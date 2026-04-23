@@ -1,0 +1,31 @@
+@import "tailwindcss";
+@plugin "flowbite/plugin";
+
+@theme {
+  --color-brand-gold: #DBB668;
+  --color-dark-bg: #232222;
+  --color-gray-pc: #828282;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: var(--color-dark-bg);
+}
+
+.PhoneInputCountry {
+  background: white;
+  border: 1px solid #D1D5DB;
+  padding: 8px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+}
+
+.PhoneInputCountrySelectArrow {
+  color: #000;
+  opacity: 1;
+}

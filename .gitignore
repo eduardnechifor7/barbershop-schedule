@@ -1,0 +1,13 @@
+# Dependențe
+node_modules/
+
+# Variabile de mediu (parole, chei API)
+.env
+
+# Fișiere specifice IDE-ului (văd că ai .idea în screenshot)
+.idea/
+.DS_Store
+
+# Build-uri
+dist/
+build/
