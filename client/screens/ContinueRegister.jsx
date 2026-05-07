@@ -1,9 +1,9 @@
 import { AuthInput } from "../components/AuthInput.jsx";
 import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
 import { AuthPhoneInput } from "../components/AuthPhoneInput.jsx";
-import {OTPScreen} from "./OTPScreen.jsx";
-import {useState} from "react";
-import { auth} from "../src/firebase.js";
+import { OTPScreen } from "./OTPScreen.jsx";
+import { useState } from "react";
+import { auth } from "../src/firebase.js";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useEffect } from "react";
 
@@ -11,25 +11,41 @@ export function ContinueRegister( { phoneValue } ) {
     const [email, setEmail] = useState("");
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
-    const [password, setPassword] = useState("");
     const [phone, setPhone] = useState(phoneValue);
     const [otp, setOtp] = useState("");
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [otpWindow, setOtpWindow] = useState(false);
+    const [errors, setErrors] = useState([]);
 
     useEffect(() => {
-        const container = document.getElementById('recaptcha-container');
 
-        if (container && !window.recaptchaVerifier) {
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-                'size': 'invisible',
-                'callback': () => { }
-            });
+        if (import.meta.env.DEV) {
+            auth.settings.appVerificationDisabledForTesting = true;
         }
+
+        const initVerifier = () => {
+            const container = document.getElementById('recaptcha-container');
+            if (container && !window.recaptchaVerifier) {
+                auth.config.siteKey = undefined;
+                try {
+                    window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                        'size': 'invisible',
+                        'callback': () => { }
+                    });
+                    window.recaptchaVerifier.render();
+                } catch (err) {
+                    console.error("Recaptcha init error:", err);
+                }
+            }
+        };
+
+        initVerifier();
 
         return () => {
             if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.clear();
+                try {
+                    window.recaptchaVerifier.clear();
+                } catch (e) {}
                 window.recaptchaVerifier = null;
             }
         };
@@ -59,11 +75,23 @@ export function ContinueRegister( { phoneValue } ) {
         }
     };
 
+    const validateEmail = (email) => {
+        const emailPatten = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailPatten.test(email);
+    }
+
     const handleButton = async () => {
+        setErrors([]);
+        const errorsArr = [];
         // If OTP is not sent
         if (!isOtpSent) {
             if (!phone || !email || !firstName) {
-                alert("Please complete all fields");
+                errorsArr.push("Please complete all fields");
+                setErrors(errorsArr);
+                return;
+            } else if (!validateEmail(email)) {
+                errorsArr.push("Please enter a valid email");
+                setErrors(errorsArr);
                 return;
             }
 
@@ -73,12 +101,10 @@ export function ContinueRegister( { phoneValue } ) {
 
                 window.confirmationResult = confirmationResult;
                 setIsOtpSent(true);
-                alert("SMS sent! Please check your phone.");
                 setOtpWindow(true);
             } catch (error) {
                 setOtpWindow(false);
-                console.error("Firebase error (SMS):", error);
-                alert("Could not send SMS. Check if phone number is correct.");
+                setErrors(["Could not send SMS. Check the phone number."]);
             }
         }
         // Verify the code and send data to database
@@ -88,10 +114,9 @@ export function ContinueRegister( { phoneValue } ) {
                 const firebaseUser = result.user;
 
                 await sendData(firebaseUser);
-                alert("Account created successfully!");
             } catch (error) {
-                console.error("OTP Error:", error);
-                alert("Invalid code. Try again.");
+                errorsArr.push("Invalid code. Try again.");
+                setErrors(errorsArr);
             }
         }
     };
@@ -105,9 +130,11 @@ export function ContinueRegister( { phoneValue } ) {
                         <span className="text-white text-sm">Continue with your personal details</span>
                     </div>
                     <div className="flex flex-col justify-center items-center gap-4">
-                        <AuthPhoneInput
-                            value={phone}
-                            onChange={(val) => setPhone(val)} />
+                        <div className="relative w-full">
+                            <AuthPhoneInput
+                                value={phone}
+                                onChange={(val) => setPhone(val)} />
+                        </div>
                         <AuthInput
                             placeholder="Enter your email"
                             value={email}
@@ -118,11 +145,15 @@ export function ContinueRegister( { phoneValue } ) {
                         <AuthInput
                             placeholder="Last name"
                             value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                        <AuthInput
-                            placeholder="Password"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)} />
+                        {errors.length > 0 && (
+                            <div className="flex flex-col gap-1 mb-4">
+                                {errors.map((err, index) => (
+                                    <p key={index} className="animate-error-shake text-red-500 text-xs font-medium">
+                                        • {err}
+                                    </p>
+                                ))}
+                            </div>
+                        )}
                         <PrimaryAuthButton onClick={handleButton}>Create account</PrimaryAuthButton>
                     </div>
                     <div className="flex flex-row items-center justify-center gap-1">
@@ -137,9 +168,10 @@ export function ContinueRegister( { phoneValue } ) {
                     otp={otp}
                     setOtp={setOtp}
                     onVerify={handleButton}
+                    errors={errors}
                 />
             )}
-            <div id="recaptcha-container"></div>
+            <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
         </div>
     );
 }
