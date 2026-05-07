@@ -4,11 +4,12 @@ const db = require('../db');
 const admin = require("firebase-admin");
 
 router.post('/', async (req, res) => {
-    const { barber_id, service_id, appointment_date, start_time, notes } = req.body;
+    const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;
+
     const user_id = req.user?.id || 3;
     if (!user_id) return res.status(401).send("Unauthorized");
 
-    if (!barber_id || !service_id || !appointment_date) {
+    if (!barber_id || !service_ids || !Array.isArray(service_ids) || service_ids.length === 0 || !appointment_date) {
         return res.status(400).json({ error: "Important missing data" });
     }
 
@@ -24,13 +25,24 @@ router.post('/', async (req, res) => {
         );
 
         const newAppointmentID = appointmentRes.rows[0].id;
-        const serviceRes = await db.query(`SELECT price FROM services WHERE id = $1`, [service_id]);
-        const currentPrice = serviceRes.rows[0].price;
 
-        await db.query(
-            `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
-                    VALUES ($1, $2, $3)`, [newAppointmentID, service_id, currentPrice]
-        );
+
+        for (const s_id of service_ids) {
+            const serviceRes = await db.query(`SELECT price FROM services WHERE id = $1`, [s_id]);
+
+            if (serviceRes.rows.length === 0) {
+                throw new Error(`The service with ${s_id} is not present in Database.`);
+            }
+
+            if (serviceRes.rows.length > 0) {
+                const currentPrice = serviceRes.rows[0].price;
+
+                await db.query(
+                    `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
+                    VALUES ($1, $2, $3)`, [newAppointmentID, s_id, currentPrice]
+                );
+            }
+        }
 
         await db.query('COMMIT');
         res.status(201).json({ message: "Succes!" });

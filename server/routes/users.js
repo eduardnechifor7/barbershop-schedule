@@ -21,4 +21,24 @@ router.post('/sync', async (req, res) => {
     }
 });
 
+router.get('/check/:phone', async (req, res) => {
+    const { phone } = req.params;
+
+    try {
+        const result = await db.query(
+            'SELECT id FROM users WHERE phone_number = $1',
+            [phone]
+        );
+
+        if (result.rows.length > 0) {
+            return res.json({ exists: true });
+        } else {
+            return res.json({ exists: false });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error in finding phone number" });
+    }
+});
+
 module.exports = router;

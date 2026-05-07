@@ -1,2 +1,2 @@
-### Get All Services
-GET http://localhost:4000/api/services
+PATCH http://localhost:4000/api/services/1
+Content-Type: application/json

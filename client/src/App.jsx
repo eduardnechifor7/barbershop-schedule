@@ -2,6 +2,7 @@ import { Button, Label, TextInput } from "flowbite-react";
 import { AuthInput } from "../components/AuthInput.jsx";
 import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
 import { ContinueRegister } from "../screens/ContinueRegister.jsx";
+import { WelcomeScreen } from "../screens/WelcomeScreen.jsx";
 import { useState } from "react";
 
 function App() {
@@ -13,7 +14,8 @@ function App() {
 
     return (
         <div className="flex flex-col gap-4 p-5 bg-dark-bg">
-            <ContinueRegister/>
+            <WelcomeScreen />
+            {/*<ContinueRegister/>*/}
         </div>
     );
 }
