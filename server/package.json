@@ -14,11 +14,13 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "firebase-admin": "^13.8.0",
+    "firebase": "^12.13.0",
+    "firebase-admin": "^13.10.0",
     "pg": "^8.20.0"
   },
   "overrides": {
     "google-p12-pem": "^4.0.0",
+    "@tootallnate/once": "^3.0.1",
     "got": "^11.8.5"
   }
 }

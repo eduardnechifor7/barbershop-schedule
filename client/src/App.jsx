@@ -1,6 +1,6 @@
 import { Button, Label, TextInput } from "flowbite-react";
 import { AuthInput } from "../components/AuthInput.jsx";
-import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
+import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { ContinueRegister } from "../screens/ContinueRegister.jsx";
 import { WelcomeScreen } from "../screens/WelcomeScreen.jsx";
 import { useState } from "react";
