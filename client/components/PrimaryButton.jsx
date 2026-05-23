@@ -1,12 +1,12 @@
 import { Button } from "flowbite-react";
 
-export function PrimaryAuthButton({ children, onClick, disabled, isLoading }) {
+export function PrimaryButton({ children, onClick, disabled, isLoading, className }) {
 
     return (
         <Button
             onClick={onClick}
             disabled={disabled || isLoading}
-            className="w-full bg-brand-gold enabled:hover:bg-yellow-200 text-black text-base border-none focus:ring-4 focus:ring-yellow-200 transition-all duration-200"
+            className={`w-full text-base border-none focus:ring-4 transition-all duration-200 ${className}`}
             theme={{
                 base: "group flex items-center justify-center p-2 text-center font-bold focus:z-10",
                     inner: {
@@ -18,3 +18,6 @@ export function PrimaryAuthButton({ children, onClick, disabled, isLoading }) {
         </Button>
     );
 };
+
+// bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200
+// !w-auto bg-[#2d3748] hover:bg-[#3d4852] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm

@@ -1,8 +1,9 @@
 const express = require('express');
+const { verifyToken, isAdmin } = require('../middleware/auth.js');
 const router = express.Router();
 const db = require('../db');
 
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, isAdmin, async (req, res) => {
     try {
         const { service_name, price, minutes_duration } = req.body;
         const newService = await db.query(
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { service_name, price, minutes_duration, is_active } = req.body;
@@ -59,7 +60,7 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
    try {
        const { id } = req.params;
 
@@ -82,7 +83,7 @@ router.delete('/:id', async (req, res) => {
    }
 });
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         const updateActive = await db.query(

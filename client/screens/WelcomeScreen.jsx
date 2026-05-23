@@ -1,8 +1,9 @@
 import { AuthPhoneInput } from "../components/AuthPhoneInput.jsx";
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useState } from "react";
-import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
+import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { ContinueRegister } from "./ContinueRegister.jsx";
+import { AdminDashboardMenu } from "./AdminDashboardMenu.jsx";
 import appLogo from "../src/assets/cuthut_logo.png"
 import OTPInput from "react-otp-input";
 import {OTPScreen} from "./OTPScreen.jsx";
@@ -12,7 +13,7 @@ import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 
 export function WelcomeScreen() {
     const [phone, setPhone] = useState("");
-    const [screen, setScreen] = useState('START'); // 'START', 'REGISTER', 'OTP'
+    const [screen, setScreen] = useState('START'); // 'START', 'REGISTER', 'OTP', 'ADMIN'
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
 
@@ -76,14 +77,18 @@ export function WelcomeScreen() {
         try {
             const response = await fetch(`http://localhost:4000/api/users/check/${phone}`);
             const data = await response.json();
-
-            if (data.exists) {
+            if (data.exists && data.role === "Customer") {
                 const appVerifier = window.recaptchaVerifier;
                 const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
                 window.confirmationResult = confirmationResult;
                 setScreen('OTP');
-            } else {
+            } else if (!data.exists) {
                 setScreen('REGISTER');
+            } else if (data.exists && data.role === "Admin") {
+                const appVerifier = window.recaptchaVerifier;
+                const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+                window.confirmationResult = confirmationResult;
+                setScreen('OTP');
             }
         } catch (error) {
             console.log(error);
@@ -94,6 +99,7 @@ export function WelcomeScreen() {
     const handleLoginVerify = async () => {
         try {
             await window.confirmationResult.confirm(otp);
+            setScreen('ADMIN');
             alert("Welcome back to Cut Hut!");
             // Aici pui navigarea către Home
         } catch (error) {
@@ -121,7 +127,8 @@ export function WelcomeScreen() {
                                         • {error}
                                     </p>
                                 )}
-                                <PrimaryAuthButton onClick={handleContinue}>Continue</PrimaryAuthButton>
+                                <PrimaryButton onClick={handleContinue}
+                                               className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">Continue</PrimaryButton>
                             </div>
                         </div>
                     </div>
@@ -147,6 +154,12 @@ export function WelcomeScreen() {
                         setOtp={setOtp}
                         onVerify={handleLoginVerify}
                     />
+                </div>
+            )}
+
+            {screen === 'ADMIN' && (
+                <div key="admin" className="animate-screen-in">
+                    <AdminDashboardMenu />
                 </div>
             )}
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
-const admin = require("firebase-admin");
+const admin = require("../config/firebase.js");
 
 router.post('/', async (req, res) => {
     const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;

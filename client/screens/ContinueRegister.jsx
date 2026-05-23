@@ -1,5 +1,5 @@
 import { AuthInput } from "../components/AuthInput.jsx";
-import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
+import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { AuthPhoneInput } from "../components/AuthPhoneInput.jsx";
 import { OTPScreen } from "./OTPScreen.jsx";
 import { useState } from "react";
@@ -154,7 +154,8 @@ export function ContinueRegister( { phoneValue } ) {
                                 ))}
                             </div>
                         )}
-                        <PrimaryAuthButton onClick={handleButton}>Create account</PrimaryAuthButton>
+                        <PrimaryButton onClick={handleButton}
+                                       className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">Create account</PrimaryButton>
                     </div>
                     <div className="flex flex-row items-center justify-center gap-1">
                         <span className="text-gray-pc text-sm">Already have an account?</span>

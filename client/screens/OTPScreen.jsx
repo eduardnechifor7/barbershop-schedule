@@ -1,5 +1,5 @@
 import OTPInput from "react-otp-input";
-import { PrimaryAuthButton } from "../components/PrimaryAuthButton.jsx";
+import { PrimaryButton } from "../components/PrimaryButton.jsx";
 
 export function OTPScreen ({ otp, setOtp, onVerify, errors = [] }) {
     
@@ -36,9 +36,10 @@ export function OTPScreen ({ otp, setOtp, onVerify, errors = [] }) {
                     </div>
                 )}
 
-                <PrimaryAuthButton onClick={onVerify}>
+                <PrimaryButton onClick={onVerify}
+                               className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">
                     Your chair is waiting
-                </PrimaryAuthButton>
+                </PrimaryButton>
 
                 <div className="flex flex-row items-center justify-center gap-1">
                     <span className="text-gray-pc text-sm">Didn't get a code?</span>
