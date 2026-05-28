@@ -1,7 +1,7 @@
 import OTPInput from "react-otp-input";
 import { PrimaryButton } from "../components/PrimaryButton.jsx";
 
-export function OTPScreen ({ otp, setOtp, onVerify, errors = [] }) {
+export function OTPScreen ({ otp, setOtp, onVerify, errors = [], isLoading }) {
     
     return (
         <div className="min-h-dvh flex flex-col justify-between px-6 py-8">
@@ -37,6 +37,7 @@ export function OTPScreen ({ otp, setOtp, onVerify, errors = [] }) {
                 )}
 
                 <PrimaryButton onClick={onVerify}
+                               isLoading={isLoading}
                                className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">
                     Your chair is waiting
                 </PrimaryButton>

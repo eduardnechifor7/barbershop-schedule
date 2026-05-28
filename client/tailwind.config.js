@@ -26,9 +26,11 @@ export default {
                 }
             },
             animation: {
+                'fade-in': 'fadeIn 0.2s ease-out forwards',
+                'scale-up': 'scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
                 'screen-in': 'slideUp 0.3s ease-out forwards',
                 'error-shake': 'shake 0.2s ease-in-out 0s 2',
-            }
+            },
         },
     },
     plugins: [

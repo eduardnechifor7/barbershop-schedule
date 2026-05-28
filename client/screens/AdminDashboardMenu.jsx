@@ -2,6 +2,7 @@ import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { useState } from "react";
 import { signOut } from "firebase/auth";
 import { ManageUsers } from "./ManageUsers.jsx";
+import { WelcomeScreen } from "./WelcomeScreen.jsx"
 import { auth } from "../src/firebase.js";
 
 
@@ -29,28 +30,31 @@ export function AdminDashboardMenu() {
     const renderSubMenu = () => {
         switch (selectMenu) {
             case "M_users":
-                return <div className="w-full max-w-screen-lg mx-auto">
+                return <div className="w-full max-w-max-w-5xl mx-auto">
                     <ManageUsers />
                 </div>;
             case "M_barbers":
-                return <div className="w-full max-w-screen-lg mx-auto">M_barbers</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">M_barbers</div>;
             case "M_appointments":
-                return <div className="w-full max-w-screen-lg mx-auto">M_appointments</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">M_appointments</div>;
             case "M_services":
-                return <div className="w-full max-w-screen-lg mx-auto">M_services</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">M_services</div>;
             default:
                 return <p>Something went wrong...</p>;
         }
     };
 
+    if (selectMenu === "WelcomeScreen") {
+        return <WelcomeScreen />;
+    }
+
     return (
         <>
             {selectMenu === "initial_menu" ? (
-                <div className="w-full min-h-screen p-8 flex flex-col justify-evenly items-center p-2">
+                <div className="w-full min-h-screen p-8 flex flex-col justify-evenly items-center">
                     <div className="flex flex-col items-center gap-1">
                         <span className="text-3xl font-bold text-white">Management</span>
                         <span className="text-3xl font-bold text-white">Dashboard</span>
-                        <p className="text-yellow-400">Meniu activ: {selectMenu || "Niciunul"}</p>
                     </div>
                     <div className="flex flex-col justify-evenly items-center gap-10 p-2">
                         <PrimaryButton onClick={() => handleButton("M_users")}
@@ -65,7 +69,7 @@ export function AdminDashboardMenu() {
                     <div className="w-full flex justify-center mb-8">
                         <PrimaryButton
                             onClick={handleLogout}
-                            className="!w-auto bg-[#2d3748] hover:bg-[#3d4852] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm"
+                            className="w-auto bg-[#2d3748] hover:bg-[#3d4852] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm"
                         >
                             Log out
                         </PrimaryButton>

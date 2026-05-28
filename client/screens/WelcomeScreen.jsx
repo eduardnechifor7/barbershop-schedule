@@ -5,7 +5,6 @@ import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { ContinueRegister } from "./ContinueRegister.jsx";
 import { AdminDashboardMenu } from "./AdminDashboardMenu.jsx";
 import appLogo from "../src/assets/cuthut_logo.png"
-import OTPInput from "react-otp-input";
 import {OTPScreen} from "./OTPScreen.jsx";
 import { auth } from "../src/firebase.js";
 import { useEffect } from "react";
@@ -16,6 +15,8 @@ export function WelcomeScreen() {
     const [screen, setScreen] = useState('START'); // 'START', 'REGISTER', 'OTP', 'ADMIN'
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
+    const [role, setRole] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (import.meta.env.DEV) {
@@ -75,36 +76,38 @@ export function WelcomeScreen() {
         }
 
         try {
+            setIsLoading(true);
             const response = await fetch(`http://localhost:4000/api/users/check/${phone}`);
             const data = await response.json();
-            if (data.exists && data.role === "Customer") {
+
+            setRole(data.role);
+
+            if (data.exists) {
                 const appVerifier = window.recaptchaVerifier;
-                const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-                window.confirmationResult = confirmationResult;
+                window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
                 setScreen('OTP');
-            } else if (!data.exists) {
+            } else {
                 setScreen('REGISTER');
-            } else if (data.exists && data.role === "Admin") {
-                const appVerifier = window.recaptchaVerifier;
-                const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-                window.confirmationResult = confirmationResult;
-                setScreen('OTP');
             }
         } catch (error) {
             console.log(error);
             alert("Something went wrong.");
         }
+
+        setIsLoading(false);
     }
 
     const handleLoginVerify = async () => {
         try {
+            setIsLoading(true);
             await window.confirmationResult.confirm(otp);
-            setScreen('ADMIN');
-            alert("Welcome back to Cut Hut!");
-            // Aici pui navigarea către Home
+            if (role === "Admin") {
+                setScreen('ADMIN');
+            }
         } catch (error) {
             alert("Invalid code.");
         }
+        setIsLoading(false);
     };
 
     return (
@@ -128,6 +131,7 @@ export function WelcomeScreen() {
                                     </p>
                                 )}
                                 <PrimaryButton onClick={handleContinue}
+                                               isLoading={isLoading}
                                                className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">Continue</PrimaryButton>
                             </div>
                         </div>
@@ -150,6 +154,7 @@ export function WelcomeScreen() {
             {screen === 'OTP' && (
                 <div key="otp" className="animate-screen-in">
                     <OTPScreen
+                        isLoading={isLoading}
                         otp={otp}
                         setOtp={setOtp}
                         onVerify={handleLoginVerify}

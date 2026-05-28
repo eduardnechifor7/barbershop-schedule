@@ -12,7 +12,7 @@ export function AuthInput({ placeholder, type = "text", width = "w-full", value,
                 theme={{
                     field: {
                         input: {
-                            base: "block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2"
+                            base: "block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0]"
                         }
                     }
                 }}

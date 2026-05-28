@@ -14,10 +14,15 @@ export function PrimaryButton({ children, onClick, disabled, isLoading, classNam
                     }
             }}
         >
-            {isLoading ? "Loading..." : children}
+            {isLoading ? (
+                    <div className="flex items-center gap-2">
+                        <span className="pl-3">Loading...</span>
+                    </div>
+                ) : (children)
+            }
         </Button>
     );
-};
+}
 
 // bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200
 // !w-auto bg-[#2d3748] hover:bg-[#3d4852] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm

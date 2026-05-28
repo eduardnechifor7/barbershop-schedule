@@ -1,6 +1,5 @@
 import 'react-phone-number-input/style.css';
 import PhoneInput from "react-phone-number-input";
-import { useState } from 'react';
 
 export function AuthPhoneInput({ onChange, value }) {
 
@@ -12,7 +11,7 @@ export function AuthPhoneInput({ onChange, value }) {
                 onChange={onChange}
                 defaultCountry="RO"
                 numberInputProps={{
-                    className: "block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2"
+                    className: "block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0]"
                 }}
                 className="flex gap-2"
             />
