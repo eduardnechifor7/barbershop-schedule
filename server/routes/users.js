@@ -2,6 +2,12 @@ const express = require('express');
 const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth');
 const db = require('../db');
+const admin = require('firebase-admin');
+
+const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 router.post('/sync', async (req, res) => {
     const { firebase_uid, first_name, last_name, phone_number, email } = req.body;
@@ -60,18 +66,31 @@ router.get('/check/:phone', async (req, res) => {
     }
 });
 
-router.patch('/:id', verifyToken, isAdmin, async (req, res) => {
+router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
+    console.log(req.body);
     const { first_name, last_name, phone_number, email, role } = req.body;
 
     try {
+
+        const userResult = await db.query(
+            `SELECT firebase_uid, phone_number FROM users WHERE id = $1`, [id]
+        );
+        const user = userResult.rows[0];
+
+        if (!user) return res.status(404).json({ error: "User not found" });
+
+        if (phone_number && phone_number !== user.phone_number) {
+            await admin.auth().updateUser(user.firebase_uid, { phoneNumber: phone_number });
+        }
+
         const updateUser = await db.query(
             `UPDATE users
-             SET first_name = COALESCE($1, first_name),
-                 last_name = COALESCE($2, last_name),
-                 phone_number = COALESCE($3, phone_number),
-                 email = COALESCE($4, email),
-                 role = COALESCE($5, role)
+             SET first_name = COALESCE(NULLIF($1, ''), first_name),
+                 last_name = COALESCE(NULLIF($2, ''), last_name),
+                 phone_number = COALESCE(NULLIF($3, ''), phone_number),
+                 email = COALESCE(NULLIF($4, ''), email),
+                 role = COALESCE(NULLIF($5, ''), role)
              WHERE id = $6 RETURNING *`, [first_name, last_name, phone_number, email, role, id]
         );
 
@@ -111,7 +130,7 @@ router.patch('/me', verifyToken, async (req, res) => {
     }
 });
 
-router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
 
     try {
@@ -122,7 +141,6 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
         if (deleteUser.rows.length === 0) {
             return res.status(404).json({ error: "The user does not exist" });
         }
-
         res.status(200).json(deleteUser.rows[0]);
     } catch (error) {
         res.status(500).json({ error: "Error in deleteing user" });

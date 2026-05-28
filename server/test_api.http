@@ -1,7 +1,3 @@
-PATCH http://localhost:4000/api/users/2
+DELETE http://localhost:4000/api/users/2
 Content-Type: application/json
 X-Test-Bypass: true
-
-{
-  "role": "Admin"
-}

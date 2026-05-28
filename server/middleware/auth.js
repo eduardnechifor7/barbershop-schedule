@@ -3,7 +3,6 @@ const db = require('../db');
 
 
 const verifyToken = async (req, res, next) => {
-
     if (req.headers['x-test-bypass'] === 'true') {
         req.user = { uid: "user_test_admin", email: "test@admin.com", role: "Admin" };
         return next();

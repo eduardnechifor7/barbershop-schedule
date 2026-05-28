@@ -1,14 +1,23 @@
 import { useState, useEffect } from "react";
 import { auth } from "../src/firebase.js";
+import { EditModal } from "../components/EditModal.jsx";
 
 export function ManageUsers() {
 
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(""); // 'ADD' 'VIEW' 'EDIT'
+    const [modalType, setModalType] = useState(""); // 'VIEW' 'EDIT'
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const inputLabels = {
+        "First Name": "first_name",
+        "Last Name": "last_name",
+        "Phone Number": "phone_number",
+        "Email": "email",
+        "Role": "role"
+    };
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -28,6 +37,7 @@ export function ManageUsers() {
                 });
 
                 const data = await response.json();
+                console.log(data);
                 setUsers(data);
             } catch (error) {
                 console.error("Error in listing users", error.response?.data || error.message);
@@ -38,6 +48,38 @@ export function ManageUsers() {
 
         fetchUsers();
     }, [refreshTrigger]);
+
+    const handleEditUser = async (formData) => {
+        console.log(formData);
+        try {
+            const currentUser = auth.currentUser;
+
+            if (!currentUser) {
+                alert("Session expired. Please log in again.");
+                return;
+            }
+
+            const token = await currentUser.getIdToken();
+
+            const response = await fetch(`http://localhost:4000/api/users/edit/${selectedUserId}`, {
+                method: "PATCH",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                setSelectedUserId(null);
+                setRefreshTrigger(prev => prev + 1);
+            } else {
+                console.error("Error in editing user");
+            }
+        } catch (error) {
+            console.error("Error in editing user: ", error.message);
+        }
+    };
 
     const openModal = (type) => {
         setModalType(type);
@@ -60,7 +102,8 @@ export function ManageUsers() {
 
             const token = await currentUser.getIdToken();
 
-            const response = await fetch(`http://localhost:4000/apiuser/delete/${id}`, {
+            const response = await fetch(`http://localhost:4000/api/users/delete/${id}`, {
+                method: "DELETE",
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -79,9 +122,6 @@ export function ManageUsers() {
         <div className="w-full max-w-auto mx-auto p-4 min-h-screen flex flex-col">
             {/* Buttons structure */}
             <div className="flex justify-between mb-6 gap-3">
-                <button onClick={() => openModal("ADD")} className="bg-brand-gold text-black font-semibold px-4 py-2 rounded-lg flex-1">
-                    Add
-                </button>
                 <button
                     disabled={!selectedUserId}
                     onClick={() => openModal("VIEW")}
@@ -154,6 +194,9 @@ export function ManageUsers() {
                             </div>
                         );
                     })}
+                    {isModalOpen && modalType === "EDIT" && (
+                        <EditModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser}/>
+                    )}
                 </div>
             )}
         </div>
