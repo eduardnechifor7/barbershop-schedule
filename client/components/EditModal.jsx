@@ -12,7 +12,6 @@ export function EditModal({ isOpen, onClose, config, onSubmit }) {
 
     const handleChange = (backendKey, value) => {
         setFormData(prev => ({ ...prev, [backendKey]: value }));
-        console.log("Datele mele smechere: ", formData);
     }
 
     const handleSubmit = () => {

@@ -61,7 +61,7 @@ export function ContinueRegister( { phoneValue } ) {
         };
 
         try {
-            const respone = await fetch("http://localhost:4000/api/users/sync", {
+            const respone = await fetch("http://localhost:8080/api/users/sync", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(userRegisterData)
@@ -97,9 +97,8 @@ export function ContinueRegister( { phoneValue } ) {
 
             try {
                 const appVerifier = window.recaptchaVerifier;
-                const confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
 
-                window.confirmationResult = confirmationResult;
+                window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
                 setIsOtpSent(true);
                 setOtpWindow(true);
             } catch (error) {

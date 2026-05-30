@@ -77,7 +77,7 @@ export function WelcomeScreen() {
 
         try {
             setIsLoading(true);
-            const response = await fetch(`http://localhost:4000/api/users/check/${phone}`);
+            const response = await fetch(`http://localhost:8080/api/users/check/${phone}`);
             const data = await response.json();
 
             setRole(data.role);
