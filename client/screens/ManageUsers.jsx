@@ -1,43 +1,31 @@
 import { useState, useEffect } from "react";
-import { auth } from "../src/firebase.js";
 import { EditModal } from "../components/EditModal.jsx";
+import { ViewModal } from "../components/ViewModal.jsx";
+import { userService } from "../services/userService.js";
+
+const inputLabels = {
+    "First Name": "first_name",
+    "Last Name": "last_name",
+    "Phone Number": "phone_number",
+    "Email": "email",
+    "Role": "role"
+};
 
 export function ManageUsers() {
-
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState(""); // 'VIEW' 'EDIT'
     const [users, setUsers] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const inputLabels = {
-        "First Name": "first_name",
-        "Last Name": "last_name",
-        "Phone Number": "phone_number",
-        "Email": "email",
-        "Role": "role"
-    };
+    const selectedUser = users.find(u => u.id === selectedUserId);
 
     useEffect(() => {
         const fetchUsers = async () => {
-            setIsLoading(true);
             try {
-                const currentUser = auth.currentUser;
-
-                if (!currentUser) {
-                    alert("Session expired. Please log in again.");
-                    return;
-                }
-
-                const token = await currentUser.getIdToken();
-
-                const response = await fetch("http://localhost:4000/api/users/list", {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-
-                const data = await response.json();
-                console.log(data);
+                setIsLoading(true);
+                const data = await userService.getAll();
                 setUsers(data);
             } catch (error) {
                 console.error("Error in listing users", error.response?.data || error.message);
@@ -45,39 +33,27 @@ export function ManageUsers() {
                 setIsLoading(false);
             }
         };
-
-        fetchUsers();
+        fetchUsers().catch(console.error);
     }, [refreshTrigger]);
 
     const handleEditUser = async (formData) => {
-        console.log(formData);
         try {
-            const currentUser = auth.currentUser;
-
-            if (!currentUser) {
-                alert("Session expired. Please log in again.");
-                return;
-            }
-
-            const token = await currentUser.getIdToken();
-
-            const response = await fetch(`http://localhost:4000/api/users/edit/${selectedUserId}`, {
-                method: "PATCH",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(formData)
-            });
-
-            if (response.ok) {
-                setSelectedUserId(null);
-                setRefreshTrigger(prev => prev + 1);
-            } else {
-                console.error("Error in editing user");
-            }
+            await userService.edit(selectedUserId, formData);
+            closeModal();
+            setSelectedUserId(null);
+            setRefreshTrigger(prev => prev + 1);
         } catch (error) {
             console.error("Error in editing user: ", error.message);
+        }
+    };
+
+    const handleDeleteUser = async (id) => {
+        try {
+            await userService.delete(id);
+            setSelectedUserId(null);
+            setRefreshTrigger(prev => prev + 1);
+        } catch (error) {
+            console.error("Error in deleteing user: ", error.message);
         }
     };
 
@@ -91,36 +67,9 @@ export function ManageUsers() {
         setIsModalOpen(false);
     };
 
-    const deleteUser = async (id) => {
-        try {
-            const currentUser = auth.currentUser;
-
-            if (!currentUser) {
-                alert("Session expired. Please log in again.");
-                return;
-            }
-
-            const token = await currentUser.getIdToken();
-
-            const response = await fetch(`http://localhost:4000/api/users/delete/${id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bearer ${token}` }
-            });
-
-            if (response.ok) {
-                setSelectedUserId(null);
-                setRefreshTrigger(prev => prev + 1);
-            } else {
-                console.error("Error in deleteing user");
-            }
-        } catch (error) {
-            console.error("Error in deleteing user: ", error.message);
-        }
-    };
 
     return (
         <div className="w-full max-w-auto mx-auto p-4 min-h-screen flex flex-col">
-            {/* Buttons structure */}
             <div className="flex justify-between mb-6 gap-3">
                 <button
                     disabled={!selectedUserId}
@@ -138,7 +87,7 @@ export function ManageUsers() {
                 </button>
                 <button
                     disabled={!selectedUserId}
-                    onClick={() => deleteUser(selectedUserId)}
+                    onClick={() => handleDeleteUser(selectedUserId)}
                     className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedUserId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
                 >
                     Delete
@@ -196,6 +145,9 @@ export function ManageUsers() {
                     })}
                     {isModalOpen && modalType === "EDIT" && (
                         <EditModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser}/>
+                    )}
+                    {isModalOpen && modalType === "VIEW" && (
+                        <ViewModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} user={selectedUser} />
                     )}
                 </div>
             )}

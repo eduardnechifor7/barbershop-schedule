@@ -1,6 +1,5 @@
 const express = require('express');
 const cors = require('cors');
-const db = require('./db');
 require('dotenv').config();
 
 require('./config/firebase.js');
@@ -11,7 +10,7 @@ const barbersRoutes = require('./routes/barbers');
 const usersRoutes = require('./routes/users');
 
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 8080;
 
 app.use(cors());
 app.use(express.json());
