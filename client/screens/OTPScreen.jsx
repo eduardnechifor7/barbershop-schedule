@@ -47,11 +47,6 @@ export function OTPScreen ({ otp, setOtp, onVerify, errors = [], isLoading }) {
                     <span className="text-white text-sm font-semibold cursor-pointer">Resend</span>
                 </div>
             </div>
-
-            <div className="flex flex-row justify-center gap-1 mt-auto pb-4">
-                <span className="text-gray-pc text-sm">You don't have an account?</span>
-                <span className="text-white text-sm font-semibold cursor-pointer">Sign up</span>
-            </div>
         </div>
     );
 }

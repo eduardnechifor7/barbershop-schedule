@@ -2,7 +2,8 @@ import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { useState } from "react";
 import { signOut } from "firebase/auth";
 import { ManageUsers } from "./ManageUsers.jsx";
-import { WelcomeScreen } from "./WelcomeScreen.jsx"
+import { ManageBarbers } from "./ManageBarbers.jsx";
+import { WelcomeScreen } from "./WelcomeScreen.jsx";
 import { auth } from "../src/firebase.js";
 
 
@@ -34,7 +35,9 @@ export function AdminDashboardMenu() {
                     <ManageUsers />
                 </div>;
             case "M_barbers":
-                return <div className="w-full max-w-max-w-5xl mx-auto">M_barbers</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">
+                    <ManageBarbers />
+                </div>;
             case "M_appointments":
                 return <div className="w-full max-w-max-w-5xl mx-auto">M_appointments</div>;
             case "M_services":
