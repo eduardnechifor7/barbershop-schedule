@@ -10,8 +10,17 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                 <div className="flex flex-col justify-between mb-4 text-black gap-5">
                     {Object.entries(config).map(([friendlyName, backendKey]) => {
                         return (
-                            <p className="flex flex-row text-m">
-                                <span className="font-medium">{friendlyName + ": " + user[backendKey]}</span>
+                            <p key={backendKey} className="flex flex-row text-m">
+                                {friendlyName !== "Photo URL" ? (
+                                    <span className="font-medium">{friendlyName + ": " + user[backendKey]}</span>
+                                ) : (
+                                    <div className="flex flex-row items-center gap-3">
+                                        <span className="font-medium">{friendlyName + ": "}</span>
+                                        <span className="flex justify-center items-center w-10 h-10 bg-blue-500 rounded-full overflow-hidden">
+                                            <img src={user[backendKey]} alt="Profil" className="w-full h-full object-cover" />
+                                        </span>
+                                    </div>
+                                )}
                             </p>
                         );
                     })}

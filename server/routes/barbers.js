@@ -3,16 +3,16 @@ const router = express.Router();
 const { verifyToken, isAdmin } = require('../middleware/auth.js');
 const db = require('../db');
 
-router.get('/', async (req, res) => {
+router.get('/list', async (req, res) => {
     try {
-        const barbers = await db.query('SELECT id, first_name, last_name, specialization, photo_url FROM barbers');
+        const barbers = await db.query('SELECT id, first_name, last_name, phone_number, specialization, photo_url FROM barbers');
         res.json(barbers.rows);
     } catch (err) {
         res.status(500).json({ error: "Error in loading barbers list" });
     }
 });
 
-router.post('/', verifyToken, isAdmin, async (req, res) => {
+router.post('/addBarber', verifyToken, isAdmin, async (req, res) => {
     const { first_name, last_name, phone_number, specialization, photo_url } = req.body;
     try {
         const newBarber = await db.query(
@@ -26,20 +26,18 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
-router.put('/:id', verifyToken, isAdmin, async (req, res) => {
+router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const { first_name, last_name, phone_number, specialization, photo_url } = req.body;
 
-        if (!first_name || !last_name || !phone_number || !specialization || !photo_url) {
-            return res.status(400).json({
-                error: "All fields are required",
-            });
-        }
-
         const updateBarber = await db.query(
             `UPDATE barbers 
-                  SET first_name = $1, last_name = $2, phone_number = $3, specialization = $4, photo_url = $5
+                  SET first_name = COALESCE(NULLIF($1, ''), first_name), 
+                      last_name = COALESCE(NULLIF($2, ''), last_name), 
+                      phone_number = COALESCE(NULLIF($3, ''), phone_number), 
+                      specialization = COALESCE(NULLIF($4, ''), specialization), 
+                      photo_url = COALESCE(NULLIF($5, ''), photo_url)
                   WHERE id = $6
                   RETURNING *`, [first_name, last_name, phone_number, specialization, photo_url, id]
         );
@@ -54,7 +52,7 @@ router.put('/:id', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
-router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
         const deleteBarber = await db.query(

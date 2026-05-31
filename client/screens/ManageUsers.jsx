@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { EditModal } from "../components/EditModal.jsx";
+import { FormModal } from "../components/FormModal.jsx";
 import { ViewModal } from "../components/ViewModal.jsx";
 import { userService } from "../services/userService.js";
 
@@ -144,7 +144,7 @@ export function ManageUsers() {
                         );
                     })}
                     {isModalOpen && modalType === "EDIT" && (
-                        <EditModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser}/>
+                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser}/>
                     )}
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} user={selectedUser} />

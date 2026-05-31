@@ -68,7 +68,6 @@ router.get('/check/:phone', async (req, res) => {
 
 router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
-    console.log(req.body);
     const { first_name, last_name, phone_number, email, role } = req.body;
 
     try {
