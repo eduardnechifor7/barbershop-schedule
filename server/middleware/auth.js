@@ -17,7 +17,7 @@ const verifyToken = async (req, res, next) => {
         const decodedToken = await admin.auth().verifyIdToken(token);
 
         const userQuery = await db.query(
-            'SELECT role FROM users WHERE firebase_uid = $1',
+            'SELECT id, role FROM users WHERE firebase_uid = $1',
             [decodedToken.uid]
         );
 
@@ -27,6 +27,7 @@ const verifyToken = async (req, res, next) => {
 
         req.user = {
             ...decodedToken,
+            id: userQuery[0].id,
             role: userQuery.rows[0].role
         };
         next();
