@@ -2,20 +2,21 @@ import { AuthInput } from "./AuthInput.jsx";
 import { PrimaryButton } from "./PrimaryButton.jsx";
 import { useState } from "react";
 
-export function AddModal({ isOpen, onClose, labels, onSubmit }) {
-    const [formData, setFormData] = useState(
-        labels.reduce((acc, label) => ({ ...acc, [label]: "" }), {})
-    );
+export function FormModal({ isOpen, onClose, config, onSubmit }) {
+    const getInitialState = () =>
+        Object.values(config).reduce((acc, backendKey) => ({ ...acc, [backendKey]: "" }), {});
+
+    const [formData, setFormData] = useState(getInitialState);
 
     if (!isOpen) return null;
 
-    const handleChange = (label, value) => {
-        setFormData(prev => ({ ...prev, [label]: value }));
+    const handleChange = (backendKey, value) => {
+        setFormData(prev => ({ ...prev, [backendKey]: value }));
     }
 
     const handleSubmit = () => {
         onSubmit(formData);
-        setFormData(labels.reduce((acc, label) => ({ ...acc, [label]: "" }), {}));
+        setFormData(getInitialState);
         onClose();
     };
 
@@ -23,12 +24,13 @@ export function AddModal({ isOpen, onClose, labels, onSubmit }) {
         <div className="fixed inset-0 flex flex-col items-center justify-start pt-40 z-50 bg-black/40 animate-fade-in">
             <div className="bg-brand-gold p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 transition-all transform animate-scale-up">
                 <div className="flex flex-col justify-between items-center mb-4 text-black gap-5">
-                    {labels.map((label) => {
+                    {Object.entries(config).map(([friendlyName, backendKey]) => {
                         return (
                             <AuthInput
-                                key={label}
-                                placeholder={label}
-                                onChange={(e) => handleChange(label, e.target.value)}
+                                key={backendKey}
+                                placeholder={friendlyName}
+                                value={formData[backendKey] || ""}
+                                onChange={(e) => handleChange(backendKey, e.target.value)}
                             />
                         );
                     })}
