@@ -1,8 +1,9 @@
 import { AuthInput } from "./AuthInput.jsx";
 import { PrimaryButton } from "./PrimaryButton.jsx";
 import { useState } from "react";
+import {Dropdown} from "./Dropdown.jsx";
 
-export function FormModal({ isOpen, onClose, config, onSubmit }) {
+export function FormModal({ isOpen, onClose, config, onSubmit, options = null }) {
     const getInitialState = () =>
         Object.values(config).reduce((acc, backendKey) => ({ ...acc, [backendKey]: "" }), {});
 
@@ -25,13 +26,29 @@ export function FormModal({ isOpen, onClose, config, onSubmit }) {
             <div className="bg-brand-gold p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 transition-all transform animate-scale-up">
                 <div className="flex flex-col justify-between items-center mb-4 text-black gap-5">
                     {Object.entries(config).map(([friendlyName, backendKey]) => {
+                        let inputType = "text";
+                        if (backendKey === "appointment_date") inputType = "date";
+                        if (backendKey === "start_time") inputType = "time";
+
                         return (
-                            <AuthInput
-                                key={backendKey}
-                                placeholder={friendlyName}
-                                value={formData[backendKey] || ""}
-                                onChange={(e) => handleChange(backendKey, e.target.value)}
-                            />
+                            !options ? (
+                                <AuthInput
+                                    key={backendKey}
+                                    placeholder={friendlyName}
+                                    value={formData[backendKey] || ""}
+                                    onChange={(e) => handleChange(backendKey, e.target.value)}
+                                />
+                            ) : (
+                                <Dropdown
+                                    key={backendKey}
+                                    type={inputType}
+                                    name={backendKey}
+                                    value={formData[backendKey] || ""}
+                                    placeholder={friendlyName}
+                                    onChange={(e) => handleChange(backendKey, e.target.value)}
+                                    options={options}
+                                />
+                            )
                         );
                     })}
                 </div>

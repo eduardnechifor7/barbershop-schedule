@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth.js');
 
-router.post('/', verifyToken, async (req, res) => {
+router.post('/addAppointment', verifyToken, async (req, res) => {
     const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
     const user_id = req.user.id;
@@ -26,7 +26,7 @@ router.post('/', verifyToken, async (req, res) => {
         const newAppointmentID = appointmentRes.rows[0].id;
 
         const insertAppServ = await db.query(
-            `INSERT INTO appointments_services (appointment_id, service_id, price_at_booking)
+            `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
                   SELECT $1, id, price
                   FROM services
                   WHERE id = ANY($2)`, [newAppointmentID, service_ids]
@@ -60,14 +60,17 @@ router.get('/me', verifyToken, async (req, res) => {
                          appointments.status,
                          barbers.first_name AS barber_first_name,
                          barbers.last_name AS barber_last_name,
-                         services.service_name,
-                         appointment_services.price_at_booking
+                         JSON_AGG(
+                            JSON_BUILD_OBJECT('service_name', services.service_name, 
+                                              'price_at_booking', appointment_services.price_at_booking)
+                         ) AS services
                   FROM appointments
                   INNER JOIN barbers ON appointments.barber_id = barbers.id
                   INNER JOIN appointment_services ON appointment_services.appointment_id = appointments.id
                   INNER JOIN services ON appointment_services.service_id = services.id
                   WHERE appointments.user_id = $1
-                  ORDER BY appointments.appointment_date ASC, appointments.start_time ASC`, [user_id]
+                  GROUP BY appointments.id, barbers.last_name, barbers.first_name, appointments.appointment_date, appointments.start_time
+                  ORDER BY appointments.appointment_date, appointments.start_time`, [user_id]
         );
         res.status(200).json(result.rows);
     } catch (error) {
@@ -89,19 +92,108 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
                          users.phone_number AS client_phone,
                          barbers.first_name AS barber_first_name,
                          barbers.last_name AS barber_last_name,
-                         services.service_name,
-                         appointment_services.price_at_booking
+                         JSON_AGG(
+                            JSON_BUILD_OBJECT('service_name', services.service_name,
+                                              'price_at_booking', appointment_services.price_at_booking)
+                         ) AS services
                   FROM appointments
                   INNER JOIN users ON appointments.user_id = users.id
                   INNER JOIN barbers ON appointments.barber_id = barbers.id
                   INNER JOIN appointment_services ON appointment_services.appointment_id = appointments.id
                   INNER JOIN services ON appointment_services.service_id = services.id
-                  ORDER BY appointments.appointment_date ASC, appointments.start_time ASC`
+                  GROUP BY appointments.id, barbers.last_name, barbers.first_name, users.first_name, users.last_name, users.phone_number, appointments.appointment_date, appointments.start_time
+                  ORDER BY appointments.appointment_date, appointments.start_time`
         );
         res.status(200).json(result.rows);
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error in listing appointments" });
+    }
+});
+
+router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { appointment_date, start_time, notes, status, service_ids } = req.body;
+
+    try {
+        const updateAppointment = await db.query(
+            `UPDATE appointments
+                  SET appointment_date = COALESCE(NULLIF($1, ''), appointment_date),
+                      start_time = COALESCE(NULLIF($2, ''), start_time),
+                      notes = COALESCE(NULLIF($3, ''), notes),
+                      status = COALESCE(NULLIF($4, ''), status)
+                  WHERE id = $5
+                  RETURNING *`, [appointment_date, start_time, notes, status, id]
+        );
+
+        if (updateAppointment.rows.length === 0) {
+            return res.status(404).json({ error: "The appointment doesn't exist." });
+        }
+
+        if (service_ids && service_ids.length > 0) {
+            await db.query(`DELETE FROM appointment_services WHERE appointment_id = $1`, [id]);
+
+            const servicesResult = await db.query(
+                `SELECT id, price FROM services WHERE id = ANY($1)`, [service_ids]
+            );
+
+            for (const service of servicesResult.rows) {
+                await db.query(
+                    `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
+             VALUES ($1, $2, $3)`,
+                    [id, service.id, service.price]
+                );
+            }
+        }
+
+
+        res.status(200).json(updateAppointment.rows[0]);
+    } catch (error) {
+        return res.status(500).json( { error: "Error in updating appointment." });
+    }
+});
+
+router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
+    const { id } = req.params;
+    try {
+        await db.query(
+            `DELETE FROM appointment_services WHERE appointment_id = $1`, [id]
+        );
+
+        const deleteAppointment = await db.query(
+            `DELETE FROM appointments WHERE id = $1 RETURNING *`, [id]
+        );
+
+        if (deleteAppointment.rows.length === 0) {
+            return res.status(404).json({ error: "Appointments doesn't exist." })
+        }
+
+        res.status(200).json(deleteAppointment.rows[0]);
+    } catch (error) {
+        return res.status(500).json({ error: "Error in deleting appointment." })
+    }
+});
+
+router.delete('/delete/me/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    const user_id = req.user.id;
+
+    try {
+        await db.query(
+            `DELETE FROM appointment_services WHERE appointment_id = $1 AND appointment_id IN (SELECT id FROM appointments WHERE user_id = $2)`, [id, user_id]
+        );
+
+        const deleteAppointment = await db.query(
+            `DELETE FROM appointments WHERE id = $1 AND user_id = $2 RETURNING *`, [id, user_id]
+        );
+
+        if (deleteAppointment.rows.length === 0) {
+            return res.status(404).json({ error: "Appointments doesn't exist or you are not authorized to delete it." })
+        }
+
+        res.status(200).json(deleteAppointment.rows[0]);
+    } catch (error) {
+        return res.status(500).json({ error: "Error in deleting appointment." })
     }
 });
 

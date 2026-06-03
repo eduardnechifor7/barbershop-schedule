@@ -1,71 +1,95 @@
-import {useEffect, useState} from "react";
-import {FormModal} from "../components/FormModal.jsx";
-import {ViewModal} from "../components/ViewModal.jsx";
+import { useState, useEffect } from "react";
+import { FormModal } from "../components/FormModal.jsx";
+import { ViewModal } from "../components/ViewModal.jsx";
+import { appointmentService } from "../services/appointmentService.js";
 import { barberService } from "../services/barberService.js";
+import { userService } from "../services/userService.js";
 
-
-const inputLabels = {
-    "First Name": "first_name",
-    "Last Name": "last_name",
-    "Phone Number": "phone_number",
-    "Photo URL": "photo_url",
-    "Specialization": "specialization"
+const inputLabelsForm = {
+    "Appointment Date": "appointment_date",
+    "Scheduled time": "start_time",
+    "Client name": "user_id",
+    "Barber name": "barber_id",
+    "Appointment services": "service_ids",
+    "Notes": "notes",
+    "Status": "status"
 };
 
-export function ManageBarbers() {
-    const [selectedBarberId, setSelectedBarberId] = useState(null);
+export function ManageAppointments() {
+    const [selectedAppId, setSelectedAppId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState(""); // 'ADD' 'VIEW' 'EDIT'
+    const [appointments, setAppointments] = useState([]);
+    const [users, setUsers] = useState([]);
     const [barbers, setBarbers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const selectedBarber = barbers.find(b => b.id === selectedBarberId);
+    const selectedAppointment = appointments.find(a => a.id === selectedAppId);
+
+    const options = {
+        "appointment_date": null,
+        "start_time": null,
+        "notes": null,
+        "status": [
+            { id: "scheduled", label: "Scheduled" },
+            { id: "completed", label: "Finished" },
+            { id: "cancelled", label: "Cancelled"}
+        ],
+        "barber_id": barbers.map(b => ({ id: b.id, label: `${b.last_name} ${b.first_name}`  })),
+        "user_id": users.map(u => ({ id: u.id, label: `${u.last_name} ${u.first_name}`})),
+        "service_ids": null
+    }
 
     useEffect(() => {
-        const fetchBarbers = async () => {
+        const fetchGetAllData = async () => {
             try {
                 setIsLoading(true);
-                const data = await barberService.getAll();
-                setBarbers(data);
+                const dataAppointments = await appointmentService.getAll();
+                const dataBarbers = await barberService.getAll();
+                const dataUsers = await userService.getAll();
+                setAppointments(dataAppointments);
+                setUsers(dataUsers);
+                setBarbers(dataBarbers);
+
             } catch (error) {
-                console.error("Error in listing barbers", error.response?.data || error.message);
+                console.error("Error in listing appointments.", error.response?.data || error.message);
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchBarbers().catch(console.error);
-    }, [refreshTrigger]);
+        fetchGetAllData().catch(console.error);
+    }), [refreshTrigger]
 
-    const handleAddBarber = async (formData) => {
+    const handleAddAppointment = async (formData) => {
         try {
-            await barberService.addBarber(formData);
+            await appointmentService.addAppointment(formData);
             closeModal();
-            setSelectedBarberId(null);
+            setSelectedAppId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in adding barber: ", error.message);
+            console.error("Error in adding appointment: ", error.message);
         }
     };
 
-    const handleEditBarber = async (formData) => {
+    const handleEditAppointment = async (formData) => {
         try {
-            await barberService.edit(selectedBarberId, formData);
+            await appointmentService.edit(selectedAppId, formData);
             closeModal();
-            setSelectedBarberId(null);
+            setSelectedAppId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in editing barber: ", error.message);
+            console.error("Error in editing appointment: ", error.message);
         }
     };
 
-    const handleDeleteBarber = async (id) => {
+    const handleDeleteAppointment = async (id) => {
         try {
-            await barberService.delete(id);
-            setSelectedBarberId(null);
+            await appointmentService.delete(id);
+            setSelectedAppId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in deleting barber: ", error.message);
+            console.error("Error in deleting appointment: ", error.message);
         }
     };
 
@@ -89,23 +113,23 @@ export function ManageBarbers() {
                     Add
                 </button>
                 <button
-                    disabled={!selectedBarberId}
+                    disabled={!selectedAppId}
                     onClick={() => openModal("VIEW")}
-                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedBarberId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
+                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedAppId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
                 >
                     View
                 </button>
                 <button
-                    disabled={!selectedBarberId}
+                    disabled={!selectedAppId}
                     onClick={() => openModal("EDIT")}
-                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedBarberId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
+                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedAppId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
                 >
                     Edit
                 </button>
                 <button
-                    disabled={!selectedBarberId}
-                    onClick={() => handleDeleteBarber(selectedBarberId)}
-                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedBarberId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
+                    disabled={!selectedAppId}
+                    onClick={() => handleDeleteAppointment(selectedAppId)}
+                    className={`font-semibold px-4 py-2 rounded-lg flex-1 transition ${selectedAppId ? 'bg-brand-gold text-black' : 'bg-gray-700 text-gray-500 cursor-not-allowed'}`}
                 >
                     Delete
                 </button>
@@ -134,14 +158,14 @@ export function ManageBarbers() {
             )}
             {!isLoading && (
                 <div className = "flex flex-col justify-center items-center p-1 gap-3 mt-5">
-                    {barbers.map((barber) => {
-                        const isSelected = selectedBarberId === barber.id;
+                    {appointments.map((appointment) => {
+                        const isSelected = selectedAppId === appointment.id;
 
                         return (
                             <div
-                                key={barber.id}
+                                key={appointment.id}
                                 onClick={() => {
-                                    setSelectedBarberId(isSelected ? null : barber.id);
+                                    setSelectedAppId(isSelected ? null : appointment.id);
                                 }}
                                 className={`flex items-center w-full justify-between p-4 rounded-xl cursor-pointer transition-all duration-200 active:scale-[0.98] ${
                                     isSelected
@@ -152,25 +176,22 @@ export function ManageBarbers() {
                                 <div className = "flex items-center gap-3 w-full">
                                     <div className={`w-1 h-8 rounded-full transition-colors ${isSelected ? "bg-black" : "bg-transparent"}`} />
                                     <div className="flex flex-row items-center justify-start gap-3">
-                                        <span className="flex justify-center items-center w-10 h-10 bg-blue-500 rounded-full overflow-hidden">
-                                            <img src={barber.photo_url} alt="Profil" className="w-full h-full object-cover" />
-                                        </span>
-                                        <span>{barber.last_name + " " + barber.first_name}</span>
+                                        <span>{appointment.client_last_name + " " + appointment.client_first_name}</span>
                                         <span className="text-gray-400 font-light">/</span>
-                                        <span>{barber.phone_number}</span>
+                                        <span>{appointment.appointment_date}</span>
                                     </div>
                                 </div>
                             </div>
                         );
                     })}
                     {isModalOpen && modalType === "ADD" && (
-                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleAddBarber} />
+                        <FormModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} onSubmit={handleAddAppointment} options={options} />
                     )}
                     {isModalOpen && modalType === "EDIT" && (
-                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditBarber}/>
+                        <FormModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} onSubmit={handleEditAppointment} options={options} />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
-                        <ViewModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} user={selectedBarber} />
+                        <ViewModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} user={selectedAppointment} />
                     )}
                 </div>
             )}

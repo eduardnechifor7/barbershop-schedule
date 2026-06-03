@@ -3,11 +3,6 @@ const db = require('../db');
 
 
 const verifyToken = async (req, res, next) => {
-    if (req.headers['x-test-bypass'] === 'true') {
-        req.user = { uid: "user_test_admin", email: "test@admin.com", role: "Admin" };
-        return next();
-    }
-
     try {
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
@@ -27,12 +22,12 @@ const verifyToken = async (req, res, next) => {
 
         req.user = {
             ...decodedToken,
-            id: userQuery[0].id,
+            id: userQuery.rows[0].id,
             role: userQuery.rows[0].role
         };
         next();
     } catch (error) {
-        console.error("Eroare Firebase detaliată:", error);
+        console.error("Firebase error:", error);
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 };
