@@ -3,6 +3,7 @@ import { useState } from "react";
 import { signOut } from "firebase/auth";
 import { ManageUsers } from "./ManageUsers.jsx";
 import { ManageBarbers } from "./ManageBarbers.jsx";
+import { ManageAppointments } from "./ManageAppointments.jsx";
 import { WelcomeScreen } from "./WelcomeScreen.jsx";
 import { auth } from "../src/firebase.js";
 
@@ -39,7 +40,9 @@ export function AdminDashboardMenu() {
                     <ManageBarbers />
                 </div>;
             case "M_appointments":
-                return <div className="w-full max-w-max-w-5xl mx-auto">M_appointments</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">
+                    <ManageAppointments />
+                </div>;
             case "M_services":
                 return <div className="w-full max-w-max-w-5xl mx-auto">M_services</div>;
             default:
