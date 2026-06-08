@@ -4,6 +4,9 @@ import { ViewModal } from "../components/ViewModal.jsx";
 import { appointmentService } from "../services/appointmentService.js";
 import { barberService } from "../services/barberService.js";
 import { userService } from "../services/userService.js";
+import { servicesService } from "../services/servicesService.js";
+
+// TODO: isActive Services
 
 const inputLabelsForm = {
     "Appointment Date": "appointment_date",
@@ -22,6 +25,7 @@ export function ManageAppointments() {
     const [appointments, setAppointments] = useState([]);
     const [users, setUsers] = useState([]);
     const [barbers, setBarbers] = useState([]);
+    const [services, setServices] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -38,7 +42,7 @@ export function ManageAppointments() {
         ],
         "barber_id": barbers.map(b => ({ id: b.id, label: `${b.last_name} ${b.first_name}`  })),
         "user_id": users.map(u => ({ id: u.id, label: `${u.last_name} ${u.first_name}`})),
-        "service_ids": null
+        "service_ids": services.map(s => ({ value: s.id, label: `${s.service_name}` }))
     }
 
     useEffect(() => {
@@ -48,9 +52,11 @@ export function ManageAppointments() {
                 const dataAppointments = await appointmentService.getAll();
                 const dataBarbers = await barberService.getAll();
                 const dataUsers = await userService.getAll();
+                const dataServices = await servicesService.getAll();
                 setAppointments(dataAppointments);
                 setUsers(dataUsers);
                 setBarbers(dataBarbers);
+                setServices(dataServices);
 
             } catch (error) {
                 console.error("Error in listing appointments.", error.response?.data || error.message);
@@ -59,7 +65,7 @@ export function ManageAppointments() {
             }
         };
         fetchGetAllData().catch(console.error);
-    }), [refreshTrigger]
+    }, [refreshTrigger]);
 
     const handleAddAppointment = async (formData) => {
         try {
@@ -160,6 +166,8 @@ export function ManageAppointments() {
                 <div className = "flex flex-col justify-center items-center p-1 gap-3 mt-5">
                     {appointments.map((appointment) => {
                         const isSelected = selectedAppId === appointment.id;
+                        const dataIso = appointment.appointment_date;
+                        const appointmentDate = new Date(dataIso);
 
                         return (
                             <div
@@ -175,10 +183,9 @@ export function ManageAppointments() {
                             >
                                 <div className = "flex items-center gap-3 w-full">
                                     <div className={`w-1 h-8 rounded-full transition-colors ${isSelected ? "bg-black" : "bg-transparent"}`} />
-                                    <div className="flex flex-row items-center justify-start gap-3">
-                                        <span>{appointment.client_last_name + " " + appointment.client_first_name}</span>
-                                        <span className="text-gray-400 font-light">/</span>
-                                        <span>{appointment.appointment_date}</span>
+                                    <div className="flex flex-row items-center justify-start gap-2">
+                                        <span>{appointment.client_last_name + " " + appointment.client_first_name + " / "}</span>
+                                        <span>{appointmentDate.toLocaleDateString("ro-RO") + " / " + appointment.start_time.substring(0, 5)}</span>
                                     </div>
                                 </div>
                             </div>

@@ -3,7 +3,7 @@ const { verifyToken, isAdmin } = require('../middleware/auth.js');
 const router = express.Router();
 const db = require('../db');
 
-router.post('/', verifyToken, isAdmin, async (req, res) => {
+router.post('/create', verifyToken, isAdmin, async (req, res) => {
     try {
         const { service_name, price, minutes_duration } = req.body;
         const newService = await db.query(
@@ -18,10 +18,10 @@ router.post('/', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
-router.get('/', async (req, res) => {
+router.get('/list', async (req, res) => {
     try {
         const serviceData = await db.query(
-            'SELECT * FROM services ORDER BY price ASC'
+            'SELECT * FROM services ORDER BY price'
         );
         res.json(serviceData.rows);
     } catch (err) {
@@ -30,37 +30,7 @@ router.get('/', async (req, res) => {
     }
 });
 
-router.put('/:id', verifyToken, isAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { service_name, price, minutes_duration, is_active } = req.body;
-
-        if (!service_name || price === undefined || !minutes_duration) {
-            return res.status(400).json({
-                error: "All fields are required",
-            });
-        }
-
-        const updatedService = await db.query(
-            `UPDATE services 
-                  SET service_name = $1, price = $2, minutes_duration = $3, is_active = COALESCE($4, is_active)
-                  WHERE id = $5
-                  RETURNING *`,
-            [service_name, price, minutes_duration, is_active, id]
-        );
-
-        if (updatedService.rows.length === 0) {
-            return res.status(404).json({ error: "The service does not exist" });
-        }
-
-        res.status(200).json(updatedService.rows[0]);
-    } catch (err) {
-        console.error(err);
-        res.status(500).json({ error: "Error in updating barber service" });
-    }
-});
-
-router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
+router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
    try {
        const { id } = req.params;
 
@@ -83,7 +53,7 @@ router.delete('/:id', verifyToken, isAdmin, async (req, res) => {
    }
 });
 
-router.patch('/:id', verifyToken, isAdmin, async (req, res) => {
+router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
     try {
         const updateActive = await db.query(

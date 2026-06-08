@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth.js');
 
-router.post('/addAppointment', verifyToken, async (req, res) => {
+router.post('/me/addAppointment', verifyToken, async (req, res) => {
     const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
     const user_id = req.user.id;
@@ -21,6 +21,49 @@ router.post('/addAppointment', verifyToken, async (req, res) => {
                     VALUES ($1, $2, $3, $4, $5, 'scheduled')
                     RETURNING id`,
                     [user_id, barber_id, appointment_date, start_time, notes]
+        );
+
+        const newAppointmentID = appointmentRes.rows[0].id;
+
+        const insertAppServ = await db.query(
+            `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
+                  SELECT $1, id, price
+                  FROM services
+                  WHERE id = ANY($2)`, [newAppointmentID, service_ids]
+        );
+
+        if (insertAppServ.rowCount !== service_ids.length) {
+            throw new Error("One or more selected services don't exist in the database");
+        }
+
+        await db.query('COMMIT');
+        res.status(201).json({ message: "Appointment created successfully" });
+    } catch (err) {
+        await db.query('ROLLBACK');
+        console.log(err);
+        res.status(500).json({
+            error: "Error in creating appointment",
+            message: err.message
+        });
+    }
+});
+
+router.post('/addAppointment', verifyToken, isAdmin, async (req, res) => {
+    const { user_id, barber_id, service_ids, appointment_date, start_time, notes } = req.body;
+
+    if (!barber_id || !service_ids || !Array.isArray(service_ids) || service_ids.length === 0 || !appointment_date) {
+        return res.status(400).json({ error: "Important missing data" });
+    }
+
+
+    try {
+        await db.query('BEGIN');
+
+        const appointmentRes = await db.query(
+            `INSERT INTO appointments (user_id, barber_id, appointment_date, start_time, notes, status)
+                    VALUES ($1, $2, $3, $4, $5, 'scheduled')
+                    RETURNING id`,
+            [user_id, barber_id, appointment_date, start_time, notes]
         );
 
         const newAppointmentID = appointmentRes.rows[0].id;
@@ -82,7 +125,7 @@ router.get('/me', verifyToken, async (req, res) => {
 router.get('/list', verifyToken, isAdmin, async (req, res) => {
     try {
         const result = await db.query(
-            `SELECT appointments.id AS appointment_id,
+            `SELECT appointments.id,
                          appointments.appointment_date,
                          appointments.start_time,
                          appointments.notes,
@@ -113,17 +156,27 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
 
 router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
-    const { appointment_date, start_time, notes, status, service_ids } = req.body;
+    const { user_id, barber_id, appointment_date, start_time, notes, status, service_ids } = req.body;
 
     try {
+        const cleanDate = appointment_date === "" ? null : appointment_date;
+        const cleanTime = start_time === "" ? null : start_time;
+        const cleanNotes = notes === "" ? null : notes;
+        const cleanStatus = status === "" ? null : status;
+        const cleanUser = user_id === "" ? null : user_id;
+        const cleanBarber = barber_id === "" ? null : barber_id;
+
         const updateAppointment = await db.query(
             `UPDATE appointments
-                  SET appointment_date = COALESCE(NULLIF($1, ''), appointment_date),
-                      start_time = COALESCE(NULLIF($2, ''), start_time),
-                      notes = COALESCE(NULLIF($3, ''), notes),
-                      status = COALESCE(NULLIF($4, ''), status)
-                  WHERE id = $5
-                  RETURNING *`, [appointment_date, start_time, notes, status, id]
+                  SET appointment_date = COALESCE($1, appointment_date),
+                      start_time = COALESCE($2, start_time),
+                      notes = COALESCE($3, notes),
+                      status = COALESCE($4, status),
+                      user_id = COALESCE($5, user_id),
+                      barber_id = COALESCE($6, barber_id)
+                  WHERE id = $7
+                  RETURNING *`,
+            [cleanDate, cleanTime, cleanNotes, cleanStatus, cleanUser, cleanBarber, id]
         );
 
         if (updateAppointment.rows.length === 0) {
@@ -140,16 +193,16 @@ router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
             for (const service of servicesResult.rows) {
                 await db.query(
                     `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
-             VALUES ($1, $2, $3)`,
+                     VALUES ($1, $2, $3)`,
                     [id, service.id, service.price]
                 );
             }
         }
 
-
         res.status(200).json(updateAppointment.rows[0]);
+
     } catch (error) {
-        return res.status(500).json( { error: "Error in updating appointment." });
+        return res.status(500).json({ error: "Error in updating appointment.", details: error.message });
     }
 });
 
