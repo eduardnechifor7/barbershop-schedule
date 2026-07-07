@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { ManageUsers } from "./ManageUsers.jsx";
 import { ManageBarbers } from "./ManageBarbers.jsx";
 import { ManageAppointments } from "./ManageAppointments.jsx";
+import { ManageServices } from "./ManageServices.jsx";
 import { WelcomeScreen } from "./WelcomeScreen.jsx";
 import { auth } from "../src/firebase.js";
 
@@ -44,7 +45,9 @@ export function AdminDashboardMenu() {
                     <ManageAppointments />
                 </div>;
             case "M_services":
-                return <div className="w-full max-w-max-w-5xl mx-auto">M_services</div>;
+                return <div className="w-full max-w-max-w-5xl mx-auto">
+                    <ManageServices />
+                </div>;
             default:
                 return <p>Something went wrong...</p>;
         }
@@ -84,7 +87,7 @@ export function AdminDashboardMenu() {
             ) : (
                 <div className="flex flex-col justify-center items-center bg-[#1e1e1e] min-h-screen text-white gap-4">
                     {/* Buton de întoarcere ca să poți testa la nesfârșit */}
-                    <div className="w-full max-w-4xl flex justify-start mb-4">
+                    <div className="w-full max-w-4xl flex justify-start mb-4 p-4">
                         <button
                             onClick={() => setSelectMenu("initial_menu")}
                             className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded text-sm font-semibold transition"

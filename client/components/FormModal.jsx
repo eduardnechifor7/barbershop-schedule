@@ -3,6 +3,16 @@ import { PrimaryButton } from "./PrimaryButton.jsx";
 import { useState } from "react";
 import { Dropdown } from "./Dropdown.jsx";
 import Select from 'react-select';
+import {
+    validateFields,
+    required,
+    email,
+    phone,
+    url,
+    positiveNumber,
+    positiveInteger,
+    minItems, textOnly
+} from "../utils/validation.js";
 
 export function FormModal({ isOpen, onClose, config, onSubmit, options = null }) {
 
@@ -13,6 +23,17 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
         }, {});
 
     const [formData, setFormData] = useState(getInitialState);
+    const [errors, setErrors] = useState({});
+
+    const validationRules = {
+        email: [required, email],
+        service_name: [required, textOnly],
+        phone_number: [required, phone],
+        phone_url: [required, url],
+        price: [required, positiveNumber],
+        minutes_duration: [required, positiveInteger],
+        service_ids: [minItems]
+    };
 
     if (!isOpen) return null;
 
@@ -21,8 +42,16 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
     };
 
     const handleSubmit = () => {
+        const nextErrors = validateFields(formData, validationRules);
+
+        if (Object.keys(nextErrors).length > 0) {
+            setErrors(nextErrors);
+            return;
+        }
+
         onSubmit(formData);
         setFormData(getInitialState);
+        setErrors({});
         onClose();
     };
 
@@ -57,22 +86,36 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
                         }
 
                         return !options || !options[backendKey] ? (
-                            <AuthInput
-                                key={backendKey}
-                                placeholder={friendlyName}
-                                value={formData[backendKey] || ""}
-                                type={inputType}
-                                onChange={(e) => handleChange(backendKey, e.target.value)}
-                            />
+                            <div key={backendKey} className="flex flex-col gap-1 w-full">
+                                <AuthInput
+                                    placeholder={friendlyName}
+                                    value={formData[backendKey] || ""}
+                                    type={inputType}
+                                    onChange={(e) => handleChange(backendKey, e.target.value)}
+                                />
+
+                                {errors[backendKey] && (
+                                    <p className="text-red-600 text-xs font-medium">
+                                        {errors[backendKey]}
+                                    </p>
+                                )}
+                            </div>
                         ) : (
-                            <Dropdown
-                                key={backendKey}
-                                name={backendKey}
-                                value={formData[backendKey] || ""}
-                                placeholder={friendlyName}
-                                onChange={(e) => handleChange(backendKey, e.target.value)}
-                                options={currentOptions}
-                            />
+                            <div key={backendKey} className="flex flex-col gap-1 w-full">
+                                <Dropdown
+                                    name={backendKey}
+                                    value={formData[backendKey] || ""}
+                                    placeholder={friendlyName}
+                                    onChange={(e) => handleChange(backendKey, e.target.value)}
+                                    options={currentOptions}
+                                />
+
+                                {errors[backendKey] && (
+                                    <p className="text-red-600 text-xs font-medium">
+                                        {errors[backendKey]}
+                                    </p>
+                                )}
+                            </div>
                         );
                     })}
                 </div>

@@ -1,7 +1,7 @@
 import OTPInput from "react-otp-input";
 import { PrimaryButton } from "../components/PrimaryButton.jsx";
 
-export function OTPScreen ({ otp, setOtp, onVerify, errors = [], isLoading }) {
+export function OTPScreen ({ otp, setOtp, onVerify, error = "", isLoading }) {
     
     return (
         <div className="min-h-dvh flex flex-col justify-between px-6 py-8">
@@ -26,13 +26,11 @@ export function OTPScreen ({ otp, setOtp, onVerify, errors = [], isLoading }) {
                     />
                 </div>
 
-                {errors && errors.length > 0 && (
+                {error && (
                     <div className="flex flex-col gap-1 mb-4">
-                        {errors.map((err, index) => (
-                            <p key={index} className="text-red-500 text-xs font-medium text-center">
-                                • {err}
-                            </p>
-                        ))}
+                        <p className="text-red-500 text-xs font-medium text-center">
+                            • {error}
+                        </p>
                     </div>
                 )}
 

@@ -55,10 +55,16 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
 
 router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     const { id } = req.params;
+    const { service_name, price, minutes_duration, is_active } = req.body;
     try {
         const updateActive = await db.query(
-            `UPDATE services SET is_active = true WHERE id = $1 RETURNING *`,
-            [id]
+            `UPDATE services 
+                  SET service_name = COALESCE(NULLIF($1, ''), service_name),
+                      price = COALESCE(NULLIF($2, '')::numeric, price),
+                      minutes_duration = COALESCE(NULLIF($3, '')::integer, minutes_duration),
+                      is_active = COALESCE($4::boolean, is_active)
+                      WHERE id = $5 RETURNING *`,
+            [service_name, price, minutes_duration, is_active, id]
         );
 
         if (updateActive.rows.length === 0) {
