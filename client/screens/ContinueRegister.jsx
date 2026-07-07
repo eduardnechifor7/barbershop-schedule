@@ -6,6 +6,7 @@ import { useState } from "react";
 import { auth } from "../src/firebase.js";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useEffect } from "react";
+import { validateFields, required, email as validateEmail, phone as validatePhone, textOnly } from "../utils/validation.js";
 
 export function ContinueRegister( { phoneValue } ) {
     const [email, setEmail] = useState("");
@@ -15,7 +16,8 @@ export function ContinueRegister( { phoneValue } ) {
     const [otp, setOtp] = useState("");
     const [isOtpSent, setIsOtpSent] = useState(false);
     const [otpWindow, setOtpWindow] = useState(false);
-    const [errors, setErrors] = useState([]);
+    const [formErrors, setFormErrors] = useState({});
+    const [otpError, setOtpError] = useState("");
 
     useEffect(() => {
 
@@ -75,27 +77,24 @@ export function ContinueRegister( { phoneValue } ) {
         }
     };
 
-    const validateEmail = (email) => {
-        const emailPatten = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailPatten.test(email);
-    }
-
     const handleButton = async () => {
-        setErrors([]);
-        const errorsArr = [];
         // If OTP is not sent
         if (!isOtpSent) {
-            if (!phone || !email || !firstName) {
-                errorsArr.push("Please complete all fields");
-                setErrors(errorsArr);
-                return;
-            } else if (!validateEmail(email)) {
-                errorsArr.push("Please enter a valid email");
-                setErrors(errorsArr);
+            const nextErrors = validateFields({ phone, email, firstName }, {
+                phone: [required, validatePhone],
+                email: [required, validateEmail],
+                firstName: [required, textOnly],
+                lastName: [required, textOnly]
+            });
+
+            if (Object.keys(nextErrors).length > 0) {
+                setFormErrors(nextErrors);
                 return;
             }
 
             try {
+                setFormErrors({});
+                setOtpErrors([]);
                 const appVerifier = window.recaptchaVerifier;
 
                 window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
@@ -103,19 +102,19 @@ export function ContinueRegister( { phoneValue } ) {
                 setOtpWindow(true);
             } catch (error) {
                 setOtpWindow(false);
-                setErrors(["Could not send SMS. Check the phone number."]);
+                setOtpError("Could not send SMS. Check the phone number.");
             }
         }
         // Verify the code and send data to database
         else {
             try {
+                setOtpErrors([]);
                 const result = await window.confirmationResult.confirm(otp);
                 const firebaseUser = result.user;
 
                 await sendData(firebaseUser);
             } catch (error) {
-                errorsArr.push("Invalid code. Try again.");
-                setErrors(errorsArr);
+                setOtpError("Invalid code. Try again.");
             }
         }
     };
@@ -129,24 +128,52 @@ export function ContinueRegister( { phoneValue } ) {
                         <span className="text-white text-sm">Continue with your personal details</span>
                     </div>
                     <div className="flex flex-col justify-center items-center gap-4">
-                        <div className="relative w-full">
+                        <div className="relative w-full flex flex-col gap-1">
                             <AuthPhoneInput
                                 value={phone}
                                 onChange={(val) => setPhone(val)} />
+                            {formErrors.phone && (
+                                <p className="animate-error-shake text-red-500 text-xs font-medium">
+                                    • {formErrors.phone}
+                                </p>
+                            )}
                         </div>
-                        <AuthInput
-                            placeholder="Enter your email"
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)} />
-                        <AuthInput
-                            placeholder="First name"
-                            value={firstName} onChange={(e) => setFirstName(e.target.value)} />
-                        <AuthInput
-                            placeholder="Last name"
-                            value={lastName} onChange={(e) => setLastName(e.target.value)} />
-                        {errors.length > 0 && (
+                        <div className="w-full flex flex-col gap-1">
+                            <AuthInput
+                                placeholder="Enter your email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)} />
+                            {formErrors.email && (
+                                <p className="animate-error-shake text-red-500 text-xs font-medium">
+                                    • {formErrors.email}
+                                </p>
+                            )}
+                        </div>
+                        <div className="w-full flex flex-col gap-1">
+                            <AuthInput
+                                placeholder="First name"
+                                value={firstName}
+                                onChange={(e) => setFirstName(e.target.value)} />
+                            {formErrors.firstName && (
+                                <p className="animate-error-shake text-red-500 text-xs font-medium">
+                                    • {formErrors.firstName}
+                                </p>
+                            )}
+                        </div>
+                        <div className="w-full flex flex-col gap-1">
+                            <AuthInput
+                                placeholder="Last name"
+                                value={lastName}
+                                onChange={(e) => setLastName(e.target.value)} />
+                            {formErrors.lastName && (
+                                <p className="animate-error-shake text-red-500 text-xs font-medium">
+                                    • {formErrors.lastName}
+                                </p>
+                            )}
+                        </div>
+                        {otpErrors.length > 0 && (
                             <div className="flex flex-col gap-1 mb-4">
-                                {errors.map((err, index) => (
+                                {otpErrors.map((err, index) => (
                                     <p key={index} className="animate-error-shake text-red-500 text-xs font-medium">
                                         • {err}
                                     </p>
@@ -168,7 +195,7 @@ export function ContinueRegister( { phoneValue } ) {
                     otp={otp}
                     setOtp={setOtp}
                     onVerify={handleButton}
-                    errors={errors}
+                    errors={otpError}
                 />
             )}
             <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>

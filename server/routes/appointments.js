@@ -3,6 +3,33 @@ const router = express.Router();
 const db = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth.js');
 
+async function createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes) {
+    await db.query('BEGIN');
+
+    const appointmentRes = await db.query(
+        `INSERT INTO appointments (user_id, barber_id, appointment_date, start_time, notes, status)
+                VALUES ($1, $2, $3, $4, $5, 'scheduled')
+                RETURNING id`,
+        [user_id, barber_id, appointment_date, start_time, notes]
+    );
+
+    const newAppointmentID = appointmentRes.rows[0].id;
+
+    const insertAppServ = await db.query(
+        `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
+              SELECT $1, id, price
+              FROM services
+              WHERE id = ANY($2)`, [newAppointmentID, service_ids]
+    );
+
+    if (insertAppServ.rowCount !== service_ids.length) {
+        throw new Error("One or more selected services don't exist in the database");
+    }
+
+    await db.query('COMMIT');
+    return { message: "Appointment created successfully" };
+}
+
 router.post('/me/addAppointment', verifyToken, async (req, res) => {
     const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
@@ -14,30 +41,8 @@ router.post('/me/addAppointment', verifyToken, async (req, res) => {
 
 
     try {
-        await db.query('BEGIN');
-
-        const appointmentRes = await db.query(
-            `INSERT INTO appointments (user_id, barber_id, appointment_date, start_time, notes, status)
-                    VALUES ($1, $2, $3, $4, $5, 'scheduled')
-                    RETURNING id`,
-                    [user_id, barber_id, appointment_date, start_time, notes]
-        );
-
-        const newAppointmentID = appointmentRes.rows[0].id;
-
-        const insertAppServ = await db.query(
-            `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
-                  SELECT $1, id, price
-                  FROM services
-                  WHERE id = ANY($2)`, [newAppointmentID, service_ids]
-        );
-
-        if (insertAppServ.rowCount !== service_ids.length) {
-            throw new Error("One or more selected services don't exist in the database");
-        }
-
-        await db.query('COMMIT');
-        res.status(201).json({ message: "Appointment created successfully" });
+        const result = await createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes);
+        res.status(201).json(result);
     } catch (err) {
         await db.query('ROLLBACK');
         console.log(err);
@@ -49,6 +54,7 @@ router.post('/me/addAppointment', verifyToken, async (req, res) => {
 });
 
 router.post('/addAppointment', verifyToken, isAdmin, async (req, res) => {
+    console.log("Am picat");
     const { user_id, barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
     if (!barber_id || !service_ids || !Array.isArray(service_ids) || service_ids.length === 0 || !appointment_date) {
@@ -57,30 +63,8 @@ router.post('/addAppointment', verifyToken, isAdmin, async (req, res) => {
 
 
     try {
-        await db.query('BEGIN');
-
-        const appointmentRes = await db.query(
-            `INSERT INTO appointments (user_id, barber_id, appointment_date, start_time, notes, status)
-                    VALUES ($1, $2, $3, $4, $5, 'scheduled')
-                    RETURNING id`,
-            [user_id, barber_id, appointment_date, start_time, notes]
-        );
-
-        const newAppointmentID = appointmentRes.rows[0].id;
-
-        const insertAppServ = await db.query(
-            `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
-                  SELECT $1, id, price
-                  FROM services
-                  WHERE id = ANY($2)`, [newAppointmentID, service_ids]
-        );
-
-        if (insertAppServ.rowCount !== service_ids.length) {
-            throw new Error("One or more selected services don't exist in the database");
-        }
-
-        await db.query('COMMIT');
-        res.status(201).json({ message: "Appointment created successfully" });
+        const result = await createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes);
+        res.status(201).json(result);
     } catch (err) {
         await db.query('ROLLBACK');
         console.log(err);

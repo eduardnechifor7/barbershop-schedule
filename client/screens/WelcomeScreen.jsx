@@ -17,6 +17,7 @@ export function WelcomeScreen() {
     const [error, setError] = useState("");
     const [role, setRole] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [otpError, setOtpError] = useState("");
 
     useEffect(() => {
         if (import.meta.env.DEV) {
@@ -68,10 +69,10 @@ export function WelcomeScreen() {
     const handleContinue = async () => {
         setError("");
         if (!phone) {
-            setError("Phone number is required");
+            setError("This field is required");
             return;
         } else if (!isValidPhoneNumber(phone)) {
-            setError("The number format is invalid for the selected country");
+            setError("Please enter a valid phone number");
             return;
         }
 
@@ -105,7 +106,7 @@ export function WelcomeScreen() {
                 setScreen('ADMIN');
             }
         } catch (error) {
-            alert("Invalid code.");
+            setOtpError("Invalid code.");
         }
         setIsLoading(false);
     };
@@ -154,6 +155,7 @@ export function WelcomeScreen() {
             {screen === 'OTP' && (
                 <div key="otp" className="animate-screen-in">
                     <OTPScreen
+                        error={otpError}
                         isLoading={isLoading}
                         otp={otp}
                         setOtp={setOtp}

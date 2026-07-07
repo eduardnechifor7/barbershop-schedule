@@ -116,7 +116,7 @@ export function ManageUsers() {
                 </div>
             )}
             {!isLoading && (
-                <div className = "flex flex-col justify-center items-center p-1 gap-3 mt-5">
+                <div className = "flex flex-col justify-center items-center p-10 gap-3 mt-5 max-h-[calc(100vh-160px)] overflow-y-auto w-full operational-scroll">
                     {users.map((user) => {
                         const isSelected = selectedUserId === user.id;
 

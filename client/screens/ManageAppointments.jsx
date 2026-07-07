@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { FormModal } from "../components/FormModal.jsx";
 import { ViewModal } from "../components/ViewModal.jsx";
 import { appointmentService } from "../services/appointmentService.js";
@@ -6,9 +6,7 @@ import { barberService } from "../services/barberService.js";
 import { userService } from "../services/userService.js";
 import { servicesService } from "../services/servicesService.js";
 
-// TODO: isActive Services
-
-const inputLabelsForm = {
+const editLabelsForm = {
     "Appointment Date": "appointment_date",
     "Scheduled time": "start_time",
     "Client name": "user_id",
@@ -17,6 +15,27 @@ const inputLabelsForm = {
     "Notes": "notes",
     "Status": "status"
 };
+
+const inputLabelsForm = {
+    "Appointment Date": "appointment_date",
+    "Scheduled time": "start_time",
+    "Client name": "user_id",
+    "Barber name": "barber_id",
+    "Appointment services": "service_ids",
+    "Notes": "notes"
+};
+
+const viewLabels = {
+    "Appointment Date": "appointment_date",
+    "Barber Name": ["barber_first_name", "barber_last_name"],
+    "Client Name": ["client_first_name", "client_last_name"],
+    "Client Phone": "client_phone",
+    "Notes": "notes",
+    "Services": "services",
+    "Start time": "start_time",
+    "Status": "status"
+};
+
 
 export function ManageAppointments() {
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -31,7 +50,10 @@ export function ManageAppointments() {
 
     const selectedAppointment = appointments.find(a => a.id === selectedAppId);
 
-    const options = {
+    console.log(selectedAppointment);
+
+
+    const options = useMemo(() => ({
         "appointment_date": null,
         "start_time": null,
         "notes": null,
@@ -40,10 +62,12 @@ export function ManageAppointments() {
             { id: "completed", label: "Finished" },
             { id: "cancelled", label: "Cancelled"}
         ],
-        "barber_id": barbers.map(b => ({ id: b.id, label: `${b.last_name} ${b.first_name}`  })),
+        "barber_id": barbers.map(b => ({ id: b.id, label: `${b.last_name} ${b.first_name}` })),
         "user_id": users.map(u => ({ id: u.id, label: `${u.last_name} ${u.first_name}`})),
-        "service_ids": services.map(s => ({ value: s.id, label: `${s.service_name}` }))
-    }
+        "service_ids": services
+            .filter(s => s.is_active)
+            .map(s => ({ id: s.id, label: s.service_name }))
+    }), [barbers, users, services]);
 
     useEffect(() => {
         const fetchGetAllData = async () => {
@@ -163,7 +187,7 @@ export function ManageAppointments() {
                 </div>
             )}
             {!isLoading && (
-                <div className = "flex flex-col justify-center items-center p-1 gap-3 mt-5">
+                <div className = "flex flex-col justify-center items-center p-10 gap-3 mt-5 max-h-[calc(100vh-160px)] overflow-y-auto w-full operational-scroll">
                     {appointments.map((appointment) => {
                         const isSelected = selectedAppId === appointment.id;
                         const dataIso = appointment.appointment_date;
@@ -195,10 +219,10 @@ export function ManageAppointments() {
                         <FormModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} onSubmit={handleAddAppointment} options={options} />
                     )}
                     {isModalOpen && modalType === "EDIT" && (
-                        <FormModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} onSubmit={handleEditAppointment} options={options} />
+                        <FormModal isOpen={isModalOpen} config={editLabelsForm} onClose={closeModal} onSubmit={handleEditAppointment} options={options} />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
-                        <ViewModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} user={selectedAppointment} />
+                        <ViewModal isOpen={isModalOpen} config={viewLabels} onClose={closeModal} user={selectedAppointment} />
                     )}
                 </div>
             )}
