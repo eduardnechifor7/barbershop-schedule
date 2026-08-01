@@ -4,11 +4,12 @@ import { useState } from "react";
 import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { ContinueRegister } from "./ContinueRegister.jsx";
 import { AdminDashboardMenu } from "./AdminDashboardMenu.jsx";
-import appLogo from "../src/assets/cuthut_logo.png"
+import appLogo from "../assets/cuthut_logo.png"
 import {OTPScreen} from "./OTPScreen.jsx";
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
+import { CustomerHome } from "./CustomerHome.jsx";
 
 export function WelcomeScreen() {
     const [phone, setPhone] = useState("");
@@ -105,6 +106,9 @@ export function WelcomeScreen() {
             if (role === "Admin") {
                 setScreen('ADMIN');
             }
+            else if (role === "Customer") {
+                setScreen('CUSTOMER');
+            }
         } catch (error) {
             setOtpError("Invalid code.");
         }
@@ -114,7 +118,7 @@ export function WelcomeScreen() {
     return (
         <div>
             {screen === 'START' && (
-                <div key="start" className="animate-screen-in min-h-dvh flex flex-col justify-between py-12">
+                <div key="start" className="animate-screen-in min-h-dvh flex flex-col justify-between py-12 max-h-[calc(100vh-160px)] overflow-y-auto w-full operational-scroll">
                     <div className="flex flex-col justify-evenly items-center px-6">
                         <div className="flex flex-col items-center gap-4">
                             <img src={appLogo} className="w-50 h-50 object-contain mb-4" alt="Cut Hut"/>
@@ -167,6 +171,12 @@ export function WelcomeScreen() {
             {screen === 'ADMIN' && (
                 <div key="admin" className="animate-screen-in">
                     <AdminDashboardMenu />
+                </div>
+            )}
+
+            {screen === 'CUSTOMER' && (
+                <div key="customer" className="animate-screen-in">
+                    <CustomerHome />
                 </div>
             )}
 

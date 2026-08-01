@@ -39,8 +39,7 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
 
         return res.json(result.rows);
     } catch (error) {
-        console.log("Get users error". error);
-        return res.status(500).json({ messageL: "Internal server error" });
+        return res.status(500).json({ error: "Internal server error", details: error.message });
     }
 });
 
@@ -63,6 +62,20 @@ router.get('/check/:phone', async (req, res) => {
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Error in finding phone number" });
+    }
+});
+
+router.get('/me', verifyToken, async (req, res) => {
+    const firebase_uid = req.user.uid;
+
+    try {
+        const result = await db.query(
+            `SELECT * FROM users WHERE firebase_uid = $1`,
+            [firebase_uid]
+        );
+        res.json(result.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: "Error in fetching user details", details: error.message });
     }
 });
 
@@ -100,7 +113,7 @@ router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
         res.status(200).json(updateUser.rows[0]);
 
     } catch (error) {
-        res.status(500).json({ error: "Error in updating user" });
+        res.status(500).json({ error: "Error in updating user", details: error.message });
     }
 });
 
@@ -125,7 +138,7 @@ router.patch('/me', verifyToken, async (req, res) => {
 
         res.status(200).json(updateUser.rows[0]);
     } catch (error) {
-        res.status(500).json({ error: "Error in updating user" });
+        return res.status(500).json({ error: "Error in updating user", details: error.message });
     }
 });
 
@@ -142,7 +155,7 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
         }
         res.status(200).json(deleteUser.rows[0]);
     } catch (error) {
-        res.status(500).json({ error: "Error in deleteing user" });
+        return res.status(500).json({ error: "Error in deleting user", details: error.message });
     }
 });
 

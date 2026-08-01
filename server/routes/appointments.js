@@ -87,6 +87,7 @@ router.get('/me', verifyToken, async (req, res) => {
                          appointments.status,
                          barbers.first_name AS barber_first_name,
                          barbers.last_name AS barber_last_name,
+                         barbers.photo_url AS barber_photo_url,
                          JSON_AGG(
                             JSON_BUILD_OBJECT('service_name', services.service_name, 
                                               'price_at_booking', appointment_services.price_at_booking)
@@ -96,7 +97,7 @@ router.get('/me', verifyToken, async (req, res) => {
                   INNER JOIN appointment_services ON appointment_services.appointment_id = appointments.id
                   INNER JOIN services ON appointment_services.service_id = services.id
                   WHERE appointments.user_id = $1
-                  GROUP BY appointments.id, barbers.last_name, barbers.first_name, appointments.appointment_date, appointments.start_time
+                  GROUP BY appointments.id, barbers.last_name, barbers.first_name, barbers.photo_url, appointments.appointment_date, appointments.start_time
                   ORDER BY appointments.appointment_date, appointments.start_time`, [user_id]
         );
         res.status(200).json(result.rows);
@@ -135,6 +136,31 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: "Error in listing appointments" });
+    }
+});
+
+router.get('/:id/existing-bookings', verifyToken, async (req, res) => {
+    const barberId = req.params.id;
+    const date = req.query.date;
+
+    if (!date) {
+        return res.status(400).json({ error: "Date query parameter is required" });
+    }
+
+    try {
+        const existingBookings = await db.query(
+            `SELECT appointments.start_time, services.minutes_duration
+                  FROM appointments
+                  INNER JOIN appointment_services ON appointments.id = appointment_services.appointment_id
+                  INNER JOIN services ON appointment_services.service_id = services.id
+                  WHERE appointments.barber_id = $1 AND appointments.appointment_date = $2 AND appointments.status = 'scheduled'`,
+            [barberId, date]
+        );
+
+        res.status(200).json(existingBookings.rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: "Failed in fetching existing bookings" });
     }
 });
 
@@ -207,7 +233,7 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
 
         res.status(200).json(deleteAppointment.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in deleting appointment." })
+        return res.status(500).json({ error: "Error in deleting appointment. ", details: error.message })
     }
 });
 
@@ -230,7 +256,7 @@ router.delete('/delete/me/:id', verifyToken, async (req, res) => {
 
         res.status(200).json(deleteAppointment.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in deleting appointment." })
+        return res.status(500).json({ error: "Error in deleting appointment. ", details: error.message })
     }
 });
 

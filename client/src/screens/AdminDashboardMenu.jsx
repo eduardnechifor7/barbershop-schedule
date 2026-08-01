@@ -6,7 +6,7 @@ import { ManageBarbers } from "./ManageBarbers.jsx";
 import { ManageAppointments } from "./ManageAppointments.jsx";
 import { ManageServices } from "./ManageServices.jsx";
 import { WelcomeScreen } from "./WelcomeScreen.jsx";
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 
 
 //TODO: LOOKUP LOGOUT FUNCTIONALTIY

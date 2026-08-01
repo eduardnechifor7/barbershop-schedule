@@ -156,8 +156,6 @@ export function ManageBarbers() {
                                             <img src={barber.photo_url} alt="Profil" className="w-full h-full object-cover" />
                                         </span>
                                         <span>{barber.last_name + " " + barber.first_name}</span>
-                                        <span className="text-gray-400 font-light">/</span>
-                                        <span>{barber.phone_number}</span>
                                     </div>
                                 </div>
                             </div>

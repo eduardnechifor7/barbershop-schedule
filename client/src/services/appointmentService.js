@@ -1,4 +1,4 @@
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 
 const getAuthHeaders = async (contentType = false) => {
     const currentUser = auth.currentUser;
@@ -13,12 +13,32 @@ const getAuthHeaders = async (contentType = false) => {
 
 export const appointmentService = {
     async getAll() {
-        const headers = await getAuthHeaders();
+        const headers = await getAuthHeaders(true);
         const response = await fetch("http://localhost:8080/api/appointments/list", {
             method: "GET",
             headers
         });
         if (!response.ok) throw new Error("Failed to fetch appointments");
+        return response.json();
+    },
+
+    async getByUser() {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/appointments/me`, {
+            method: "GET",
+            headers
+        });
+        if(!response.ok) throw new Error("Failed to fetch user appointments");
+        return response.json();
+    },
+
+    async getOccupiedTimes(barberId, date) {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/appointments/${barberId}/existing-bookings?date=${date}`, {
+            method: "GET",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to fetch occupied times");
         return response.json();
     },
 
@@ -41,6 +61,17 @@ export const appointmentService = {
             body: JSON.stringify(formData)
         });
         if (!response.ok) throw new Error("Failed to add appointment");
+        return response;
+    },
+
+    async addAppointmentUser(formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch(`http://localhost:8080/api/appointments/me/addAppointment`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to add appointment for user");
         return response;
     },
 

@@ -3,7 +3,7 @@ import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { AuthPhoneInput } from "../components/AuthPhoneInput.jsx";
 import { OTPScreen } from "./OTPScreen.jsx";
 import { useState } from "react";
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
 import { useEffect } from "react";
 import { validateFields, required, email as validateEmail, phone as validatePhone, textOnly } from "../utils/validation.js";
@@ -18,6 +18,7 @@ export function ContinueRegister( { phoneValue } ) {
     const [otpWindow, setOtpWindow] = useState(false);
     const [formErrors, setFormErrors] = useState({});
     const [otpError, setOtpError] = useState("");
+    const [loggedIn, setLoggedIn] = useState(false);
 
     useEffect(() => {
 
@@ -79,6 +80,7 @@ export function ContinueRegister( { phoneValue } ) {
 
     const handleButton = async () => {
         // If OTP is not sent
+        setLoggedIn(false);
         if (!isOtpSent) {
             const nextErrors = validateFields({ phone, email, firstName }, {
                 phone: [required, validatePhone],
@@ -94,7 +96,7 @@ export function ContinueRegister( { phoneValue } ) {
 
             try {
                 setFormErrors({});
-                setOtpErrors([]);
+                setOtpError([]);
                 const appVerifier = window.recaptchaVerifier;
 
                 window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
@@ -108,10 +110,11 @@ export function ContinueRegister( { phoneValue } ) {
         // Verify the code and send data to database
         else {
             try {
-                setOtpErrors([]);
+                setOtpError([]);
                 const result = await window.confirmationResult.confirm(otp);
                 const firebaseUser = result.user;
 
+                setLoggedIn(true);
                 await sendData(firebaseUser);
             } catch (error) {
                 setOtpError("Invalid code. Try again.");
@@ -171,9 +174,9 @@ export function ContinueRegister( { phoneValue } ) {
                                 </p>
                             )}
                         </div>
-                        {otpErrors.length > 0 && (
+                        {otpError.length > 0 && (
                             <div className="flex flex-col gap-1 mb-4">
-                                {otpErrors.map((err, index) => (
+                                {otpError.map((err, index) => (
                                     <p key={index} className="animate-error-shake text-red-500 text-xs font-medium">
                                         • {err}
                                     </p>

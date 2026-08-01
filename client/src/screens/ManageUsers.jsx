@@ -135,9 +135,7 @@ export function ManageUsers() {
                                 <div className = "flex items-center gap-3 w-full">
                                     <div className={`w-1 h-8 rounded-full transition-colors ${isSelected ? "bg-black" : "bg-transparent"}`} />
                                     <div className="flex flex-row items-center justify-start">
-                                        <span>{user.last_name + " " + user.first_name}</span>
-                                        <span className="text-gray-400 font-light">|</span>
-                                        <span>{user.phone_number}</span>
+                                        <span>{user.last_name + " " + user.first_name + " & " + user.phone_number}</span>
                                     </div>
                                 </div>
                             </div>

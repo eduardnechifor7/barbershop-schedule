@@ -42,7 +42,25 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
     };
 
     const handleSubmit = () => {
-        const nextErrors = validateFields(formData, validationRules);
+        const activeRules = {};
+        Object.values(config).forEach(backendKey => {
+            if (validationRules[backendKey]) {
+                activeRules[backendKey] = validationRules[backendKey];
+            }
+        });
+
+        let nextErrors = {};
+        try {
+            nextErrors = validateFields(formData, activeRules) || {};
+        } catch (e) {
+            console.error("Error in validateFields", e);
+        }
+
+        Object.keys(nextErrors).forEach(key => {
+            if (!nextErrors[key]) {
+                delete nextErrors[key];
+            }
+        });
 
         if (Object.keys(nextErrors).length > 0) {
             setErrors(nextErrors);
@@ -50,7 +68,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
         }
 
         onSubmit(formData);
-        setFormData(getInitialState);
+        setFormData(getInitialState());
         setErrors({});
         onClose();
     };
@@ -81,6 +99,11 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
                                         }}
                                         value={currentOptions ? currentOptions.filter(o => (formData[backendKey] || []).includes(o.value)) : []}
                                     />
+                                    {errors[backendKey] && (
+                                        <p className="text-red-600 text-xs font-medium">
+                                            {errors[backendKey]}
+                                        </p>
+                                    )}
                                 </div>
                             );
                         }
