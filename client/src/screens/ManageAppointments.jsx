@@ -66,7 +66,7 @@ export function ManageAppointments() {
         "user_id": users.map(u => ({ id: u.id, label: `${u.last_name} ${u.first_name}`})),
         "service_ids": services
             .filter(s => s.is_active)
-            .map(s => ({ id: s.id, label: s.service_name }))
+            .map(s => ({ value: s.id, label: s.service_name }))
     }), [barbers, users, services]);
 
     useEffect(() => {

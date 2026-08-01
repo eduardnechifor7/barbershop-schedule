@@ -1,4 +1,4 @@
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 
 const getAuthHeaders = async (contentType = false) => {
     const currentUser = auth.currentUser;
@@ -11,43 +11,46 @@ const getAuthHeaders = async (contentType = false) => {
     return headers;
 };
 
-export const barberService = {
+export const servicesService = {
     async getAll() {
-        const response = await fetch("http://localhost:8080/api/barbers/list");
-        if (!response.ok) throw new Error("Failed to fetch barbers");
+        const headers = await getAuthHeaders();
+        const response = await fetch("http://localhost:8080/api/services/list", {
+            method: "GET",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to fetch services");
         return response.json();
     },
 
     async edit(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/barbers/edit/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/services/edit/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
         });
-        if (!response.ok) throw new Error("Failed to edit barber");
+        if (!response.ok) throw new Error("Failed to edit the service");
         return response;
     },
 
-    async addBarber(formData) {
+    async addService(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/barbers/addBarber`, {
+        const response = await fetch("http://localhost:8080/api/services/create", {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
         });
-        if (!response.ok) throw new Error("Failed to add barber");
+        if (!response.ok) throw new Error("Failed to add the service");
         return response;
     },
 
-
     async delete(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/barbers/delete/${id}`, {
+        const response = await fetch(`http://localhost:8080/api/services/delete/${id}`, {
             method: "DELETE",
             headers
         });
-        if (!response.ok) throw new Error("Failed to delete barber");
+        if (!response.ok) throw new Error("Failed to delete the service");
         return response;
     }
 };

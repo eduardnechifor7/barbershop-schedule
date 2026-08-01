@@ -1,4 +1,4 @@
-import { auth } from "../src/firebase.js";
+import { auth } from "../firebase.js";
 
 const getAuthHeaders = async (contentType = false) => {
     const currentUser = auth.currentUser;
@@ -16,6 +16,16 @@ export const userService = {
         const headers = await getAuthHeaders();
         const response = await fetch("http://localhost:8080/api/users/list", { headers });
         if (!response.ok) throw new Error("Failed to fetch users");
+        return response.json();
+    },
+
+    async getProfile() {
+        const headers = await getAuthHeaders();
+        const response = await fetch("http://localhost:8080/api/users/me", {
+            method: "GET",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to fetch user");
         return response.json();
     },
 

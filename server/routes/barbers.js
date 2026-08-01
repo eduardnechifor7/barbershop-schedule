@@ -8,7 +8,21 @@ router.get('/list', async (req, res) => {
         const barbers = await db.query('SELECT id, first_name, last_name, phone_number, specialization, photo_url FROM barbers');
         res.json(barbers.rows);
     } catch (err) {
-        res.status(500).json({ error: "Error in loading barbers list" });
+        res.status(500).json({ error: "Error in loading barbers list", details: err.message});
+    }
+});
+
+router.get('/:id', verifyToken, async (req, res) => {
+    const { id } = req.params;
+    try {
+        const barber = await db.query(
+            `SELECT id, first_name, last_name, phone_number, specialization, photo_url 
+                  FROM barbers 
+                  WHERE id = $1`, [id]
+        );
+        res.json(barber.rows[0]);
+    } catch (err) {
+        res.status(500).json({ error: "Error in fetching barber details", details: err.message });
     }
 });
 
@@ -22,7 +36,7 @@ router.post('/addBarber', verifyToken, isAdmin, async (req, res) => {
         );
         res.status(201).json(newBarber.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: "Error in adding barber" });
+        res.status(500).json({ error: "Error in adding barber", details: err.message });
     }
 });
 
@@ -48,7 +62,7 @@ router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
 
         res.status(200).json(updateBarber.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: "Error in updating barber" });
+        res.status(500).json({ error: "Error in updating barber", details: err.message });
     }
 });
 
@@ -67,7 +81,7 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
 
         res.status(200).json(deleteBarber.rows[0]);
     } catch (err) {
-        res.status(500).json({ error: "Error in deleteing barber" });
+        res.status(500).json({ error: "Error in deleting barber", details: err.message });
     }
 });
 

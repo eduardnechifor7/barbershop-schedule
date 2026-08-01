@@ -22,5 +22,10 @@
     "google-p12-pem": "^4.0.0",
     "@tootallnate/once": "^3.0.1",
     "got": "^11.8.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.6.0",
+    "globals": "^17.7.0"
   }
 }
