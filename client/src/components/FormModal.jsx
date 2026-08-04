@@ -14,7 +14,7 @@ import {
     minItems, textOnly
 } from "../utils/validation.js";
 
-export function FormModal({ isOpen, onClose, config, onSubmit, options = null }) {
+export function FormModal({ isOpen, onClose, config, onSubmit, options = null, isEdit = false }) {
 
     const getInitialState = () =>
         Object.values(config).reduce((acc, backendKey) => {
@@ -25,15 +25,27 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
     const [formData, setFormData] = useState(getInitialState);
     const [errors, setErrors] = useState({});
 
-    const validationRules = {
-        email: [required, email],
-        service_name: [required, textOnly],
-        phone_number: [required, phone],
-        phone_url: [required, url],
-        price: [required, positiveNumber],
-        minutes_duration: [required, positiveInteger],
-        service_ids: [minItems]
-    };
+    const validationRules = [
+        // First element is for adding data, second element is for editing data.
+        {
+            email: [required, email],
+            service_name: [required, textOnly],
+            phone_number: [required, phone],
+            photo_url: [required, url],
+            price: [required, positiveNumber],
+            minutes_duration: [required, positiveInteger],
+            service_ids: [minItems]
+        },
+        {
+            email: [email],
+            service_name: [textOnly],
+            phone_number: [phone],
+            photo_url: [url],
+            price: [positiveNumber],
+            minutes_duration: [positiveInteger],
+            service_ids: [minItems]
+        }
+    ];
 
     if (!isOpen) return null;
 
@@ -42,10 +54,11 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null })
     };
 
     const handleSubmit = () => {
+        const optionsIndex = isEdit ? 1 : 0;
         const activeRules = {};
         Object.values(config).forEach(backendKey => {
-            if (validationRules[backendKey]) {
-                activeRules[backendKey] = validationRules[backendKey];
+            if (validationRules[optionsIndex][backendKey]) {
+                activeRules[backendKey] = validationRules[optionsIndex][backendKey];
             }
         });
 

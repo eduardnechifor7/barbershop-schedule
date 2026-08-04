@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
     CalendarDays,
     Clock,
-    Home,
     Scissors,
     User,
     ChevronRight,
@@ -12,22 +11,30 @@ import {
 import { appointmentService } from "../services/appointmentService.js";
 import { userService } from "../services/userService.js";
 import { useNavigate } from "react-router-dom";
-import { CustomerBookings } from "./CustomerBookings.jsx";
-import {LoadingSpinner} from "../components/LoadingSpinner.jsx";
+import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
+import { auth } from "../firebase.js";
+import {BottomNav} from "../components/BottomNav.jsx";
+import {ConfirmModal} from "../components/ConfirmModal.jsx";
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
     const [appointments, setAppointments] = useState([]);
     const [user, setUser] = useState(null);
-    const [cancelVisible, setCancelVisible] = useState(true);
-    const [activeTab, setActiveTab] = useState("home");
     const [isError, setIsError] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
+    const [isCancelling, setIsCancelling] = useState(false);
+
     const navigate = useNavigate();
     const currentDate = new Date();
 
     useEffect(() => {
-        const fetchDashboardData = async () => {
+        const fetchDashboardData = auth.onAuthStateChanged ( async (firebaseUser) => {
+            if (!firebaseUser) {
+                return;
+            }
+
             setLoading(true);
             setIsError(false);
             try {
@@ -43,21 +50,29 @@ export function CustomerHome() {
             } finally {
                 setLoading(false);
             }
-        };
-        fetchDashboardData();
+        });
+        return () => fetchDashboardData();
     }, [refreshTrigger]);
 
     const lastAppointment = appointments.find(appt => appt.status === "scheduled" && (new Date(appt.appointment_date) >= currentDate)) || null;
     const completedAppointments = appointments.filter(appt => appt.status === "completed");
     const BARBER_PHOTO = lastAppointment ? lastAppointment.barber_photo_url : null;
 
-    useEffect(() => {
-        if (!lastAppointment) {
-            setCancelVisible(false);
-        } else {
-            setCancelVisible(true);
+    const handleConfirmCancel = async () => {
+        if (!lastAppointment) return;
+        setIsCancelling(true);
+
+        try {
+            await appointmentService.deleteAsUser(lastAppointment.appointment_id);
+
+            setShowConfirmModal(false);
+            setRefreshTrigger(prev => prev + 1);
+        } catch (error) {
+            console.error("Error cancelling appointment:", error);
+        } finally {
+            setIsCancelling(false);
         }
-    }, [lastAppointment]);
+    };
 
     if (loading) {
         return <LoadingSpinner label = "Loading dashboard..." />
@@ -81,7 +96,7 @@ export function CustomerHome() {
     }
 
     return (
-        <div className="min-h-screen bg-dark-bg flex flex-col">
+        <div className="animate-fade-in min-h-screen bg-dark-bg flex flex-col">
             <div
                 className="relative w-full min-h-screen flex flex-col overflow-hidden"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -126,7 +141,6 @@ export function CustomerHome() {
                         {/* Booking section */}
                         <button
                             onClick={() => {
-                                setActiveTab("appointments");
                                 navigate("/bookings");
                             }}
                             className="w-full rounded-2xl py-4 px-6 flex items-center justify-between group transition-all active:scale-[0.98]"
@@ -156,7 +170,7 @@ export function CustomerHome() {
                                 </h2>
                             </div>
 
-                            {cancelVisible ? (
+                            {lastAppointment ? (
                                 <div className="bg-card rounded-2xl overflow-hidden border border-white/5">
                                     {/* Gold top accent line */}
                                     <div className="h-0.5 bg-linear-to-r from-brand-gold via-[#c9a155] to-transparent" />
@@ -221,7 +235,9 @@ export function CustomerHome() {
                                         {/* Actions */}
                                         <div className="flex gap-2">
                                             <button
-                                                onClick={() => setCancelVisible(false)}
+                                                onClick={() => {
+                                                    setShowConfirmModal(true);
+                                                }}
                                                 className="flex-1 rounded-xl py-2.5 text-sm font-semibold text-[#F2EFE9] border border-white/10 bg-white/5 hover:bg-white/10 transition-all active:scale-[0.97] flex items-center justify-center gap-1.5"
                                             >
                                                 <X size={13} />
@@ -239,7 +255,6 @@ export function CustomerHome() {
                                     <p className="text-gray-pc text-sm">Book your next cut to see it here.</p>
                                     <button
                                         onClick={() => {
-                                            setActiveTab("appointments");
                                             navigate("/bookings");
                                         }}
                                         className="mt-1 px-5 py-2 rounded-xl text-sm font-semibold text-[#1A1919]"
@@ -295,64 +310,18 @@ export function CustomerHome() {
                 </div>
 
                 {/* Bottom Nav */}
-                <div
-                    className="absolute bottom-0 left-0 right-0 bg-[#1A1919] border-t border-white/5"
-                    style={{ paddingBottom: "env(safe-area-inset-bottom, 12px)" }}
-                >
-                    <div className="flex items-center justify-around px-4 pt-3 pb-4">
-                        {[
-                            { tab: "home", icon: Home, label: "Home", path: "/customer" },
-                            { tab: "appointments", icon: CalendarDays, label: "Bookings", path: "/bookings" },
-                            { tab: "explore", icon: Scissors, label: "Explore", path: "/explore" },
-                            { tab: "profile", icon: User, label: "Profile", path: "/profile" }
-                        ].map(({ tab, icon: Icon, label, path }) => (
-                            <button
-                                key={tab}
-                                onClick={() => {
-                                    setActiveTab(tab);
-                                    navigate(path);
-                                }}
-                                className="flex flex-col items-center gap-1 group"
-                            >
-                                <div
-                                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                                        activeTab === tab
-                                            ? "bg-brand-gold/15"
-                                            : "bg-transparent group-hover:bg-white/5"
-                                    }`}
-                                >
-                                    <Icon
-                                        size={20}
-                                        className={`transition-colors ${
-                                            activeTab === tab ? "text-brand-gold" : "text-gray-pc"
-                                        }`}
-                                    />
-                                </div>
-                                <span
-                                    className={`text-[10px] font-medium transition-colors ${
-                                        activeTab === tab ? "text-brand-gold" : "text-gray-pc"
-                                    }`}
-                                >
-                                    {label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-                {activeTab === "appointments" && (
-                    <div className="fixed inset-0 z-50 bg-dark-bg overflow-y-auto">
-                        <CustomerBookings
-                            onCancel={() => {
-                                setActiveTab("home");
-                                navigate("/customer");
-                            }}
-                            onSubmit={() => {
-                                setActiveTab("home");
-                            }}
-                        />
-                    </div>
-                )}
+                <BottomNav />
             </div>
+
+            <ConfirmModal
+                isOpen={showConfirmModal}
+                onClose={() => setShowConfirmModal(false)}
+                onConfirm={handleConfirmCancel}
+                title="Cancel Appointment?"
+                message="Are you sure you want to cancel this appointment? This action cannot be undone."
+                confirmText="Yes, Cancel"
+                isLoading={isCancelling}
+            />
         </div>
     );
 }

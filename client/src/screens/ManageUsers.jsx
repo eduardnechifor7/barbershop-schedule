@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { FormModal } from "../components/FormModal.jsx";
 import { ViewModal } from "../components/ViewModal.jsx";
 import { userService } from "../services/userService.js";
+import {useNavigate} from "react-router-dom";
 
 const inputLabels = {
     "First Name": "first_name",
@@ -20,6 +21,7 @@ export function ManageUsers() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const selectedUser = users.find(u => u.id === selectedUserId);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUsers = async () => {
@@ -70,6 +72,14 @@ export function ManageUsers() {
 
     return (
         <div className="w-full max-w-auto mx-auto p-4 min-h-screen flex flex-col">
+            <div className="w-full max-w-4xl flex justify-start mb-4">
+                <button
+                    onClick={() => navigate("/admin")}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded text-sm font-semibold transition"
+                >
+                    ← Back
+                </button>
+            </div>
             <div className="flex justify-between mb-6 gap-3">
                 <button
                     disabled={!selectedUserId}
@@ -142,7 +152,7 @@ export function ManageUsers() {
                         );
                     })}
                     {isModalOpen && modalType === "EDIT" && (
-                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser}/>
+                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditUser} isEdit={true} />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} user={selectedUser} />

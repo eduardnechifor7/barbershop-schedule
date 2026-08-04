@@ -5,6 +5,7 @@ import { appointmentService } from "../services/appointmentService.js";
 import { barberService } from "../services/barberService.js";
 import { userService } from "../services/userService.js";
 import { servicesService } from "../services/servicesService.js";
+import { useNavigate } from "react-router-dom";
 
 const editLabelsForm = {
     "Appointment Date": "appointment_date",
@@ -49,6 +50,7 @@ export function ManageAppointments() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const selectedAppointment = appointments.find(a => a.id === selectedAppId);
+    const navigate = useNavigate();
 
     console.log(selectedAppointment);
 
@@ -135,6 +137,14 @@ export function ManageAppointments() {
 
     return (
         <div className="w-full max-w-auto mx-auto p-4 min-h-screen flex flex-col">
+            <div className="w-full max-w-4xl flex justify-start mb-4">
+                <button
+                    onClick={() => navigate("/admin")}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded text-sm font-semibold transition"
+                >
+                    ← Back
+                </button>
+            </div>
             <div className="flex justify-between mb-6 gap-3">
                 <button
                     onClick={() => openModal("ADD")}
@@ -219,7 +229,7 @@ export function ManageAppointments() {
                         <FormModal isOpen={isModalOpen} config={inputLabelsForm} onClose={closeModal} onSubmit={handleAddAppointment} options={options} />
                     )}
                     {isModalOpen && modalType === "EDIT" && (
-                        <FormModal isOpen={isModalOpen} config={editLabelsForm} onClose={closeModal} onSubmit={handleEditAppointment} options={options} />
+                        <FormModal isOpen={isModalOpen} config={editLabelsForm} onClose={closeModal} onSubmit={handleEditAppointment} options={options} isEdit={true} />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal isOpen={isModalOpen} config={viewLabels} onClose={closeModal} user={selectedAppointment} />

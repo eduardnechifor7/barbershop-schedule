@@ -83,5 +83,15 @@ export const appointmentService = {
         });
         if (!response.ok) throw new Error("Failed to delete appointment");
         return response;
+    },
+
+    async deleteAsUser(id) {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/appointments/delete/me/${id}`, {
+            method: "DELETE",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to delete appointment");
+        return response;
     }
 };
