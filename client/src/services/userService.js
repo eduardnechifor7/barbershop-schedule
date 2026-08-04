@@ -19,9 +19,22 @@ export const userService = {
         return response.json();
     },
 
+    async addUser(formData) {
+        const headers = await getAuthHeaders();
+        const response = await fetch("http://localhost:8080/api/users/sync", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to add user");
+        return response.json();
+    },
+
     async getProfile() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/users/me", {
+        const response = await fetch("http://localhost:8080/api/users/by-uid", {
             method: "GET",
             headers
         });

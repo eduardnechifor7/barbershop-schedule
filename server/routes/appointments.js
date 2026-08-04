@@ -237,6 +237,7 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
+//FIXME: This route should change the status of the appointment to 'cancelled' instead of deleting it, but for now it deletes the appointment.
 router.delete('/delete/me/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;

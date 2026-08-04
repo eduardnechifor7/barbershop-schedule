@@ -12,6 +12,8 @@ app.use(express.urlencoded({ extended: true }));
 router.post('/sync', async (req, res) => {
     const { firebase_uid, first_name, last_name, phone_number, email } = req.body;
 
+    console.log(req.body);
+
     try {
         const user = await db.query(
             `INSERT INTO users (firebase_uid, first_name, last_name, phone_number, email)
@@ -65,7 +67,7 @@ router.get('/check/:phone', async (req, res) => {
     }
 });
 
-router.get('/me', verifyToken, async (req, res) => {
+router.get('/by-uid', verifyToken, async (req, res) => {
     const firebase_uid = req.user.uid;
 
     try {

@@ -2,23 +2,27 @@ import { AuthPhoneInput } from "../components/AuthPhoneInput.jsx";
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useState } from "react";
 import { PrimaryButton } from "../components/PrimaryButton.jsx";
-import { ContinueRegister } from "./ContinueRegister.jsx";
-import { AdminDashboardMenu } from "./AdminDashboardMenu.jsx";
 import appLogo from "../assets/cuthut_logo.png"
-import {OTPScreen} from "./OTPScreen.jsx";
 import { auth } from "../firebase.js";
 import { useEffect } from "react";
 import { RecaptchaVerifier, signInWithPhoneNumber } from "firebase/auth";
-import { CustomerHome } from "./CustomerHome.jsx";
+import { useNavigate } from "react-router-dom";
 
 export function WelcomeScreen() {
     const [phone, setPhone] = useState("");
-    const [screen, setScreen] = useState('START'); // 'START', 'REGISTER', 'OTP', 'ADMIN'
-    const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
-    const [role, setRole] = useState("");
     const [isLoading, setIsLoading] = useState(false);
-    const [otpError, setOtpError] = useState("");
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
+            if (firebaseUser) {
+                navigate('/customer', { replace: true });
+            }
+        });
+        return () => unsubscribe();
+    }, [navigate]);
 
     useEffect(() => {
         if (import.meta.env.DEV) {
@@ -82,14 +86,12 @@ export function WelcomeScreen() {
             const response = await fetch(`http://localhost:8080/api/users/check/${phone}`);
             const data = await response.json();
 
-            setRole(data.role);
-
             if (data.exists) {
                 const appVerifier = window.recaptchaVerifier;
                 window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-                setScreen('OTP');
+                navigate('/welcome/otp', { state: { phone, role: data.role } });
             } else {
-                setScreen('REGISTER');
+                navigate('/register', { state: { phone } });
             }
         } catch (error) {
             console.log(error);
@@ -99,86 +101,39 @@ export function WelcomeScreen() {
         setIsLoading(false);
     }
 
-    const handleLoginVerify = async () => {
-        try {
-            setIsLoading(true);
-            await window.confirmationResult.confirm(otp);
-            if (role === "Admin") {
-                setScreen('ADMIN');
-            }
-            else if (role === "Customer") {
-                setScreen('CUSTOMER');
-            }
-        } catch (error) {
-            setOtpError("Invalid code.");
-        }
-        setIsLoading(false);
-    };
-
     return (
-        <div>
-            {screen === 'START' && (
-                <div key="start" className="animate-screen-in min-h-dvh flex flex-col justify-between py-12 max-h-[calc(100vh-160px)] overflow-y-auto w-full operational-scroll">
-                    <div className="flex flex-col justify-evenly items-center px-6">
-                        <div className="flex flex-col items-center gap-4">
-                            <img src={appLogo} className="w-50 h-50 object-contain mb-4" alt="Cut Hut"/>
-                            <div className="flex flex-col items-center justify-center">
-                                <span className="text-white text-base font-bold">Welcome to Cut Hut</span>
-                                <span className="text-white text-sm">Sign in or enter your details to get started</span>
-                            </div>
-                            <div className="flex flex-col justify-center items-center gap-4">
-                                <AuthPhoneInput
-                                    value={phone}
-                                    onChange={(val) => setPhone(val)} />
-                                {error && (
-                                    <p className="animate-error-shake text-red-500 text-xs font-medium">
-                                        • {error}
-                                    </p>
-                                )}
-                                <PrimaryButton onClick={handleContinue}
-                                               isLoading={isLoading}
-                                               className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">Continue</PrimaryButton>
-                            </div>
-                        </div>
+        <div className="animate-screen-in min-h-dvh flex flex-col justify-between py-12 w-full">
+            <div className="flex flex-col justify-evenly items-center px-6">
+                <div className="flex flex-col items-center gap-4">
+                    <img src={appLogo} className="w-50 h-50 object-contain mb-4" alt="Cut Hut"/>
+                    <div className="flex flex-col items-center justify-center">
+                        <span className="text-white text-base font-bold">Welcome to Cut Hut</span>
+                        <span className="text-white text-sm">Sign in or enter your details to get started</span>
                     </div>
-                    <p className="text-xs text-center text-gray-400 max-w-xs mx-auto leading-relaxed">
-                        By clicking continue, you agree to our
-                        <span className="text-white cursor-pointer font-medium"> Terms of Service </span>
-                        and
-                        <span className="text-white cursor-pointer font-medium"> Privacy Policy</span>
-                    </p>
+                    <div className="flex flex-col justify-center items-center gap-4">
+                        <AuthPhoneInput value={phone} onChange={setPhone} />
+                        {error && (
+                            <p className="animate-error-shake text-red-500 text-xs font-medium">
+                                • {error}
+                            </p>
+                        )}
+                        <PrimaryButton
+                            onClick={handleContinue}
+                            isLoading={isLoading}
+                            className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200"
+                        >
+                            Continue
+                        </PrimaryButton>
+                    </div>
                 </div>
-            )}
+            </div>
 
-            {screen === 'REGISTER' && (
-                <div key="register" className="animate-screen-in">
-                    <ContinueRegister phoneValue={phone} />
-                </div>
-            )}
-
-            {screen === 'OTP' && (
-                <div key="otp" className="animate-screen-in">
-                    <OTPScreen
-                        error={otpError}
-                        isLoading={isLoading}
-                        otp={otp}
-                        setOtp={setOtp}
-                        onVerify={handleLoginVerify}
-                    />
-                </div>
-            )}
-
-            {screen === 'ADMIN' && (
-                <div key="admin" className="animate-screen-in">
-                    <AdminDashboardMenu />
-                </div>
-            )}
-
-            {screen === 'CUSTOMER' && (
-                <div key="customer" className="animate-screen-in">
-                    <CustomerHome />
-                </div>
-            )}
+            <p className="text-xs text-center text-gray-400 max-w-xs mx-auto leading-relaxed">
+                By clicking continue, you agree to our
+                <span className="text-white font-medium"> Terms of Service </span>
+                and
+                <span className="text-white font-medium"> Privacy Policy</span>
+            </p>
 
             <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
         </div>

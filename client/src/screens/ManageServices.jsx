@@ -2,6 +2,7 @@ import {useEffect, useMemo, useState} from "react";
 import {servicesService} from "../services/servicesService.js";
 import {FormModal} from "../components/FormModal.jsx";
 import {ViewModal} from "../components/ViewModal.jsx";
+import { useNavigate } from "react-router-dom";
 
 const inputLabels = {
     "Service Name": "service_name",
@@ -19,6 +20,7 @@ export function ManageServices() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const selectedService = services.find(s => s.id === selectedServiceId);
+    const navigate = useNavigate();
 
     const options = useMemo( () => ({
         "service_name": null,
@@ -80,6 +82,14 @@ export function ManageServices() {
 
     return (
         <div className="w-full max-w-auto mx-auto p-4 min-h-screen flex flex-col">
+            <div className="w-full max-w-4xl flex justify-start mb-4">
+                <button
+                    onClick={() => navigate("/admin")}
+                    className="bg-gray-800 hover:bg-gray-700 text-gray-300 px-4 py-2 rounded text-sm font-semibold transition"
+                >
+                    ← Back
+                </button>
+            </div>
             <div className="flex justify-between mb-6 gap-3">
                 <button
                     onClick={() => openModal("ADD")}
@@ -156,7 +166,7 @@ export function ManageServices() {
                         <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleAddService} options={options} />
                     )}
                     {isModalOpen && modalType === "EDIT" && (
-                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditService} options={options} />
+                        <FormModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} onSubmit={handleEditService} options={options} isEdit={true} />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal isOpen={isModalOpen} config={inputLabels} onClose={closeModal} user={selectedService} />
