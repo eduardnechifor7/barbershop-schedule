@@ -1,15 +1,8 @@
-import { PrimaryButton } from "../components/PrimaryButton.jsx";
-import { useState } from "react";
 import { signOut } from "firebase/auth";
-import { ManageUsers } from "./ManageUsers.jsx";
-import { ManageBarbers } from "./ManageBarbers.jsx";
-import { ManageAppointments } from "./ManageAppointments.jsx";
-import { ManageServices } from "./ManageServices.jsx";
-import { WelcomeScreen } from "./WelcomeScreen.jsx";
 import { auth } from "../firebase.js";
 import {useNavigate} from "react-router-dom";
+import { User, Scissors, Calendar, FileText, ArrowRight } from "lucide-react";
 
-//TODO: Add a button to navigate to Customer Home. And then in Customer Home, add a button to navigate to Admin Dashboard.
 
 export function AdminDashboardMenu() {
     const navigate = useNavigate();
@@ -26,36 +19,51 @@ export function AdminDashboardMenu() {
     };
 
     return (
-        <div className="w-full min-h-screen p-8 flex flex-col justify-evenly items-center">
-            <div className="flex flex-col items-center gap-1">
-                <span className="text-3xl font-bold text-white">Management</span>
-                <span className="text-3xl font-bold text-white">Dashboard</span>
+        <div className="min-h-screen bg-dark-bg p-6 flex flex-col items-center justify-center">
+            <div className="text-center mb-8">
+                <p className="text-xs uppercase tracking-widest text-gray-pc mb-1">Admin Portal</p>
+                <h1 className="text-3xl font-bold text-[#F2EFE9]" style={{ fontFamily: "'Playfair Display', serif" }}>
+                    Management Dashboard
+                </h1>
             </div>
-            <div className="flex flex-col justify-evenly items-center gap-10 p-2">
-                {[
-                    {label: "Manage users", path: "/admin/users"},
-                    {label: "Manage barbers", path: "/admin/barbers"},
-                    {label: "Manage appointments", path: "/admin/appointments"},
-                    {label: "Manage services", path: "/admin/services"}
-                ].map(({label, path}) => (
-                    <PrimaryButton
-                        key={path}
-                        onClick={() => {
-                            navigate(path);
-                        }}
-                        className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200"
-                    >
-                        {label}
-                    </PrimaryButton>
-                ))}
+
+            <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-6">
+                <button onClick={() => navigate("/admin/users")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
+                    <User className="text-[#DBB668]" size={24} />
+                    <span className="text-xs font-semibold text-[#F2EFE9]">Users</span>
+                </button>
+
+                <button onClick={() => navigate("/admin/barbers")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
+                    <Scissors className="text-[#DBB668]" size={24} />
+                    <span className="text-xs font-semibold text-[#F2EFE9]">Barbers</span>
+                </button>
+
+                <button onClick={() => navigate("/admin/appointments")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
+                    <Calendar className="text-[#DBB668]" size={24} />
+                    <span className="text-xs font-semibold text-[#F2EFE9]">Appointments</span>
+                </button>
+
+                <button onClick={() => navigate("/admin/services")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
+                    <FileText className="text-[#DBB668]" size={24} />
+                    <span className="text-xs font-semibold text-[#F2EFE9]">Services</span>
+                </button>
             </div>
-            <div className="w-full flex justify-center mb-8">
-                <PrimaryButton
+
+            <div className="w-full max-w-sm space-y-3">
+                <button
+                    onClick={() => navigate("/customer")}
+                    className="w-full py-3.5 px-4 bg-amber-500/10 border border-amber-500/30 rounded-xl text-amber-400 font-semibold text-sm flex items-center justify-center gap-2 hover:bg-amber-500/20 transition-all"
+                >
+                    <span>Switch to Customer View</span>
+                    <ArrowRight size={16} />
+                </button>
+
+                <button
                     onClick={handleLogout}
-                    className="w-auto bg-[#2d3748] hover:bg-[#3d4852] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm"
+                    className="w-full py-3 text-xs font-medium text-gray-pc hover:text-white transition-colors"
                 >
                     Log out
-                </PrimaryButton>
+                </button>
             </div>
         </div>
     );

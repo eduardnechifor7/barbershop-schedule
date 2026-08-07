@@ -2,6 +2,7 @@ import { WelcomeScreen } from "./screens/WelcomeScreen.jsx";
 import { Routes, Route } from "react-router-dom";
 import { CustomerHome } from "./screens/CustomerHome.jsx";
 import { CustomerBookings } from "./screens/CustomerBookings.jsx";
+import { PastAppointments } from "./screens/PastAppointments.jsx";
 import { OTPScreen } from "./screens/OTPScreen.jsx";
 import { ContinueRegister } from "./screens/ContinueRegister.jsx";
 import { AdminDashboardMenu } from "./screens/AdminDashboardMenu.jsx";
@@ -58,6 +59,7 @@ function App() {
                     <Route path="services" element={<ManageServices />} />
                 </Route>
 
+                <Route path="past-appointments" element={<PastAppointments />} />
                 <Route path="/customer" element={<CustomerHome />} />
                 <Route path="/bookings" element={<CustomerBookings />} />
             </Routes>
