@@ -118,6 +118,7 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
                          users.first_name AS client_first_name,
                          users.last_name AS client_last_name,
                          users.phone_number AS client_phone,
+                         barbers.id AS barber_id,
                          barbers.first_name AS barber_first_name,
                          barbers.last_name AS barber_last_name,
                          JSON_AGG(
@@ -129,7 +130,7 @@ router.get('/list', verifyToken, isAdmin, async (req, res) => {
                   INNER JOIN barbers ON appointments.barber_id = barbers.id
                   INNER JOIN appointment_services ON appointment_services.appointment_id = appointments.id
                   INNER JOIN services ON appointment_services.service_id = services.id
-                  GROUP BY appointments.id, barbers.last_name, barbers.first_name, users.first_name, users.last_name, users.phone_number, appointments.appointment_date, appointments.start_time
+                  GROUP BY appointments.id, barbers.last_name, barbers.id, barbers.first_name, users.first_name, users.last_name, users.phone_number, appointments.appointment_date, appointments.start_time
                   ORDER BY appointments.appointment_date, appointments.start_time`
         );
         res.status(200).json(result.rows);
@@ -237,27 +238,22 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
     }
 });
 
-//FIXME: This route should change the status of the appointment to 'cancelled' instead of deleting it, but for now it deletes the appointment.
-router.delete('/delete/me/:id', verifyToken, async (req, res) => {
+router.patch('/delete/me/:id', verifyToken, async (req, res) => {
     const { id } = req.params;
     const user_id = req.user.id;
 
     try {
-        await db.query(
-            `DELETE FROM appointment_services WHERE appointment_id = $1 AND appointment_id IN (SELECT id FROM appointments WHERE user_id = $2)`, [id, user_id]
+        const changeApptStatus = await db.query(
+            `UPDATE appointments SET status = 'cancelled' WHERE id = $1 AND user_id = $2 RETURNING *`, [id, user_id]
         );
 
-        const deleteAppointment = await db.query(
-            `DELETE FROM appointments WHERE id = $1 AND user_id = $2 RETURNING *`, [id, user_id]
-        );
-
-        if (deleteAppointment.rows.length === 0) {
-            return res.status(404).json({ error: "Appointments doesn't exist or you are not authorized to delete it." })
+        if (changeApptStatus.rows.length === 0) {
+            return res.status(404).json({ error: "Appointments doesn't exist or you are not authorized to change it" })
         }
 
-        res.status(200).json(deleteAppointment.rows[0]);
+        res.status(200).json(changeApptStatus.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in deleting appointment. ", details: error.message })
+        return res.status(500).json({ error: "Error in updating appointment. ", details: error.message })
     }
 });
 

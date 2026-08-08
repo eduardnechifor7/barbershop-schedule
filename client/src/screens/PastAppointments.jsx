@@ -1,15 +1,17 @@
 import { useState, useEffect } from "react";
 import { appointmentService } from "../services/appointmentService.js";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import {ArrowLeft, Scissors, ChevronRight} from "lucide-react";
+import { ArrowLeft, Scissors, ChevronRight } from "lucide-react";
 import { BottomNav } from "../components/BottomNav.jsx";
 import { useNavigate } from "react-router-dom";
+import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal.jsx";
 
-//TODO: Each card should be clickable and lead to all the details of a past appointment.
 
 export function PastAppointments() {
     const [pastAppointments, setPastAppointments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [openDetailsModal, setOpenDetailsModal] = useState(false);
 
     const navigate = useNavigate();
 
@@ -17,8 +19,9 @@ export function PastAppointments() {
         const fetchPastAppointments = async () => {
             try {
                 const appointmentsData = await appointmentService.getByUser();
-                const pastAppointmentsData = appointmentsData.filter(appointment => appointment.status === "completed");
+                const pastAppointmentsData = appointmentsData.filter(appointment => appointment.status === "completed" || appointment.status === "cancelled");
                 setPastAppointments(pastAppointmentsData);
+                console.log(pastAppointmentsData);
             } catch (error) {
                 console.error("Error fetching past appointments:", error);
             } finally {
@@ -28,11 +31,21 @@ export function PastAppointments() {
         fetchPastAppointments();
     }, []);
 
+    const handleAppointmentClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setOpenDetailsModal(true);
+    };
+
     if (isLoading) {
         return (
             <LoadingSpinner label="Loading Past Appointments..." />
         );
     }
+
+    const STATUS_ICON_STYLES = {
+        completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+        cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
+    };
 
     return (
         <div className="flex flex-col h-screen bg-dark-bg text-[#F2EFE9] overflow-hidden">
@@ -60,12 +73,17 @@ export function PastAppointments() {
             ) : (
                 <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto">
                     {pastAppointments.map((appt) => (
-                        <div
-                            key={appt.id}
+                        <button
+                            onClick={() => handleAppointmentClick(appt)}
+                            key={appt.appointment_id}
                             className="bg-card rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:border-white/10 transition-colors"
                         >
-                            <div className="w-10 h-10 rounded-xl bg-[#333131] flex items-center justify-center shrink-0">
-                                <Scissors size={16} className="text-gray-pc" />
+                            <div
+                                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                    STATUS_ICON_STYLES[appt.status] || "bg-[#333131] text-gray-pc"
+                                }`}
+                            >
+                                <Scissors size={16} />
                             </div>
 
                             <div className="flex-1 min-w-0">
@@ -88,13 +106,18 @@ export function PastAppointments() {
                                 size={15}
                                 className="text-gray-pc/50 shrink-0 group-hover:text-gray-pc transition-colors"
                             />
-                        </div>
+                        </button>
                     ))}
                 </div>
             )}
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
+            <AppointmentDetailsModal
+                isOpen={openDetailsModal}
+                appointment={selectedAppointment}
+                onClose={() => setOpenDetailsModal(false)}
+            />
         </div>
     );
 }

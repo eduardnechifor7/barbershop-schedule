@@ -88,7 +88,7 @@ export const appointmentService = {
     async deleteAsUser(id) {
         const headers = await getAuthHeaders();
         const response = await fetch(`http://localhost:8080/api/appointments/delete/me/${id}`, {
-            method: "DELETE",
+            method: "PATCH" ,
             headers
         });
         if (!response.ok) throw new Error("Failed to delete appointment");

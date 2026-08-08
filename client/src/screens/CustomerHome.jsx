@@ -16,6 +16,7 @@ import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { auth } from "../firebase.js";
 import { BottomNav } from "../components/BottomNav.jsx";
 import { ConfirmModal } from "../components/ConfirmModal.jsx";
+import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal.jsx";
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
@@ -23,6 +24,8 @@ export function CustomerHome() {
     const [user, setUser] = useState(null);
     const [isError, setIsError] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [openDetailsModal, setOpenDetailsModal] = useState(false);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [isCancelling, setIsCancelling] = useState(false);
@@ -54,7 +57,7 @@ export function CustomerHome() {
     }, [refreshTrigger]);
 
     currentDate.setHours(0, 0, 0, 0);
-    const lastAppointment = appointments.find(appt => appt.status === "scheduled" && (new Date(appt.appointment_date) >= currentDate)) || null;
+    const lastAppointment = appointments.find(appt => (appt.status === "scheduled" || appt.status === "cancelled") && (new Date(appt.appointment_date) >= currentDate)) || null;
     const completedAppointments = appointments.filter(appt => appt.status === "completed");
     const BARBER_PHOTO = lastAppointment ? lastAppointment.barber_photo_url : null;
 
@@ -71,6 +74,16 @@ export function CustomerHome() {
         } finally {
             setIsCancelling(false);
         }
+    };
+
+    const handleAppointmentClick = (appointment) => {
+        setSelectedAppointment(appointment);
+        setOpenDetailsModal(true);
+    }
+
+    const STATUS_ICON_STYLES = {
+        completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
+        cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
     };
 
     if (loading) return <LoadingSpinner label="Loading dashboard..." />;
@@ -265,12 +278,17 @@ export function CustomerHome() {
                             style={{ scrollbarWidth: "none" }}
                         >
                             {completedAppointments.slice(0, 3).map((appt) => (
-                                <div
-                                    key={appt.id}
-                                    className="bg-card rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:border-white/10 transition-colors"
+                                <button
+                                    key={appt.appointment_id}
+                                    onClick={() => handleAppointmentClick(appt)}
+                                    className="bg-card w-full rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:border-white/10 transition-colors"
                                 >
-                                    <div className="w-10 h-10 rounded-xl bg-[#333131] flex items-center justify-center shrink-0">
-                                        <Scissors size={16} className="text-gray-pc" />
+                                    <div
+                                        className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                                            STATUS_ICON_STYLES[appt.status] || "bg-[#333131] text-gray-pc"
+                                        }`}
+                                    >
+                                        <Scissors size={16} />
                                     </div>
 
                                     <div className="flex-1 min-w-0">
@@ -293,7 +311,7 @@ export function CustomerHome() {
                                         size={15}
                                         className="text-gray-pc/50 shrink-0 group-hover:text-gray-pc transition-colors"
                                     />
-                                </div>
+                                </button>
                             ))}
                         </div>
                     </section>
@@ -310,6 +328,11 @@ export function CustomerHome() {
                 message="Are you sure you want to cancel this appointment? This action cannot be undone."
                 confirmText="Yes, Cancel"
                 isLoading={isCancelling}
+            />
+            <AppointmentDetailsModal
+                isOpen={openDetailsModal}
+                appointment={selectedAppointment}
+                onClose={() => setOpenDetailsModal(false)}
             />
         </div>
     );
