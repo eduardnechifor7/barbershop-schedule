@@ -1,7 +1,31 @@
 import { PrimaryButton } from "./PrimaryButton.jsx";
+import {
+    X,
+    User,
+    Calendar,
+    Clock,
+    Phone,
+    Scissors,
+    FileText,
+    Tag,
+    CheckCircle2,
+    XCircle,
+    AlertCircle,
+} from "lucide-react";
+
+const ICON_MAP = {
+    "Appointment Date": Calendar,
+    "Start time": Clock,
+    "Client Name": User,
+    "Barber Name": Scissors,
+    "Client Phone": Phone,
+    "Services": Tag,
+    "Notes": FileText,
+    "Status": CheckCircle2,
+};
 
 const formatValue = (user, backendKey, friendlyName) => {
-    if (!user) return "";
+    if (!user) return "-";
 
     if (Array.isArray(backendKey)) {
         return `${user[backendKey[0]] || ""} ${user[backendKey[1]] || ""}`.trim();
@@ -9,12 +33,6 @@ const formatValue = (user, backendKey, friendlyName) => {
 
     if (friendlyName === "Appointment Date" && user[backendKey]) {
         return new Date(user[backendKey]).toLocaleDateString("ro-RO");
-    }
-
-    if (friendlyName === "Services" && Array.isArray(user[backendKey])) {
-        return user[backendKey]
-            .map(s => `${s.service_name} / ${s.price_at_booking} RON`)
-            .join(" | ");
     }
 
     if (friendlyName === "Price") {
@@ -25,12 +43,6 @@ const formatValue = (user, backendKey, friendlyName) => {
         return `${user[backendKey]} minutes`;
     }
 
-    if (friendlyName === "Status") {
-        const isActive = user[backendKey] === true || user[backendKey] === "true";
-
-        return isActive ? "Active" : "Inactive";
-    }
-
     return user[backendKey] || "-";
 };
 
@@ -38,36 +50,149 @@ export function ViewModal({ isOpen, onClose, config, user }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 flex flex-col items-center justify-start pt-40 z-50 bg-black/40 animate-fade-in">
-            <div className="bg-brand-gold p-6 rounded-lg shadow-lg max-w-sm w-full mx-4 transition-all transform animate-scale-up">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+            <div
+                className="bg-[#1A1919] border border-white/10 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col text-[#F2EFE9] animate-scale-up"
+                style={{ fontFamily: "'DM Sans', sans-serif" }}
+            >
+                <div className="p-5 pb-4 border-b border-white/10 flex items-center justify-between bg-white/5">
+                    <h2
+                        className="text-xl font-bold text-[#F2EFE9]"
+                        style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                        Details
+                    </h2>
+                    <button
+                        onClick={onClose}
+                        className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
+                    >
+                        <X size={18} />
+                    </button>
+                </div>
 
-                <div className="flex flex-col justify-between mb-4 text-black gap-5">
+                <div className="p-5 space-y-3 max-h-[70vh] overflow-y-auto">
                     {Object.entries(config).map(([friendlyName, backendKey]) => {
                         const isPhoto = friendlyName === "Photo URL";
+                        const isStatus = friendlyName === "Status";
+                        const isServices = friendlyName === "Services";
                         const displayValue = formatValue(user, backendKey, friendlyName);
+                        const IconComponent = ICON_MAP[friendlyName];
+
+                        if (isPhoto) {
+                            return (
+                                <div
+                                    key={friendlyName}
+                                    className="bg-[#242323] p-3 rounded-2xl border border-white/5 flex items-center justify-between"
+                                >
+                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                        {friendlyName}
+                                    </span>
+                                    <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-white/5">
+                                        {user[backendKey] ? (
+                                            <img
+                                                src={user[backendKey]}
+                                                alt="Profil"
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center text-gray-500">
+                                                <User size={20} />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }
+
+                        if (isStatus) {
+                            const statusVal = String(user[backendKey]).toLowerCase();
+                            const isCompleted = statusVal === "completed" || statusVal === "true" || statusVal === "active";
+                            const isCancelled = statusVal === "cancelled" || statusVal === "inactive";
+
+                            return (
+                                <div
+                                    key={friendlyName}
+                                    className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 flex items-center justify-between"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {IconComponent && <IconComponent size={16} className="text-[#DBB668]" />}
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                            {friendlyName}
+                                        </span>
+                                    </div>
+                                    <span
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                                            isCompleted
+                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                : isCancelled
+                                                    ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                                    : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                                        }`}
+                                    >
+                                        {isCompleted && <CheckCircle2 size={13} />}
+                                                        {isCancelled && <XCircle size={13} />}
+                                                        {!isCompleted && !isCancelled && <AlertCircle size={13} />}
+                                                        {user[backendKey] || "N/A"}
+                                  </span>
+                                </div>
+                            );
+                        }
+
+                        if (isServices && Array.isArray(user[backendKey])) {
+                            return (
+                                <div
+                                    key={friendlyName}
+                                    className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 space-y-2"
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <Scissors size={16} className="text-[#DBB668]" />
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                            {friendlyName}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1.5 pt-1">
+                                        {user[backendKey].length > 0 ? (
+                                            user[backendKey].map((s, idx) => (
+                                                <span
+                                                    key={idx}
+                                                    className="bg-white/5 border border-white/10 text-xs px-2.5 py-1 rounded-lg text-[#DBB668] font-medium"
+                                                >
+                                                    {s.service_name} • {s.price_at_booking} RON
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-xs text-gray-500">-</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        }
 
                         return (
-                            <div key={friendlyName} className="flex flex-row items-center gap-3 text-m">
-                                <span className="font-medium">{friendlyName}: </span>
-
-                                {isPhoto ? (
-                                    <div className="w-10 h-10 bg-blue-500 rounded-full overflow-hidden">
-                                        <img src={user[backendKey]} alt="Profil" className="w-full h-full object-cover"/>
-                                    </div>
-                                ) : (
-                                    <span className="whitespace-pre-line">{displayValue}</span>
-                                )}
+                            <div
+                                key={friendlyName}
+                                className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 flex items-center justify-between gap-3"
+                            >
+                                <div className="flex items-center gap-2 shrink-0">
+                                    {IconComponent && <IconComponent size={16} className="text-[#DBB668]" />}
+                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                        {friendlyName}:
+                                    </span>
+                                </div>
+                                <span className="text-sm font-semibold text-[#F2EFE9] truncate text-right">
+                                    {displayValue}
+                                </span>
                             </div>
                         );
                     })}
                 </div>
 
-                <div className="flex flex-row justify-center items-center mb-4 text-black gap-5">
+                <div className="p-4 border-t border-white/10 bg-[#1A1919] flex justify-center">
                     <PrimaryButton
                         onClick={onClose}
-                        className="w-auto bg-[#2d3748] hover:bg-[#242729] text-gray-200 focus:ring-gray-500 px-6 py-1 font-medium text-sm"
+                        className="w-full bg-white/5 hover:bg-white/10 text-[#F2EFE9] border border-white/10 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]"
                     >
-                        Cancel
+                        Close
                     </PrimaryButton>
                 </div>
             </div>
