@@ -10,10 +10,9 @@ export function AdminDashboardMenu() {
     const handleLogout = async () => {
         try {
             await signOut(auth);
-            console.log("Logged out");
             navigate("/");
         } catch (error) {
-            console.log("Error in logging out: ", error.message);
+            console.error("Error in logging out: ", error.message);
             alert("Something went wrong, try again.");
         }
     };
@@ -47,6 +46,16 @@ export function AdminDashboardMenu() {
                     <FileText className="text-[#DBB668]" size={24} />
                     <span className="text-xs font-semibold text-[#F2EFE9]">Services</span>
                 </button>
+
+                <div className="col-span-2 flex justify-center">
+                    <button
+                        onClick={() => navigate("/admin/skills")}
+                        className="w-[calc(50%-0.5rem)] bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all"
+                    >
+                        <FileText className="text-[#DBB668]" size={24} />
+                        <span className="text-xs font-semibold text-[#F2EFE9]">Skills</span>
+                    </button>
+                </div>
             </div>
 
             <div className="w-full max-w-sm space-y-3">

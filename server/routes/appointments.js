@@ -4,9 +4,10 @@ const db = require('../db');
 const { verifyToken, isAdmin } = require('../middleware/auth.js');
 
 async function createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes) {
-    await db.query('BEGIN');
+    const client = await db.getClient();
+    await client.query('BEGIN');
 
-    const appointmentRes = await db.query(
+    const appointmentRes = await client.query(
         `INSERT INTO appointments (user_id, barber_id, appointment_date, start_time, notes, status)
                 VALUES ($1, $2, $3, $4, $5, 'scheduled')
                 RETURNING id`,
@@ -15,7 +16,7 @@ async function createAppointmentLogic(user_id, barber_id, service_ids, appointme
 
     const newAppointmentID = appointmentRes.rows[0].id;
 
-    const insertAppServ = await db.query(
+    const insertAppServ = await client.query(
         `INSERT INTO appointment_services (appointment_id, service_id, price_at_booking)
               SELECT $1, id, price
               FROM services
@@ -26,13 +27,14 @@ async function createAppointmentLogic(user_id, barber_id, service_ids, appointme
         throw new Error("One or more selected services don't exist in the database");
     }
 
-    await db.query('COMMIT');
+    await client.query('COMMIT');
     return { message: "Appointment created successfully" };
 }
 
 router.post('/me/addAppointment', verifyToken, async (req, res) => {
     const { barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
+    const client = await db.getClient();
     const user_id = req.user.id;
 
     if (!barber_id || !service_ids || !Array.isArray(service_ids) || service_ids.length === 0 || !appointment_date) {
@@ -44,8 +46,8 @@ router.post('/me/addAppointment', verifyToken, async (req, res) => {
         const result = await createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes);
         res.status(201).json(result);
     } catch (err) {
-        await db.query('ROLLBACK');
-        console.log(err);
+        await client.query('ROLLBACK');
+        console.error(err);
         res.status(500).json({
             error: "Error in creating appointment",
             message: err.message
@@ -54,9 +56,9 @@ router.post('/me/addAppointment', verifyToken, async (req, res) => {
 });
 
 router.post('/addAppointment', verifyToken, isAdmin, async (req, res) => {
-    console.log("Am picat");
     const { user_id, barber_id, service_ids, appointment_date, start_time, notes } = req.body;
 
+    const client = await db.getClient();
     if (!barber_id || !service_ids || !Array.isArray(service_ids) || service_ids.length === 0 || !appointment_date) {
         return res.status(400).json({ error: "Important missing data" });
     }
@@ -66,8 +68,7 @@ router.post('/addAppointment', verifyToken, isAdmin, async (req, res) => {
         const result = await createAppointmentLogic(user_id, barber_id, service_ids, appointment_date, start_time, notes);
         res.status(201).json(result);
     } catch (err) {
-        await db.query('ROLLBACK');
-        console.log(err);
+        await client.query('ROLLBACK');
         res.status(500).json({
             error: "Error in creating appointment",
             message: err.message

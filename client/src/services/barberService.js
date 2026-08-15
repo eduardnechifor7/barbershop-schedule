@@ -13,7 +13,11 @@ const getAuthHeaders = async (contentType = false) => {
 
 export const barberService = {
     async getAll() {
-        const response = await fetch("http://localhost:8080/api/barbers/list");
+        const headers = await getAuthHeaders();
+        const response = await fetch("http://localhost:8080/api/barbers/list", {
+            method: "GET",
+            headers
+        });
         if (!response.ok) throw new Error("Failed to fetch barbers");
         return response.json();
     },

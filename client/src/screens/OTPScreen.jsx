@@ -37,7 +37,6 @@ export function OTPScreen () {
             const firebaseUser = result.user;
 
             if (registerData) {
-                console.log(firebaseUser.uid);
                 try {
                     await userService.addUser({
                         firebase_uid: firebaseUser.uid,
@@ -53,7 +52,6 @@ export function OTPScreen () {
                 }
             }
 
-            console.log(role);
             if (role === "Admin") {
                 navigate("/admin", { replace: true });
             } else {
