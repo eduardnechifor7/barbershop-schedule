@@ -100,24 +100,34 @@ export function ManageAppointments() {
         const fetchGetAllData = async () => {
             try {
                 setIsLoading(true);
-                const dataAppointments = await appointmentService.getAll();
-                const dataBarbers = await barberService.getAll();
-                const dataUsers = await userService.getAll();
-                const dataServices = await servicesService.getAll();
+
+                const [
+                    dataAppointments,
+                    dataBarbers,
+                    dataUsers,
+                    dataServices
+                ] = await Promise.all([
+                    appointmentService.getAll(),
+                    barberService.getAll(),
+                    userService.getAll(),
+                    servicesService.getAll()
+                ]);
+
                 setAppointments(dataAppointments);
-                setUsers(dataUsers);
                 setBarbers(dataBarbers);
+                setUsers(dataUsers);
                 setServices(dataServices);
             } catch (error) {
                 console.error(
-                    "Error in listing appointments.",
+                    "Error in listing dashboard data.",
                     error.response?.data || error.message
                 );
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchGetAllData().catch(console.error);
+
+        fetchGetAllData();
     }, [refreshTrigger]);
 
     const handleAddAppointment = async (formData) => {

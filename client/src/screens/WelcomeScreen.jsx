@@ -94,7 +94,7 @@ export function WelcomeScreen() {
                 navigate('/register', { state: { phone } });
             }
         } catch (error) {
-            console.log(error);
+            console.error(error);
             alert("Something went wrong.");
         }
 

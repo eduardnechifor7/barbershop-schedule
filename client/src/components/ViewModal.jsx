@@ -19,9 +19,12 @@ const ICON_MAP = {
     "Client Name": User,
     "Barber Name": Scissors,
     "Client Phone": Phone,
+    "Phone Number": Phone,
     "Services": Tag,
+    "Skills": Tag,
     "Notes": FileText,
     "Status": CheckCircle2,
+    "Photo URL": User
 };
 
 const formatValue = (user, backendKey, friendlyName) => {
@@ -74,7 +77,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                     {Object.entries(config).map(([friendlyName, backendKey]) => {
                         const isPhoto = friendlyName === "Photo URL";
                         const isStatus = friendlyName === "Status";
-                        const isServices = friendlyName === "Services";
+                        const isServicesSkills = friendlyName === "Services" || friendlyName === "Skills";
                         const displayValue = formatValue(user, backendKey, friendlyName);
                         const IconComponent = ICON_MAP[friendlyName];
 
@@ -84,9 +87,12 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                     key={friendlyName}
                                     className="bg-[#242323] p-3 rounded-2xl border border-white/5 flex items-center justify-between"
                                 >
-                                    <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                        {friendlyName}
-                                    </span>
+                                    <div className="flex items-center gap-2">
+                                        <IconComponent size={16} className="text-[#DBB668]" />
+                                        <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                            {friendlyName}
+                                        </span>
+                                    </div>
                                     <div className="w-12 h-12 rounded-xl border border-white/10 overflow-hidden bg-white/5">
                                         {user[backendKey] ? (
                                             <img
@@ -138,26 +144,29 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                             );
                         }
 
-                        if (isServices && Array.isArray(user[backendKey])) {
+
+                        if (isServicesSkills && Array.isArray(user[backendKey])) {
                             return (
                                 <div
                                     key={friendlyName}
                                     className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 space-y-2"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <Scissors size={16} className="text-[#DBB668]" />
+                                        <IconComponent size={16} className="text-[#DBB668]" />
                                         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             {friendlyName}
                                         </span>
                                     </div>
                                     <div className="flex flex-wrap gap-1.5 pt-1">
-                                        {user[backendKey].length > 0 ? (
+                                        {user[backendKey]?.length > 0 ? (
                                             user[backendKey].map((s, idx) => (
                                                 <span
                                                     key={idx}
                                                     className="bg-white/5 border border-white/10 text-xs px-2.5 py-1 rounded-lg text-[#DBB668] font-medium"
                                                 >
-                                                    {s.service_name} • {s.price_at_booking} RON
+                                                    {friendlyName === "Services"
+                                                        ? `${s.service_name} • ${s.price_at_booking} RON`
+                                                        : s}
                                                 </span>
                                             ))
                                         ) : (

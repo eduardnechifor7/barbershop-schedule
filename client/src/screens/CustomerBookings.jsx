@@ -35,7 +35,7 @@ const selectStyles = {
     control: () =>
         "w-full bg-[#232222] border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-[#F2EFE9] focus-within:border-[#DBB668] transition-all cursor-pointer flex items-center min-h-[46px]",
     menu: () =>
-        "!bg-[#232222] border border-white/10 rounded-xl mt-2 overflow-hidden shadow-2xl z-50",
+        "!bg-[#232222] border border-white/10 rounded-xl mt-2 overflow-y-auto shadow-2xl z-50",
     option: ({ isFocused, isSelected }) =>
         `p-3 text-sm cursor-pointer transition-colors ${
             isSelected
@@ -188,7 +188,7 @@ export function CustomerBookings() {
     }
 
     return (
-        <div className="animate-fade-in flex flex-col h-screen bg-dark-bg overflow-hidden">
+        <div className="animate-fade-in flex flex-col h-screen h-[100dvh] bg-dark-bg overflow-hidden">
             {/* Header */}
             <div className="bg-[#1A1919] px-5 pt-5 pb-5 shrink-0">
                 <div className="flex items-center gap-3 mb-1">
@@ -213,7 +213,7 @@ export function CustomerBookings() {
 
             {/* Scrollable form */}
             <div
-                className="bg-background px-5 py-10 pb-10 space-y-4 overflow-y-auto flex-1 min-h-0"
+                className="bg-background px-5 py-10 pb-24 space-y-4 overflow-y-auto flex-1 min-h-0"
                 style={{ scrollbarWidth: "none" }}
             >
                 <div className="bg-[#2D2B2B] rounded-2xl p-4 border border-white/5 space-y-4">

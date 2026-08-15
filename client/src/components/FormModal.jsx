@@ -93,7 +93,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
 
     const getInitialState = () =>
         Object.values(config).reduce((acc, backendKey) => {
-            acc[backendKey] = backendKey === "service_ids" ? [] : "";
+            acc[backendKey] = (backendKey === "service_ids" || backendKey === "skills_ids") ? [] : "";
             return acc;
         }, {});
 
@@ -108,7 +108,8 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
             photo_url: [required, url],
             price: [required, positiveNumber],
             minutes_duration: [required, positiveInteger],
-            service_ids: [minItems]
+            service_ids: [minItems],
+            skills_ids: [minItems]
         },
         {
             email: [email],
@@ -117,7 +118,8 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
             photo_url: [url],
             price: [positiveNumber],
             minutes_duration: [positiveInteger],
-            service_ids: [minItems]
+            service_ids: [minItems],
+            skills_ids: [minItems]
         }
     ];
 
@@ -189,7 +191,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
 
                         const currentOptions = options && options[backendKey];
 
-                        if (backendKey === "service_ids") {
+                        if (backendKey === "service_ids" || backendKey === "skills_ids") {
                             return (
                                 <div key={backendKey} className="flex flex-col gap-1.5 w-full">
                                     <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider pb-1">
@@ -199,7 +201,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                                         isMulti
                                         name={backendKey}
                                         options={currentOptions}
-                                        placeholder="Select services..."
+                                        placeholder={`Select ${friendlyName.toLowerCase()}...`}
                                         styles={customSelectStyles}
                                         onChange={(selectedOptions) => {
                                             const values = selectedOptions ? selectedOptions.map(o => o.value) : [];
@@ -245,7 +247,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                                 <Select
                                     name={backendKey}
                                     options={currentOptions}
-                                    placeholder="Select barber..."
+                                    placeholder={`Select ${friendlyName.toLowerCase()}...`}
                                     styles={customSelectStyles}
                                     onChange={(selectedOption) => {
                                         handleChange(backendKey, selectedOption ? selectedOption.value : "");

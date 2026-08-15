@@ -21,7 +21,6 @@ export function PastAppointments() {
                 const appointmentsData = await appointmentService.getByUser();
                 const pastAppointmentsData = appointmentsData.filter(appointment => appointment.status === "completed" || appointment.status === "cancelled");
                 setPastAppointments(pastAppointmentsData);
-                console.log(pastAppointmentsData);
             } catch (error) {
                 console.error("Error fetching past appointments:", error);
             } finally {

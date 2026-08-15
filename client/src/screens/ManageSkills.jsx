@@ -1,103 +1,59 @@
-import { useEffect, useState, useMemo } from "react";
-import { FormModal } from "../components/FormModal.jsx";
-import { ViewModal } from "../components/ViewModal.jsx";
-import { barberService } from "../services/barberService.js";
-import { skillsService } from "../services/skillsService.js";
+import {useEffect, useState} from "react";
 import { useNavigate } from "react-router-dom";
-import {
-    ArrowLeft,
-    Plus,
-    Eye,
-    Edit,
-    Trash2,
-    Scissors,
-    Phone,
-    User
-} from "lucide-react";
+import {skillsService} from "../services/skillsService.js";
+import {ArrowLeft, Edit, Eye, Phone, Plus, Scissors, Trash2, User} from "lucide-react";
+import {FormModal} from "../components/FormModal.jsx";
+import {ViewModal} from "../components/ViewModal.jsx";
 
 const inputLabels = {
-    "First Name": "first_name",
-    "Last Name": "last_name",
-    "Phone Number": "phone_number",
-    "Photo URL": "photo_url",
-    "Skills": "skills_ids"
-};
-
-const viewLabels = {
-    "Barber Name": ["first_name", "last_name"],
-    "Phone Number": "phone_number",
-    "Photo URL": "photo_url",
-    "Skills": "skills"
+    "Skill Name": "name"
 }
 
-export function ManageBarbers() {
-    const [selectedBarberId, setSelectedBarberId] = useState(null);
+export function ManageSkills() {
+    const [selectedSkillId, setSelectedSkillId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [modalType, setModalType] = useState("");
-    const [barbers, setBarbers] = useState([]);
     const [skills, setSkills] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    const selectedBarber = barbers.find(b => b.id === selectedBarberId);
+    const selectedSkill = skills.find(skill => skill.id === selectedSkillId);
     const navigate = useNavigate();
 
-    const options = useMemo(() => ({
-        first_name: null,
-        last_name: null,
-        phone_number: null,
-        photo_url: null,
-        skills_ids: skills.map(skill => ({ value: skill.id, label: skill.name }))
-    }), [skills]);
-
     useEffect(() => {
-        const fetchData = async () => {
+        const fetchSkills = async () => {
+            setIsLoading(true);
             try {
-                setIsLoading(true);
-                const [barbersData, skillsData] = await Promise.all([
-                    barberService.getAll(),
-                    skillsService.getAll()
-                ]);
-                setBarbers(barbersData);
+                const skillsData = await skillsService.getAll();
                 setSkills(skillsData);
             } catch (error) {
-                console.error("Error in listing barbers: ", error.response?.data || error.message);
+                console.error("Error fetching skills:", error);
             } finally {
                 setIsLoading(false);
             }
-        };
-        fetchData().catch(console.error);
+        }
+
+        fetchSkills();
     }, [refreshTrigger]);
-
-    const handleAddBarber = async (formData) => {
+    
+    const handleAddSkill = async () => {
         try {
-            await barberService.addBarber(formData);
+            await skillsService.addSkill(name);
             closeModal();
-            setSelectedBarberId(null);
+            setSelectedSkillId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in adding barber: ", error.message);
+            console.error("Error adding skill:", error);
         }
     };
-
-    const handleEditBarber = async (formData) => {
+    
+    const handleDeleteSkill = async (skillId) => {
         try {
-            await barberService.edit(selectedBarberId, formData);
-            closeModal();
-            setSelectedBarberId(null);
+            await skillsService.deleteSkill(skillId);
+            setSelectedSkillId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in editing barber: ", error.message);
-        }
-    };
-
-    const handleDeleteBarber = async (id) => {
-        try {
-            await barberService.delete(id);
-            setSelectedBarberId(null);
-            setRefreshTrigger(prev => prev + 1);
-        } catch (error) {
-            console.error("Error in deleting barber: ", error.message);
+            console.error("Error deleting skill:", error);
         }
     };
 
@@ -127,7 +83,7 @@ export function ManageBarbers() {
                     className="text-xl sm:text-2xl font-bold text-[#F2EFE9]"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                    Manage Barbers
+                    Manage Skills
                 </h1>
             </div>
 
@@ -140,10 +96,10 @@ export function ManageBarbers() {
                 </button>
 
                 <button
-                    disabled={!selectedBarberId}
+                    disabled={!selectedSkillId}
                     onClick={() => openModal("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
-                        selectedBarberId
+                        selectedSkillId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
@@ -152,22 +108,10 @@ export function ManageBarbers() {
                 </button>
 
                 <button
-                    disabled={!selectedBarberId}
-                    onClick={() => openModal("EDIT")}
+                    disabled={!selectedSkillId}
+                    onClick={() => handleDeleteSkill(selectedSkillId)}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
-                        selectedBarberId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
-                            : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
-                    }`}
-                >
-                    <Edit size={16} /> Edit
-                </button>
-
-                <button
-                    disabled={!selectedBarberId}
-                    onClick={() => handleDeleteBarber(selectedBarberId)}
-                    className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
-                        selectedBarberId
+                        selectedSkillId
                             ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
@@ -203,19 +147,19 @@ export function ManageBarbers() {
 
             {!isLoading && (
                 <div className="flex flex-col gap-3 max-h-[calc(100vh-220px)] overflow-y-auto w-full pr-1">
-                    {barbers.length === 0 ? (
+                    {skills.length === 0 ? (
                         <div className="bg-[#2D2B2B] p-8 rounded-2xl border border-white/5 text-center text-gray-400">
-                            No barbers found.
+                            No skills found.
                         </div>
                     ) : (
-                        barbers.map((barber) => {
-                            const isSelected = selectedBarberId === barber.id;
+                        skills.map((skill) => {
+                            const isSelected = selectedSkillId === skill.id;
 
                             return (
                                 <div
-                                    key={barber.id}
+                                    key={skill.id}
                                     onClick={() => {
-                                        setSelectedBarberId(isSelected ? null : barber.id);
+                                        setSelectedSkillId(isSelected ? null : skill.id);
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
@@ -231,36 +175,12 @@ export function ManageBarbers() {
 
                                     <div className="flex items-center justify-between w-full pl-2 gap-4">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
-                                                {barber.photo_url ? (
-                                                    <img
-                                                        src={barber.photo_url}
-                                                        alt="Barber"
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : (
-                                                    <User size={20} />
-                                                )}
-                                            </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="font-semibold text-sm text-[#F2EFE9] truncate">
-                                                    {barber.first_name} {barber.last_name}
+                                                    {skill.name}
                                                 </span>
-                                                {barber.specialization && (
-                                                    <span className="text-xs text-[#DBB668] font-medium flex items-center gap-1 mt-0.5">
-                                                        <Scissors size={11} />
-                                                        {barber.specialization}
-                                                    </span>
-                                                )}
                                             </div>
                                         </div>
-
-                                        {barber.phone_number && (
-                                            <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                                                <Phone size={13} className="text-[#DBB668]" />
-                                                <span>{barber.phone_number}</span>
-                                            </div>
-                                        )}
                                     </div>
                                 </div>
                             );
@@ -272,26 +192,15 @@ export function ManageBarbers() {
                             isOpen={isModalOpen}
                             config={inputLabels}
                             onClose={closeModal}
-                            onSubmit={handleAddBarber}
-                            options={options}
-                        />
-                    )}
-                    {isModalOpen && modalType === "EDIT" && (
-                        <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
-                            onSubmit={handleEditBarber}
-                            options={options}
-                            isEdit={true}
+                            onSubmit={handleAddSkill}
                         />
                     )}
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal
                             isOpen={isModalOpen}
-                            config={viewLabels}
+                            config={inputLabels}
                             onClose={closeModal}
-                            user={selectedBarber}
+                            user={selectedSkill}
                         />
                     )}
                 </div>

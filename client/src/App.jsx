@@ -15,6 +15,7 @@ import { ManageUsers } from "./screens/ManageUsers.jsx";
 import { ManageBarbers } from "./screens/ManageBarbers.jsx";
 import { ManageAppointments } from "./screens/ManageAppointments.jsx";
 import { ManageServices } from "./screens/ManageServices.jsx";
+import { ManageSkills } from "./screens/ManageSkills.jsx";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -57,6 +58,7 @@ function App() {
                     <Route path="barbers" element={<ManageBarbers />} />
                     <Route path="appointments" element={<ManageAppointments />} />
                     <Route path="services" element={<ManageServices />} />
+                    <Route path="skills" element={<ManageSkills />} />
                 </Route>
 
                 <Route path="past-appointments" element={<PastAppointments />} />
