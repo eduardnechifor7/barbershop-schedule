@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { servicesService } from "../services/servicesService.js";
+import { skillsService } from "../services/skillsService.js";
 import { FormModal } from "../components/FormModal.jsx";
 import { ViewModal } from "../components/ViewModal.jsx";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +19,8 @@ const inputLabels = {
     "Service Name": "service_name",
     "Price": "price",
     "Duration": "minutes_duration",
+    "Description": "description",
+    "Skills": "skills_ids",
     "Status": "is_active"
 };
 
@@ -28,26 +31,32 @@ export function ManageServices() {
     const [services, setServices] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [skills, setSkills] = useState([]);
 
     const selectedService = services.find(s => s.id === selectedServiceId);
     const navigate = useNavigate();
 
     const options = useMemo(() => ({
-        "service_name": null,
-        "price": null,
-        "minutes_duration": null,
-        "is_active": [
+        service_name: null,
+        price: null,
+        minutes_duration: null,
+        skills_ids: skills.map(skill => ({ value: skill.id, label: skill.name })),
+        is_active: [
             { value: true, label: 'Active' },
             { value: false, label: 'Inactive' }
         ]
-    }), []);
+    }), [skills]);
 
     useEffect(() => {
         const fetchServices = async () => {
             try {
                 setIsLoading(true);
-                const data = await servicesService.getAll();
-                setServices(data);
+                const [servicesData, skillsData] = await Promise.all([
+                    servicesService.getAll(),
+                    skillsService.getAll()
+                ]);
+                setServices(servicesData);
+                setSkills(skillsData);
             } catch (error) {
                 console.error("Error in listing services: ", error.response?.data || error.message);
             } finally {
@@ -113,7 +122,7 @@ export function ManageServices() {
             <div className="grid grid-cols-3 gap-2.5 mb-6">
                 <button
                     onClick={() => openModal("ADD")}
-                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
+                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-brand-gold hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
                 >
                     <Plus size={16} /> Add
                 </button>
@@ -123,7 +132,7 @@ export function ManageServices() {
                     onClick={() => openModal("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedServiceId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -135,7 +144,7 @@ export function ManageServices() {
                     onClick={() => openModal("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedServiceId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -146,7 +155,7 @@ export function ManageServices() {
             {isLoading && (
                 <div className="flex justify-center items-center my-12">
                     <svg
-                        className="animate-spin h-8 w-8 text-[#DBB668]"
+                        className="animate-spin h-8 w-8 text-brand-gold"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -186,19 +195,19 @@ export function ManageServices() {
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
-                                            ? "bg-[#2D2B2B] border-[#DBB668] shadow-lg shadow-black/40 translate-x-1"
+                                            ? "bg-[#2D2B2B] border-brand-gold shadow-lg shadow-black/40 translate-x-1"
                                             : "bg-[#2D2B2B]/70 border-white/5 hover:bg-[#2D2B2B] hover:border-white/10"
                                     }`}
                                 >
                                     <div
                                         className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${
-                                            isSelected ? "bg-[#DBB668]" : "bg-transparent"
+                                            isSelected ? "bg-brand-gold" : "bg-transparent"
                                         }`}
                                     />
 
                                     <div className="flex items-center justify-between w-full pl-2 gap-4">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
+                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-brand-gold">
                                                 <Scissors size={20} />
                                             </div>
                                             <div className="flex flex-col min-w-0">
@@ -206,7 +215,7 @@ export function ManageServices() {
                                                     {service.service_name}
                                                 </span>
                                                 <div className="flex items-center gap-3 text-xs text-gray-400 mt-0.5">
-                                                    <span className="text-[#DBB668] font-semibold">
+                                                    <span className="text-brand-gold font-semibold">
                                                         {service.price} RON
                                                     </span>
                                                     {service.minutes_duration && (

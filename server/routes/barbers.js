@@ -12,7 +12,8 @@ router.get('/list', verifyToken, async (req, res) => {
                        b.last_name, 
                        b.phone_number, 
                        b.photo_url, 
-                       COALESCE(json_agg(s.name) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
+                       COALESCE(json_agg(
+                                json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
                    FROM barbers AS b
                    LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
                    LEFT JOIN skills AS s ON bs.skill_id = s.id
