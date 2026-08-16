@@ -11,9 +11,8 @@ import Select, { components } from "react-select";
 import {
     validateFields, required, minItems
 } from "../utils/validation.js";
-import {useLocation, useNavigate} from "react-router-dom";
-import {BottomNav} from "../components/BottomNav.jsx";
-
+import { useLocation, useNavigate } from "react-router-dom";
+import { BottomNav } from "../components/BottomNav.jsx";
 
 const CustomControl = ({ children, ...props }) => {
     const Icon = props.selectProps.icon;
@@ -100,6 +99,30 @@ export function CustomerBookings() {
         loadData();
     }, []);
 
+    const filteredBarbers = (selectedService && selectedService.length > 0)
+        ? barbers.filter(barber => {
+            const activeServices = selectedService
+                .map(selectedId => servicesList.find(s => (s.id || s.service_id) === selectedId))
+                .filter(Boolean);
+            const requiredSkillsIds = [...new Set(activeServices.flatMap(s => (s.required_skills || []).map(sk => sk.id)))];
+            const barberSkillIds = (barber.skills || []).map(sk => sk.id);
+
+            return requiredSkillsIds.every(id => barberSkillIds.includes(id));
+        })
+        : barbers;
+
+    const filteredServices = selectedBarber
+        ? servicesList.filter(service => {
+            const currentBarber = barbers.find(b => String(b.id) === String(selectedBarber));
+            if (!currentBarber) return true;
+
+            const barberSkillIds = (currentBarber.skills || []).map(sk => sk.id);
+            const serviceSkillIds = (service.required_skills || []).map(sk => sk.id);
+
+            return serviceSkillIds.every(id => barberSkillIds.includes(id));
+        })
+        : servicesList;
+
     useEffect(() => {
         if (!selectedBarber || !selectedDate) return;
 
@@ -116,7 +139,7 @@ export function CustomerBookings() {
 
     const allSlots = generateTimeSlots(9, 17, 30);
     const serviceDuration = servicesList
-        .filter(s => (selectedService || []).includes(s.id))
+        .filter(s => (selectedService || []).includes(s.id || s.service_id))
         .reduce((sum, s) => sum + (s.minutes_duration || 30), 0) || 30;
     const workEndMinutes = timeStringToMinutes("17:00");
 
@@ -177,7 +200,15 @@ export function CustomerBookings() {
         }
     };
 
-    const barberOptions = barbers.map(b => ({ value: b.id, label: `${b.first_name} ${b.last_name}` }));
+    const barberOptions = filteredBarbers.map(b => ({ value: b.id, label: `${b.first_name} ${b.last_name}` }));
+
+    const canBarberDoService = (barber, service) => {
+        if (!barber || !service) return false;
+        const barberSkillIds = (barber.skills || []).map(sk => sk.id);
+        const serviceSkillIds = (service.required_skills || []).map(sk => sk.id);
+
+        return serviceSkillIds.every(id => barberSkillIds.includes(id));
+    };
 
     if (success) {
         return (
@@ -216,7 +247,6 @@ export function CustomerBookings() {
                 </div>
             </div>
 
-
             {/* Scrollable form */}
             <div
                 className="bg-background px-5 py-10 pb-24 space-y-4 overflow-y-auto flex-1 min-h-0"
@@ -231,16 +261,32 @@ export function CustomerBookings() {
                         <div className="relative z-30">
                             <Select
                                 isMulti
-                                options={servicesList.map(s => ({ value: s.id, label: `${s.service_name} - ${s.price} RON` }))}
+                                options={filteredServices.map(s => ({ value: s.id || s.service_id, label: `${s.service_name} - ${s.price} RON` }))}
                                 placeholder="Select services..."
                                 onChange={(selectedOptions) => {
-                                    const values = selectedOptions ? selectedOptions.map(o => o.value) : [];
-                                    setSelectedService(values);
+                                    const selectedValues = selectedOptions ? selectedOptions.map(o => o.value) : [];
+                                    setSelectedService(selectedValues);
                                     setSelectedTime("");
+
+                                    if (selectedBarber) {
+                                        const activeServices = selectedValues
+                                            .map(selectedId => servicesList.find(s => (s.id || s.service_id) === selectedId))
+                                            .filter(Boolean);
+                                        const reqSkills = [...new Set(activeServices.flatMap(s => (s.required_skills || []).map(sk => sk.id)))];
+                                        const currentBarberObj = barbers.find(b => String(b.id) === String(selectedBarber));
+
+                                        const isStillEligible = currentBarberObj && reqSkills.every(id =>
+                                            (currentBarberObj.skills || []).some(sk => sk.id === id)
+                                        );
+
+                                        if (!isStillEligible) {
+                                            setSelectedBarber("");
+                                        }
+                                    }
                                 }}
                                 value={
                                     servicesList
-                                        .map(s => ({ value: s.id, label: `${s.service_name} - ${s.price} RON` }))
+                                        .map(s => ({ value: s.id || s.service_id, label: `${s.service_name} - ${s.price} RON` }))
                                         .filter(o => (selectedService || []).includes(o.value))
                                 }
                                 icon={Scissors}
@@ -269,8 +315,18 @@ export function CustomerBookings() {
                                 classNames={selectStyles}
                                 value={barberOptions.find((o) => o.value === selectedBarber) || null}
                                 onChange={(selectedOption) => {
-                                    setSelectedBarber(selectedOption ? selectedOption.value : "");
+                                    const barberId = selectedOption ? selectedOption.value : "";
+                                    setSelectedBarber(barberId);
                                     setSelectedTime("");
+
+                                    const currentBarber = barbers.find(b => String(b.id) === String(barberId));
+
+                                    setSelectedService(prevServices =>
+                                        prevServices.filter(serviceId => {
+                                            const service = servicesList.find(s => (s.id || s.service_id) === serviceId);
+                                            return canBarberDoService(currentBarber, service);
+                                        })
+                                    );
                                 }}
                                 icon={User}
                                 components={{ Control: CustomControl }}
