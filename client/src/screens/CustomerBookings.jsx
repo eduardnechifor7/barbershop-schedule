@@ -11,7 +11,7 @@ import Select, { components } from "react-select";
 import {
     validateFields, required, minItems
 } from "../utils/validation.js";
-import {useNavigate} from "react-router-dom";
+import {useLocation, useNavigate} from "react-router-dom";
 import {BottomNav} from "../components/BottomNav.jsx";
 
 
@@ -59,8 +59,6 @@ export function CustomerBookings() {
     const [barbers, setBarbers] = useState([]);
     const [occupiedBookings, setOccupiedBookings] = useState([]);
 
-    const [selectedService, setSelectedService] = useState([]);
-    const [selectedBarber, setSelectedBarber] = useState("");
     const [selectedDate, setSelectedDate] = useState("");
     const [selectedTime, setSelectedTime] = useState("");
     const [notes, setNotes] = useState("");
@@ -71,6 +69,7 @@ export function CustomerBookings() {
     const todayDate = new Date().toISOString().split('T')[0];
 
     const navigate = useNavigate();
+    const location = useLocation();
 
     const validationRules = {
         selectedService: [required, minItems],
@@ -78,6 +77,11 @@ export function CustomerBookings() {
         selectedDate: [required],
         selectedTime: [required]
     };
+
+    const initialService = location.state?.preselectedServices || [];
+    const initialBarber = location.state?.preselectedBarber || "";
+    const [selectedService, setSelectedService] = useState(initialService);
+    const [selectedBarber, setSelectedBarber] = useState(initialBarber);
 
     useEffect(() => {
         setSelectedDate(todayDate);
@@ -111,7 +115,9 @@ export function CustomerBookings() {
     }, [selectedDate, selectedBarber]);
 
     const allSlots = generateTimeSlots(9, 17, 30);
-    const serviceDuration = servicesList.find(s => String(s.id )=== String(selectedService))?.duration || 30;
+    const serviceDuration = servicesList
+        .filter(s => (selectedService || []).includes(s.id))
+        .reduce((sum, s) => sum + (s.minutes_duration || 30), 0) || 30;
     const workEndMinutes = timeStringToMinutes("17:00");
 
     const occupiedIntervals = occupiedBookings.map(b => {
@@ -230,6 +236,7 @@ export function CustomerBookings() {
                                 onChange={(selectedOptions) => {
                                     const values = selectedOptions ? selectedOptions.map(o => o.value) : [];
                                     setSelectedService(values);
+                                    setSelectedTime("");
                                 }}
                                 value={
                                     servicesList
@@ -307,7 +314,6 @@ export function CustomerBookings() {
                             TIME
                         </label>
                         <div className="relative z-10">
-                            <Clock size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gold" />
                             <Select
                                 unstyled
                                 placeholder={
