@@ -73,7 +73,31 @@ router.get('/by-uid', verifyToken, async (req, res) => {
             `SELECT * FROM users WHERE firebase_uid = $1`,
             [firebase_uid]
         );
-        res.json(result.rows[0]);
+
+        const user = result.rows[0];
+
+        const [countRes, barberRes] = await Promise.all([
+            db.query(
+                `SELECT COUNT(*)::int AS count
+                      FROM appointments
+                      WHERE user_id = $1`, [user.id]
+            ),
+            db.query(
+                `SELECT CONCAT(b.first_name, ' ', SUBSTRING(b.last_name, 1, 1), '.') AS name
+                      FROM appointments a
+                      JOIN barbers b ON a.barber_id = b.id
+                      WHERE a.user_id = $1
+                      GROUP BY b.id, b.first_name, b.last_name
+                      ORDER BY COUNT(a.id) DESC
+                      LIMIT 1`, [user.id]
+            )
+        ])
+
+        res.status(200).json({
+            ...user,
+            total_appointments: countRes.rows[0]?.count || 0,
+            favourite_barber: barberRes.rows[0]?.name || "N/A"
+        });
     } catch (error) {
         res.status(500).json({ error: "Error in fetching user details", details: error.message });
     }

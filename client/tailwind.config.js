@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-import flowbitePlugin from 'flowbite/plugin'; // Folosește import în loc de require
+import flowbitePlugin from 'flowbite/plugin';
 
 export default {
     content: [

@@ -47,7 +47,7 @@ export function PastAppointments() {
     };
 
     return (
-        <div className="flex flex-col h-screen bg-dark-bg text-[#F2EFE9] overflow-hidden">
+        <div className="flex flex-col h-screen h-[100dvh] bg-dark-bg text-[#F2EFE9] overflow-hidden">
             {/* Header */}
             <div className="bg-[#1A1919] px-5 pt-6 pb-5 flex items-center gap-3 shrink-0">
                 <button
@@ -70,7 +70,7 @@ export function PastAppointments() {
                     <p className="text-sm">No past appointments found.</p>
                 </div>
             ) : (
-                <div className="flex flex-col gap-3 px-5 py-4 overflow-y-auto">
+                <div className="flex flex-col gap-3 px-5 py-5 pb-24 space-y-4 overflow-y-auto">
                     {pastAppointments.map((appt) => (
                         <button
                             onClick={() => handleAppointmentClick(appt)}
