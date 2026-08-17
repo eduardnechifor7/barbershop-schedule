@@ -111,7 +111,7 @@ export function CustomerExplore() {
                                                     {barber.first_name} {barber.last_name}
                                                 </h3>
                                                 <p className="text-xs text-brand-gold font-medium mt-0.5">
-                                                    {tags[0]}
+                                                    {tags?.[0]?.name || "Master Barber"}
                                                 </p>
                                                 <p className="text-[11px] text-gray-400 mt-1">
                                                     Available for booking
@@ -122,12 +122,12 @@ export function CustomerExplore() {
 
                                     {/* Skills */}
                                     <div className="flex flex-wrap gap-2">
-                                        {tags.map((skill, idx) => (
+                                        {tags.map((skill) => (
                                             <span
-                                                key={idx}
+                                                key={skill.id}
                                                 className="text-xs bg-[#262424] text-gray-300 px-3.5 py-1.5 rounded-xl border border-white/5 font-medium"
                                             >
-                                                {skill}
+                                                {skill.name}
                                             </span>
                                         ))}
                                     </div>
@@ -182,7 +182,7 @@ export function CustomerExplore() {
                                 <button
                                     onClick={() => navigate("/bookings", {
                                         state: {
-                                            preselectedServices: [featuredService.id]
+                                            preselectedServices: [featuredService.service_id]
                                         }
                                     })}
                                     className="w-full py-3.5 rounded-2xl bg-[#DBB668] text-[#121212] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer"
@@ -195,7 +195,7 @@ export function CustomerExplore() {
 
                         {services.map((service) => (
                             <div
-                                key={service.id}
+                                key={service.service_id}
                                 className="bg-[#1C1B1B] rounded-2xl p-4 border border-white/5 flex items-center justify-between gap-3 hover:border-white/10 transition-colors"
                             >
                                 <div className="flex items-center gap-3.5 min-w-0">
@@ -223,7 +223,7 @@ export function CustomerExplore() {
                                     <button
                                         onClick={() => navigate("/bookings", {
                                             state: {
-                                                preselectedServices: [service.id]
+                                                preselectedServices: [service.service_id]
                                             }
                                         })}
                                         className="text-xs text-gray-400 hover:text-[#DBB668] flex items-center gap-0.5 transition-colors cursor-pointer"

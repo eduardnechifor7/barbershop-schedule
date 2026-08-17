@@ -22,7 +22,7 @@ const CustomControl = ({ children, ...props }) => {
             {Icon && (
                 <Icon
                     size={18}
-                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-pc pointer-events-none z-10"
+                    className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none z-10"
                 />
             )}
             {children}
@@ -32,13 +32,13 @@ const CustomControl = ({ children, ...props }) => {
 
 const selectStyles = {
     control: () =>
-        "w-full bg-[#232222] border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-[#F2EFE9] focus-within:border-[#DBB668] transition-all cursor-pointer flex items-center min-h-[46px]",
+        "w-full bg-[#262424] border border-white/10 rounded-xl py-2.5 pl-11 pr-4 text-sm text-[#F2EFE9] focus-within:border-[#DBB668] transition-all cursor-pointer flex items-center min-h-[46px]",
     menu: () =>
-        "!bg-[#232222] border border-white/10 rounded-xl mt-2 overflow-y-auto shadow-2xl z-50",
+        "!bg-[#262424] border border-white/10 rounded-xl mt-2 overflow-y-auto shadow-2xl z-50",
     option: ({ isFocused, isSelected }) =>
         `p-3 text-sm cursor-pointer transition-colors ${
             isSelected
-                ? "bg-[#DBB668] text-[#1A1919] font-semibold"
+                ? "bg-[#DBB668] text-[#121212] font-semibold"
                 : isFocused
                     ? "bg-[#DBB668]/15 text-[#F2EFE9]"
                     : "text-[#F2EFE9]"
@@ -48,8 +48,8 @@ const selectStyles = {
         "bg-[#DBB668]/20 border border-[#DBB668]/40 rounded-lg px-2 py-0.5 mr-1.5 text-[#F2EFE9] flex items-center gap-1",
     multiValueLabel: () => "text-xs font-medium text-[#F2EFE9]",
     multiValueRemove: () =>
-        "text-[#828282] hover:text-[#DBB668] transition-colors cursor-pointer",
-    placeholder: () => "text-[#828282] text-sm",
+        "text-gray-400 hover:text-[#DBB668] transition-colors cursor-pointer",
+    placeholder: () => "text-gray-400 text-sm",
     input: () => "text-[#F2EFE9] text-sm"
 };
 
@@ -79,6 +79,7 @@ export function CustomerBookings() {
 
     const initialService = location.state?.preselectedServices || [];
     const initialBarber = location.state?.preselectedBarber || "";
+
     const [selectedService, setSelectedService] = useState(initialService);
     const [selectedBarber, setSelectedBarber] = useState(initialBarber);
 
@@ -212,12 +213,12 @@ export function CustomerBookings() {
 
     if (success) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-dark-bg p-4 text-center">
+            <div className="flex flex-col items-center justify-center min-h-screen bg-[#121212] p-4 text-center">
                 <div className="relative flex items-center justify-center mb-4">
                     <div className="w-12 h-12 rounded-full border-2 border-[#DBB668]/20 bg-[#DBB668]/10 flex items-center justify-center" />
                     <Check size={20} className="absolute text-[#DBB668]" />
                 </div>
-                <p className="text-xs font-medium text-gray-pc tracking-wider uppercase">
+                <p className="text-xs font-medium text-gray-400 tracking-wider uppercase">
                     Appointment Booked!
                 </p>
             </div>
@@ -225,18 +226,12 @@ export function CustomerBookings() {
     }
 
     return (
-        <div className="animate-fade-in flex flex-col h-screen h-[100dvh] bg-dark-bg overflow-hidden">
+        <div className="animate-fade-in flex flex-col h-screen h-[100dvh] bg-[#121212] overflow-hidden">
             {/* Header */}
-            <div className="bg-[#1A1919] px-5 pt-5 pb-5 shrink-0">
+            <div className="bg-[#121212] px-5 pt-5 pb-5 shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-3 mb-1">
-                    <button
-                        onClick={() => navigate("/customer")}
-                        className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors"
-                    >
-                        <ArrowLeft size={17} className="text-[#F2EFE9]" />
-                    </button>
                     <div>
-                        <p className="text-gray-pc text-xs font-medium uppercase tracking-widest">Bookings</p>
+                        <p className="text-gray-400 text-xs font-medium uppercase tracking-widest">Bookings</p>
                         <h1
                             className="text-[#F2EFE9] text-2xl font-bold leading-tight"
                             style={{ fontFamily: "'Playfair Display', serif" }}
@@ -249,13 +244,13 @@ export function CustomerBookings() {
 
             {/* Scrollable form */}
             <div
-                className="bg-background px-5 py-10 pb-24 space-y-4 overflow-y-auto flex-1 min-h-0"
+                className="bg-[#121212] px-5 py-10 pb-24 space-y-4 overflow-y-auto flex-1 min-h-0"
                 style={{ scrollbarWidth: "none" }}
             >
-                <div className="bg-[#2D2B2B] rounded-2xl p-4 border border-white/5 space-y-4">
+                <div className="bg-[#1C1B1B] rounded-2xl p-4 border border-white/5 space-y-4">
                     {/* 1. Services */}
                     <div>
-                        <label className="text-gray-pc text-[11px] font-bold uppercase tracking-wider block mb-1.5">
+                        <label className="text-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5">
                             SERVICES
                         </label>
                         <div className="relative z-30">
@@ -304,7 +299,7 @@ export function CustomerBookings() {
 
                     {/* 2. Barber */}
                     <div>
-                        <label className="text-gray-pc text-[11px] font-bold uppercase tracking-wider block mb-1.5">
+                        <label className="text-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5">
                             BARBER
                         </label>
                         <div className="relative z-20">
@@ -341,11 +336,11 @@ export function CustomerBookings() {
 
                     {/* 3. Date */}
                     <div>
-                        <label className="text-gray-pc text-[11px] font-bold uppercase tracking-wider block mb-1.5">
+                        <label className="text-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5">
                             DATE
                         </label>
                         <div className="relative">
-                            <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gold" />
+                            <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#DBB668]" />
                             <input
                                 type="date"
                                 value={selectedDate}
@@ -354,7 +349,7 @@ export function CustomerBookings() {
                                     setSelectedDate(e.target.value);
                                     setSelectedTime("");
                                 }}
-                                className="w-full bg-dark-bg border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] focus:outline-none focus:border-brand-gold"
+                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#DBB668]"
                             />
                             {errors["selectedDate"] && (
                                 <p className="animate-error-shake text-red-400 text-xs font-medium p-1">
@@ -366,7 +361,7 @@ export function CustomerBookings() {
 
                     {/* 4. Time */}
                     <div>
-                        <label className="text-gray-pc text-[11px] font-bold uppercase tracking-wider block mb-1.5">
+                        <label className="text-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5">
                             TIME
                         </label>
                         <div className="relative z-10">
@@ -399,17 +394,17 @@ export function CustomerBookings() {
 
                     {/* 5. Notes */}
                     <div>
-                        <label className="text-gray-pc text-[11px] font-bold uppercase tracking-wider block mb-1.5">
+                        <label className="text-gray-400 text-[11px] font-bold uppercase tracking-wider block mb-1.5">
                             NOTES
                         </label>
                         <div className="relative">
-                            <FileText size={18} className="absolute left-3.5 top-3.5 text-gray-pc" />
+                            <FileText size={18} className="absolute left-3.5 top-3.5 text-gray-400" />
                             <textarea
                                 rows={3}
                                 value={notes}
                                 onChange={(e) => setNotes(e.target.value)}
                                 placeholder="Any special requests or notes for your barber..."
-                                className="w-full bg-dark-bg border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] placeholder-gray-pc/60 focus:outline-none focus:border-brand-gold resize-none"
+                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] placeholder-gray-400/60 focus:outline-none focus:border-[#DBB668] resize-none"
                             />
                         </div>
                     </div>
@@ -420,14 +415,14 @@ export function CustomerBookings() {
                             type="button"
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#1A1919] bg-brand-gold hover:bg-[#c9a458] transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
+                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#121212] bg-[#DBB668] hover:bg-[#c9a458] transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
                         >
                             {submitting ? "Booking..." : "Submit"}
                         </button>
                         <button
                             type="button"
                             onClick={() => navigate("/customer")}
-                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#F2EFE9] border border-gray-pc/50 bg-transparent hover:bg-white/5 transition-all active:scale-[0.97]"
+                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#F2EFE9] border border-gray-400/50 bg-transparent hover:bg-white/5 transition-all active:scale-[0.97]"
                         >
                             Cancel
                         </button>
