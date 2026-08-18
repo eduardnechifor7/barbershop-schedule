@@ -183,7 +183,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                     </button>
                 </div>
 
-                <div className="p-5 space-y-4 max-h-[70vh] overflow-y-auto">
+                <div className="p-5 space-y-4 min-h-[35vh] max-h-[70vh] overflow-y-auto">
                     {Object.entries(config).map(([friendlyName, backendKey]) => {
                         let inputType = "text";
                         if (backendKey === "appointment_date") inputType = "date";

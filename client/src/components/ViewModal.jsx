@@ -11,9 +11,17 @@ import {
     CheckCircle2,
     XCircle,
     AlertCircle,
+    DollarSign,
+    Info,
+    Mail,
+    Shield
 } from "lucide-react";
 
 const ICON_MAP = {
+    "First Name": User,
+    "Last Name": User,
+    "Email": Mail,
+    "Role": Shield,
     "Appointment Date": Calendar,
     "Start time": Clock,
     "Client Name": User,
@@ -24,7 +32,11 @@ const ICON_MAP = {
     "Skills": Tag,
     "Notes": FileText,
     "Status": CheckCircle2,
-    "Photo URL": User
+    "Photo URL": User,
+    "Service Name": Scissors,
+    "Price": DollarSign,
+    "Duration": Clock,
+    "Description": Info
 };
 
 const formatValue = (user, backendKey, friendlyName) => {
@@ -44,6 +56,10 @@ const formatValue = (user, backendKey, friendlyName) => {
 
     if (friendlyName === "Duration") {
         return `${user[backendKey]} minutes`;
+    }
+
+    if (friendlyName === "Start time") {
+        return `${user[backendKey].slice(0, 5)}`;
     }
 
     return user[backendKey] || "-";
@@ -127,7 +143,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                         </span>
                                     </div>
                                     <span
-                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border capitalize ${
                                             isCompleted
                                                 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
                                                 : isCancelled
@@ -166,7 +182,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                                 >
                                                     {friendlyName === "Services"
                                                         ? `${s.service_name} • ${s.price_at_booking} RON`
-                                                        : s}
+                                                        : s.name}
                                                 </span>
                                             ))
                                         ) : (

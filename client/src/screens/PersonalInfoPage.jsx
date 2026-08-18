@@ -5,6 +5,8 @@ import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { validateFields, phone, textOnly } from "../utils/validation.js";
 import { ArrowLeft, Pencil, Phone, Mail, Shield, User } from "lucide-react";
 import { BottomNav } from "../components/BottomNav.jsx";
+import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { storage } from "../firebase.js";
 
 export function PersonalInfoPage() {
     const navigate = useNavigate();
@@ -13,7 +15,6 @@ export function PersonalInfoPage() {
     const passedUser = location.state?.user;
 
     const fileInputRef = useRef(null);
-    const [avatarPreview, setAvatarPreview] = useState(null) //TODO: user.photo_url
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState(passedUser || {
@@ -22,8 +23,11 @@ export function PersonalInfoPage() {
         phone_number: "",
         email: "",
         role: "Client",
+        photo_url: "",
         created_at: "",
     });
+
+    const initialAvatarUrlRef = useRef(null);
 
     const validationRules = {
         first_name: [textOnly],
@@ -37,6 +41,7 @@ export function PersonalInfoPage() {
             try {
                 const userData = await userService.getProfile();
                 setFormData(userData);
+                initialAvatarUrlRef.current = userData?.photo_url || null;
             } catch (error) {
                 console.error("Error fetching user data", error);
             } finally {
@@ -44,15 +49,50 @@ export function PersonalInfoPage() {
             }
         }
 
-        fetchUserFallback();
+        if (passedUser) {
+            initialAvatarUrlRef.current = passedUser.photo_url || null;
+            setLoading(false);
+        } else {
+            fetchUserFallback();
+        }
     }, [passedUser]);
 
+    const deleteOldAvatar = async (url) => {
+        if (!url || !url.includes("firebase")) return;
+        try {
+            const oldFileRef = ref(storage, url);
+            await deleteObject(oldFileRef);
+        } catch (error) {
+            console.warn("Could not delete old avatar:", error);
+        }
+    };
+
+    const handleUpload = async (fileToUpload) => {
+        if (!fileToUpload) return;
+
+        const previousUploadedUrl = formData.photo_url;
+        const fileName = `${Date.now()}_${fileToUpload.name}`;
+        const storageRef = ref(storage, `avatars/${fileName}`);
+
+        try {
+            const snapshot = await uploadBytes(storageRef, fileToUpload);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+
+            setFormData((prev) => ({ ...prev, photo_url: downloadURL }));
+
+            if (previousUploadedUrl && previousUploadedUrl !== initialAvatarUrlRef.current) {
+                await deleteOldAvatar(previousUploadedUrl);
+            }
+        } catch (error) {
+            console.error("Error uploading file:", error);
+            setErrors((prev) => ({ ...prev, avatar: "Failed to upload avatar. Please try again." }));
+        }
+    };
+
     const handleFileChange = (e) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const previewUrl = URL.createObjectURL(file);
-            setAvatarPreview(previewUrl);
-            // Firebase Cloud
+        const selectedFile = e.target.files[0];
+        if (selectedFile) {
+            handleUpload(selectedFile);
         }
     };
 
@@ -85,6 +125,9 @@ export function PersonalInfoPage() {
 
         try {
             await userService.edit(formData.id, formData)
+            if (initialAvatarUrlRef.current && initialAvatarUrlRef.current !== formData.photo_url) {
+                await deleteOldAvatar(initialAvatarUrlRef.current);
+            }
             setErrors({});
             navigate(-1);
         } catch (error) {
@@ -108,7 +151,7 @@ export function PersonalInfoPage() {
                 className="hidden"
             />
 
-            <div className="bg-[#121212] px-6 pt-6 pb-4 shrink-0 border-b border-white/5 flex items-center gap-4">
+            <div className="bg-[#121212] px-6 pt-4 pb-3 shrink-0 border-b border-white/5 flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
                     className="w-10 h-10 rounded-2xl bg-[#1C1B1B] border border-white/5 flex items-center justify-center text-gray-300 hover:text-white transition-colors cursor-pointer"
@@ -120,7 +163,7 @@ export function PersonalInfoPage() {
                         ACCOUNT SETTINGS
                     </p>
                     <h1
-                        className="text-2xl font-bold leading-tight text-[#F2EFE9]"
+                        className="text-3xl font-bold leading-tight mt-1 text-[#F2EFE9]"
                         style={{ fontFamily: "'Playfair Display', serif" }}
                     >
                         Personal Information
@@ -135,9 +178,9 @@ export function PersonalInfoPage() {
                 <div className="flex flex-col items-center justify-center">
                     <div className="relative">
                         <div className="w-24 h-24 rounded-full bg-[#DBB668] text-[#121212] flex items-center justify-center font-bold text-2xl overflow-hidden border-2 border-white/10 shadow-lg">
-                            {avatarPreview ? (
+                            {formData.photo_url ? (
                                 <img
-                                    src={avatarPreview}
+                                    src={formData.photo_url}
                                     alt="Profile"
                                     className="w-full h-full object-cover"
                                 />
@@ -255,10 +298,11 @@ export function PersonalInfoPage() {
                                 </div>
                                 <div>
                                     <p className="text-sm font-semibold text-white">Member Role</p>
-                                    <p className="text-xs text-gray-400">Member since {new Date(formData.created_at).toLocaleDateString('en-US', {
-                                        month: 'long',
-                                        year: 'numeric'
-                                    })}</p>
+                                    <p className="text-xs text-gray-400">
+                                        Member since {formData.created_at
+                                        ? new Date(formData.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+                                        : "—"}
+                                    </p>
                                 </div>
                             </div>
                             <span className="text-[10px] font-bold tracking-wider text-[#DBB668] bg-[#DBB668]/15 px-2.5 py-1 rounded-md uppercase border border-[#DBB668]/30">

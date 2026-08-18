@@ -4,11 +4,11 @@ require('dotenv').config();
 
 require('./config/firebase.js');
 
-const servicesRoutes = require('./routes/services');
-const appointmentsRoutes = require('./routes/appointments');
-const barbersRoutes = require('./routes/barbers');
-const usersRoutes = require('./routes/users');
-const skillsRoutes = require('./routes/skills');
+const servicesRoutes = require('./routes/services.routes');
+const appointmentsRoutes = require('./routes/appointments.routes');
+const barbersRoutes = require('./routes/barbers.routes');
+const usersRoutes = require('./routes/users.routes');
+const skillsRoutes = require('./routes/skills.routes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;

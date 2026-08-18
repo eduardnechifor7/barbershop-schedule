@@ -6,7 +6,7 @@ export function AdminRoute({ user }) {
         return <Navigate to="/" replace />;
     }
 
-    if (user.role !== "Admin") {
+    if (user.role !== "Admin" && user.role !== "Barber") {
         return <Navigate to="/customer" replace />;
     }
 

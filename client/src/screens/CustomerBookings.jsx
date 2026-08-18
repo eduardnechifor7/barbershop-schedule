@@ -228,12 +228,12 @@ export function CustomerBookings() {
     return (
         <div className="animate-fade-in flex flex-col h-screen h-[100dvh] bg-[#121212] overflow-hidden">
             {/* Header */}
-            <div className="bg-[#121212] px-5 pt-5 pb-5 shrink-0 border-b border-white/5">
+            <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-3 mb-1">
                     <div>
                         <p className="text-gray-400 text-xs font-medium uppercase tracking-widest">Bookings</p>
                         <h1
-                            className="text-[#F2EFE9] text-2xl font-bold leading-tight"
+                            className="text-3xl font-bold leading-tight mt-1 text-[#F2EFE9]"
                             style={{ fontFamily: "'Playfair Display', serif" }}
                         >
                             New Appointment
