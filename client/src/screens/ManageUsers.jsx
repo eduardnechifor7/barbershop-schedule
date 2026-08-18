@@ -19,7 +19,8 @@ const inputLabels = {
     "Last Name": "last_name",
     "Phone Number": "phone_number",
     "Email": "email",
-    "Role": "role"
+    "Role": "role",
+    "Photo URL": "photo_url"
 };
 
 export function ManageUsers() {
@@ -192,8 +193,16 @@ export function ManageUsers() {
 
                                     <div className="flex items-center justify-between w-full pl-2 gap-4">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
-                                                <User size={20} />
+                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
+                                                {user.photo_url ? (
+                                                    <img
+                                                        src={user.photo_url}
+                                                        alt="Barber"
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <User size={20} />
+                                                )}
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <div className="flex items-center gap-2">

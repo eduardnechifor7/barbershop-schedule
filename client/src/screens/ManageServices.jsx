@@ -24,6 +24,15 @@ const inputLabels = {
     "Status": "is_active"
 };
 
+const viewLabels = {
+    "Service Name": "service_name",
+    "Price": "price",
+    "Duration": "minutes_duration",
+    "Description": "description",
+    "Skills": "required_skills",
+    "Status": "is_active"
+};
+
 export function ManageServices() {
     const [selectedServiceId, setSelectedServiceId] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,7 +42,7 @@ export function ManageServices() {
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [skills, setSkills] = useState([]);
 
-    const selectedService = services.find(s => s.id === selectedServiceId);
+    const selectedService = services.find(s => s.service_id === selectedServiceId);
     const navigate = useNavigate();
 
     const options = useMemo(() => ({
@@ -185,13 +194,13 @@ export function ManageServices() {
                         </div>
                     ) : (
                         services.map((service) => {
-                            const isSelected = selectedServiceId === service.id;
+                            const isSelected = selectedServiceId === service.service_id;
 
                             return (
                                 <div
                                     key={service.id}
                                     onClick={() => {
-                                        setSelectedServiceId(isSelected ? null : service.id);
+                                        setSelectedServiceId(isSelected ? null : service.service_id);
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
@@ -269,7 +278,7 @@ export function ManageServices() {
                     {isModalOpen && modalType === "VIEW" && (
                         <ViewModal
                             isOpen={isModalOpen}
-                            config={inputLabels}
+                            config={viewLabels}
                             onClose={closeModal}
                             user={selectedService}
                         />

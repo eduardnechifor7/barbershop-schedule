@@ -1,46 +1,48 @@
-const express = require('express');
-const router = express.Router();
-const { verifyToken, isAdmin } = require('../middleware/auth.js');
 const db = require('../db');
 
-router.get('/list', verifyToken, async (req, res) => {
+const listBarbers = async (req, res) => {
     try {
         const barbers = await db.query(
             `SELECT 
                        b.id, 
-                       b.first_name, 
-                       b.last_name, 
-                       b.phone_number, 
-                       b.photo_url, 
+                       u.first_name AS first_name,
+                       u.last_name AS last_name,
+                       u.phone_number AS phone_number,
+                       u.photo_url AS photo_url,
                        COALESCE(json_agg(
                                 json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
                    FROM barbers AS b
+                   INNER JOIN users AS u ON b.user_id = u.id
                    LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
                    LEFT JOIN skills AS s ON bs.skill_id = s.id
-                   GROUP BY b.id`
+                   GROUP BY b.id, u.id, u.first_name
+                   ORDER BY u.first_name`
         );
         res.status(200).json(barbers.rows);
     } catch (error) {
         res.status(500).json({ error: "Error in loading barbers list", details: error.message });
     }
-});
+};
 
-router.get('/:id', verifyToken, async (req, res) => {
+const getBarberById = async (req, res) => {
     const { id } = req.params;
     try {
         const barbers = await db.query(
             `SELECT
                  b.id,
-                 b.first_name,
-                 b.last_name,
-                 b.phone_number,
-                 b.photo_url,
-                 COALESCE(json_agg(s.name) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
+                 u.first_name AS first_name,
+                 u.last_name AS last_name,
+                 u.phone_number AS phone_number,
+                 u.photo_url AS photo_url,
+                 COALESCE(json_agg(
+                          json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
              FROM barbers AS b
+                      INNER JOIN users AS u ON b.user_id = u.id
                       LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
                       LEFT JOIN skills AS s ON bs.skill_id = s.id
              WHERE b.id = $1
-             GROUP BY b.id`, [id]
+             GROUP BY b.id, u.id, u.first_name
+             ORDER BY u.first_name`, [id]
         );
 
         if (barbers.rows.length === 0) {
@@ -51,102 +53,110 @@ router.get('/:id', verifyToken, async (req, res) => {
     } catch (error) {
         res.status(500).json({ error: "Error in loading barbers details", details: error.message });
     }
-});
+};
 
-router.post('/addBarber', verifyToken, isAdmin, async (req, res) => {
-    const { first_name, last_name, phone_number, skills_ids, photo_url } = req.body;
+const addBarber = async (req, res) => {
+    const { user_id, skills_ids } = req.body;
 
-    if (!first_name || !last_name || !phone_number || !skills_ids || !Array.isArray(skills_ids) || skills_ids.length === 0) {
+    if (!user_id || isNaN(Number(user_id))) {
+        return res.status(400).json({ error: "A valid user_id is required" });
+    }
+
+    if (!skills_ids || !Array.isArray(skills_ids) || skills_ids.length === 0) {
         return res.status(400).json({ error: "Missing required fields or skills_ids is not a valid array" });
     }
 
+    const uniqueSkillIds = [...new Set(skills_ids)];
     const client = await db.getClient();
 
     try {
         await client.query('BEGIN');
         const newBarber = await client.query(
-            `INSERT INTO barbers (first_name, last_name, phone_number, photo_url) 
-             VALUES ($1, $2, $3, $4) RETURNING *`,
-            [first_name, last_name, phone_number, photo_url]
+            `INSERT INTO barbers (user_id) 
+             VALUES ($1) RETURNING *`,
+            [user_id]
         );
 
         const newBarberId = newBarber.rows[0].id;
+
+        const updateRole = await client.query(
+            `UPDATE users SET role = 'Barber' WHERE id = $1 RETURNING *`, [user_id]
+        );
+
+        if (updateRole.rowCount === 0) {
+            throw new Error("User not found");
+        }
 
         const insertSkillsBarbers = await client.query(
             `INSERT INTO barber_skills (barber_id, skill_id)
                   SELECT $1, id
                   FROM skills
-                  WHERE id = ANY($2::int[])`, [newBarberId, skills_ids]
+                  WHERE id = ANY($2::int[])`, [newBarberId, uniqueSkillIds]
         );
 
-        if (insertSkillsBarbers.rowCount !== skills_ids.length) {
+        if (insertSkillsBarbers.rowCount !== uniqueSkillIds.length) {
             throw new Error("One or more selected skills don't exist in the database");
         }
 
         await client.query('COMMIT');
-        res.status(201).json({ message: "Barber added successfully", barber: newBarber.rows[0] });
+        res.status(201).json({
+            message: "Barber added successfully",
+            barber: {
+                ...newBarber.rows[0],
+                user: updateRole.rows[0]
+            }
+        });
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(500).json({ error: "Error in adding barber", details: err.message });
     } finally {
         client.release();
     }
-});
+};
 
-router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
+const editBarber = async (req, res) => {
     const { id } = req.params;
-    const { first_name, last_name, phone_number, photo_url, skills_ids } = req.body;
+    const { skills_ids } = req.body;
 
     const client = await db.getClient();
 
     try {
         await client.query('BEGIN');
 
-        const updateBarber = await client.query(
-            `UPDATE barbers 
-             SET first_name = COALESCE(NULLIF($1, ''), first_name), 
-                 last_name = COALESCE(NULLIF($2, ''), last_name), 
-                 phone_number = COALESCE(NULLIF($3, ''), phone_number), 
-                 photo_url = COALESCE(NULLIF($4, ''), photo_url)
-             WHERE id = $5
-             RETURNING *`,
-            [first_name, last_name, phone_number, photo_url, id]
-        );
-
-        if (updateBarber.rows.length === 0) {
-            await client.query('ROLLBACK');
-            return res.status(404).json({ error: "The barber does not exist" });
-        }
-
         if (skills_ids && Array.isArray(skills_ids)) {
             await client.query(`DELETE FROM barber_skills WHERE barber_id = $1`, [id]);
 
-            if (skills_ids.length > 0) {
+            const uniqueSkillIds = [...new Set(skills_ids)];
+            if (uniqueSkillIds.length > 0) {
                 const insertSkills = await client.query(
                     `INSERT INTO barber_skills (barber_id, skill_id)
                      SELECT $1, id
                      FROM skills
                      WHERE id = ANY($2::int[])`,
-                    [id, skills_ids]
+                    [id, uniqueSkillIds]
                 );
 
-                if (insertSkills.rowCount !== skills_ids.length) {
+                if (insertSkills.rowCount !== uniqueSkillIds.length) {
                     throw new Error("One or more selected skills don't exist in the database");
                 }
             }
         }
 
         await client.query('COMMIT');
-        res.status(200).json({ message: "Barber updated successfully", barber: updateBarber.rows[0] });
+
+        res.status(200).json({
+            message: "Barber updated successfully",
+            barber_id: id
+        });
     } catch (err) {
         await client.query('ROLLBACK');
         res.status(500).json({ error: "Error in updating barber", details: err.message });
     } finally {
         client.release();
     }
-});
+};
 
-router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
+const deleteBarber = async (req, res) => {
     try {
         const { id } = req.params;
         const deleteBarber = await db.query(
@@ -164,6 +174,12 @@ router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
     } catch (err) {
         res.status(500).json({ error: "Error in deleting barber", details: err.message });
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    listBarbers,
+    getBarberById,
+    addBarber,
+    editBarber,
+    deleteBarber
+};

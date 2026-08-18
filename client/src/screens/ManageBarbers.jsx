@@ -3,6 +3,7 @@ import { FormModal } from "../components/FormModal.jsx";
 import { ViewModal } from "../components/ViewModal.jsx";
 import { barberService } from "../services/barberService.js";
 import { skillsService } from "../services/skillsService.js";
+import { userService } from "../services/userService.js";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
@@ -16,10 +17,11 @@ import {
 } from "lucide-react";
 
 const inputLabels = {
-    "First Name": "first_name",
-    "Last Name": "last_name",
-    "Phone Number": "phone_number",
-    "Photo URL": "photo_url",
+    "Users": "user_id",
+    "Skills": "skills_ids"
+};
+
+const editLabels = {
     "Skills": "skills_ids"
 };
 
@@ -27,7 +29,7 @@ const viewLabels = {
     "Barber Name": ["first_name", "last_name"],
     "Phone Number": "phone_number",
     "Photo URL": "photo_url",
-    "Skills": "skills_ids"
+    "Skills": "skills"
 }
 
 export function ManageBarbers() {
@@ -36,6 +38,7 @@ export function ManageBarbers() {
     const [modalType, setModalType] = useState("");
     const [barbers, setBarbers] = useState([]);
     const [skills, setSkills] = useState([]);
+    const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -43,23 +46,22 @@ export function ManageBarbers() {
     const navigate = useNavigate();
 
     const options = useMemo(() => ({
-        first_name: null,
-        last_name: null,
-        phone_number: null,
-        photo_url: null,
+        user_id: users.map(user => ({ value: user.id, label: `${user.first_name} ${user.last_name}` })),
         skills_ids: skills.map(skill => ({ value: skill.id, label: skill.name }))
-    }), [skills]);
+    }), [skills, users]);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setIsLoading(true);
-                const [barbersData, skillsData] = await Promise.all([
+                const [barbersData, skillsData, userData] = await Promise.all([
                     barberService.getAll(),
-                    skillsService.getAll()
+                    skillsService.getAll(),
+                    userService.getAll()
                 ]);
                 setBarbers(barbersData);
                 setSkills(skillsData);
+                setUsers(userData);
             } catch (error) {
                 console.error("Error in listing barbers: ", error.response?.data || error.message);
             } finally {
@@ -279,7 +281,7 @@ export function ManageBarbers() {
                     {isModalOpen && modalType === "EDIT" && (
                         <FormModal
                             isOpen={isModalOpen}
-                            config={inputLabels}
+                            config={editLabels}
                             onClose={closeModal}
                             onSubmit={handleEditBarber}
                             options={options}

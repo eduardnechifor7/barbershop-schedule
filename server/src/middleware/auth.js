@@ -36,10 +36,20 @@ const isAdmin = (req, res, next) => {
     const user = req.user;
 
     if (user && user.role === 'Admin') {
-        next();
+        return next();
     } else {
-        res.status(403).json({ error: 'Unauthorized: Admin access required' });
+        return res.status(403).json({ error: 'Unauthorized: Admin access required' });
     }
 };
 
-module.exports = { verifyToken, isAdmin };
+const isBarber = (req, res, next) => {
+    const user = req.user;
+
+    if (user && (user.role === 'Barber' || user.role === 'Admin')) {
+        return next();
+    } else {
+        return res.status(403).json({ error: 'Unauthorized: Barber or Admin access required' });
+    }
+}
+
+module.exports = { verifyToken, isAdmin, isBarber };

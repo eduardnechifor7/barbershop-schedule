@@ -32,6 +32,38 @@ export const appointmentService = {
         return response.json();
     },
 
+    async getAsBarber() {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/appointments/list-as-barber`, {
+            method: "GET",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to fetch barber appointments");
+        return response.json();
+    },
+
+    async editAsBarber(id, formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch(`http://localhost:8080/api/appointments/edit-as-barber/${id}`, {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to edit appointment as barber");
+        return response;
+    },
+
+    async createAsBarber(formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch(`http://localhost:8080/api/appointments/create-as-barber`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to create appointment as barber");
+        return response;
+    },
+
     async getOccupiedTimes(barberId, date) {
         const headers = await getAuthHeaders();
         const response = await fetch(`http://localhost:8080/api/appointments/${barberId}/existing-bookings?date=${date}`, {

@@ -1,9 +1,6 @@
-const express = require('express');
-const { verifyToken, isAdmin } = require('../middleware/auth.js');
-const router = express.Router();
 const db = require('../db');
 
-router.post('/create', verifyToken, isAdmin, async (req, res) => {
+const createService = async (req, res) => {
     const { service_name, price, minutes_duration, description, skills_ids = [] } = req.body;
 
     if (!service_name || !price || !minutes_duration || !description || !skills_ids || !Array.isArray(skills_ids)) {
@@ -27,13 +24,15 @@ router.post('/create', verifyToken, isAdmin, async (req, res) => {
                 `INSERT INTO services_skills (service_id, skill_id)
                  SELECT $1, id
                  FROM skills
-                 WHERE id = ANY($2::int[])`, [newServiceId, uniqueSkillsIds]
+                 WHERE id = ANY($2::int[])`,
+                [newServiceId, uniqueSkillsIds]
             );
+
+            if (insertServiceSkills.rowCount !== uniqueSkillsIds.length) {
+                throw new Error("One or more selected skills don't exist in the database");
+            }
         }
 
-        if (insertServiceSkills.rowCount !== uniqueSkillsIds.length) {
-            throw new Error("One or more selected skills don't exist in the database");
-        }
         await client.query('COMMIT');
 
         res.status(201).json({ message: "Service created successfully", service: newService.rows[0] });
@@ -43,57 +42,57 @@ router.post('/create', verifyToken, isAdmin, async (req, res) => {
     } finally {
         client.release();
     }
-});
+};
 
-router.get('/list', async (req, res) => {
+const listServices = async (req, res) => {
     try {
         const serviceData = await db.query(
             `SELECT
-                    s.id AS service_id,
-                    s.service_name AS service_name,
-                    s.price AS price,
-                    s.minutes_duration AS minutes_duration,
-                    s.is_active AS is_active,
-                    s.description AS description,
-                    COALESCE(json_agg(
-                                     json_build_object('id', sk.id, 'name', sk.name)
-                                     ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS required_skills
-                  FROM services AS s
-                  LEFT JOIN services_skills AS ss ON s.id = ss.service_id
-                  LEFT JOIN skills AS sk ON ss.skill_id = sk.id
-                  GROUP BY s.id
-                  ORDER BY s.id ASC`
+                 s.id AS service_id,
+                 s.service_name AS service_name,
+                 s.price AS price,
+                 s.minutes_duration AS minutes_duration,
+                 s.is_active AS is_active,
+                 s.description AS description,
+                 COALESCE(json_agg(
+                          json_build_object('id', sk.id, 'name', sk.name)
+                                  ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS required_skills
+             FROM services AS s
+                      LEFT JOIN services_skills AS ss ON s.id = ss.service_id
+                      LEFT JOIN skills AS sk ON ss.skill_id = sk.id
+             GROUP BY s.id
+             ORDER BY s.id ASC`
         );
         res.status(200).json(serviceData.rows);
     } catch (error) {
         res.status(500).json({ error: "Error in retrieving data", details: error.message });
     }
-});
+};
 
-router.delete('/delete/:id', verifyToken, isAdmin, async (req, res) => {
-   try {
-       const { id } = req.params;
+const deleteService = async (req, res) => {
+    try {
+        const { id } = req.params;
 
-       const deletedService = await db.query(
-           'UPDATE services SET is_active = false WHERE id = $1 RETURNING *',
-           [id]
-       );
+        const deletedService = await db.query(
+            'UPDATE services SET is_active = false WHERE id = $1 RETURNING *',
+            [id]
+        );
 
-       if (deletedService.rows.length === 0) {
-           return res.status(404).json({ error: "The service does not exist" });
-       }
+        if (deletedService.rows.length === 0) {
+            return res.status(404).json({ error: "The service does not exist" });
+        }
 
-       res.status(200).json({
-           message: 'Service status updated successfully',
-           deletedService: deletedService.rows[0]
-       });
-   } catch (err) {
-       console.error(err);
-       res.status(500).json({ error: "Error in updating barber service" });
-   }
-});
+        res.status(200).json({
+            message: 'Service status updated successfully',
+            deletedService: deletedService.rows[0]
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Error in updating barber service" });
+    }
+};
 
-router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
+const editService = async (req, res) => {
     const { id } = req.params;
     const { service_name, price, minutes_duration, description, is_active, skills_ids } = req.body;
 
@@ -158,6 +157,11 @@ router.patch('/edit/:id', verifyToken, isAdmin, async (req, res) => {
     } finally {
         client.release();
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    createService,
+    listServices,
+    deleteService,
+    editService
+};

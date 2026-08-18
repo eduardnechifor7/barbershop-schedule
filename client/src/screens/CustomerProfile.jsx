@@ -21,7 +21,6 @@ import { auth } from "../firebase.js";
 import { useNavigate } from "react-router-dom";
 
 export function CustomerProfile() {
-    const fileInputRef = useRef(null);
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
 
@@ -32,7 +31,6 @@ export function CustomerProfile() {
             try {
                 setLoading(true);
                 const userData = await userService.getProfile();
-                console.log(userData);
                 setUser(userData);
             } catch (error) {
                 console.error("Error fetching user data", error);
