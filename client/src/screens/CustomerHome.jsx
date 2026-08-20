@@ -128,6 +128,8 @@ export function CustomerHome() {
         cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
     };
 
+    const unreadCount = notifications.filter((n) => !n.is_read).length;
+
     if (loading) return <LoadingSpinner label="Loading dashboard..." />;
 
     if (isError) {
@@ -175,7 +177,9 @@ export function CustomerHome() {
                             onClick={handleNotificationButton}
                             className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/[0.05] cursor-pointer">
                             <Bell size={18} />
-                            <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DBB668]" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DBB668]" />
+                            )}
                         </button>
                         <div className="w-10 h-10 rounded-full bg-[#DBB668] flex items-center justify-center text-[#121212]">
                             <User size={18} />

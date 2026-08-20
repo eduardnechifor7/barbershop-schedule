@@ -139,6 +139,49 @@ const editUserById = async (req, res) => {
     }
 };
 
+const editPhoneNumber = async (req, res) => {
+    const { verificationToken, userId } = req.body;
+
+    if (!verificationToken || !userId) {
+        return res.status(400).json({ error: "Missing token or user ID" });
+    }
+
+    try {
+        const decodedToken = await admin.auth().verifyIdToken(verificationToken);
+        const verifiedPhoneNumber = decodedToken.phone_number;
+        const tempUid = decodedToken.uid;
+
+        const userRes = await db.query(
+            "SELECT firebase_uid FROM users WHERE id = $1",
+            [userId]
+        );
+        const originalUser = userRes.rows[0];
+
+        if (!originalUser) {
+            return res.status(404).json({ error: "User not found in database" });
+        }
+
+        if (tempUid !== originalUser.firebase_uid) {
+            await admin.auth().deleteUser(tempUid).catch(() => null);
+        }
+
+        await admin.auth().updateUser(originalUser.firebase_uid, {
+            phoneNumber: verifiedPhoneNumber
+        });
+
+
+        const updatedUser = await db.query(
+            "UPDATE users SET phone_number = $1 WHERE id = $2 RETURNING *",
+            [verifiedPhoneNumber, userId]
+        );
+
+        return res.status(200).json(updatedUser.rows[0]);
+    } catch (error) {
+        console.error("Error in updating phone number", error);
+        return res.status(500).json({ error: "Error in updating phone number", details: error.message });
+    }
+};
+
 const updateMe = async (req, res) => {
     const { first_name, last_name, phone_number, email, photo_url } = req.body;
     const firebase_uid = req.user.uid;
@@ -165,6 +208,44 @@ const updateMe = async (req, res) => {
         return res.status(500).json({ error: "Error in updating user", details: error.message });
     }
 };
+
+const updateNotification = async (req, res) => {
+    const userId = req.user.id;
+    const {email_notifications, in_app_notifications, sms_notifications} = req.body;
+
+    const hasEmail = typeof email_notifications === 'boolean';
+    const hasInApp = typeof in_app_notifications === 'boolean';
+    const hasSms = typeof sms_notifications === 'boolean';
+
+    if (!hasEmail && !hasInApp && !hasSms) {
+        return res.status(400).json({error: "At least one valid boolean preference must be provided"});
+    }
+
+    try {
+        const updateResult = await db.query(
+            `UPDATE users
+             SET email_notifications  = COALESCE($1, email_notifications),
+                 in_app_notifications = COALESCE($2, in_app_notifications),
+                 sms_notifications    = COALESCE($3, sms_notifications)
+             WHERE id = $4
+             RETURNING id, email_notifications, in_app_notifications, sms_notifications`,
+            [
+                hasEmail ? email_notifications : null,
+                hasInApp ? in_app_notifications : null,
+                hasSms ? sms_notifications : null,
+                userId
+            ]
+        );
+
+        if (updateResult.rows.length === 0) {
+            return res.status(404).json({error: "The user does not exist"});
+        }
+
+        return res.status(200).json({message: "Notification preferences updated successfully"});
+    } catch (error) {
+        return res.status(500).json({error: "Error in updating notification preferences", details: error.message});
+    }
+}
 
 const deleteUser = async (req, res) => {
     const { id } = req.params;
@@ -205,7 +286,9 @@ module.exports = {
     checkPhone,
     getUserByUid,
     editUserById,
+    editPhoneNumber,
     updateMe,
     deleteUser,
-    getClients
+    getClients,
+    updateNotification
 };

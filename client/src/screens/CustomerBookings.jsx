@@ -256,6 +256,7 @@ export function CustomerBookings() {
                         <div className="relative z-30">
                             <Select
                                 isMulti
+                                menuPortalTarget={document.body}
                                 options={filteredServices.map(s => ({ value: s.id || s.service_id, label: `${s.service_name} - ${s.price} RON` }))}
                                 placeholder="Select services..."
                                 onChange={(selectedOptions) => {
@@ -287,6 +288,9 @@ export function CustomerBookings() {
                                 icon={Scissors}
                                 components={{ Control: CustomControl }}
                                 unstyled
+                                styles={{
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                }}
                                 classNames={selectStyles}
                             />
                             {errors["selectedService"] && (
@@ -305,6 +309,7 @@ export function CustomerBookings() {
                         <div className="relative z-20">
                             <Select
                                 unstyled
+                                menuPortalTarget={document.body}
                                 options={barberOptions}
                                 placeholder="Select a barber..."
                                 classNames={selectStyles}
@@ -324,6 +329,9 @@ export function CustomerBookings() {
                                     );
                                 }}
                                 icon={User}
+                                styles={{
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                }}
                                 components={{ Control: CustomControl }}
                             />
                             {errors["selectedBarber"] && (
@@ -367,6 +375,7 @@ export function CustomerBookings() {
                         <div className="relative z-10">
                             <Select
                                 unstyled
+                                menuPortalTarget={document.body}
                                 placeholder={
                                     !selectedBarber
                                         ? "Select a barber first..."
@@ -382,6 +391,9 @@ export function CustomerBookings() {
                                 }}
                                 options={availableTimeSlots.map((time) => ({ value: time, label: time }))}
                                 icon={Clock}
+                                styles={{
+                                    menuPortal: (base) => ({ ...base, zIndex: 9999 })
+                                }}
                                 components={{ Control: CustomControl }}
                             />
                             {errors["selectedTime"] && (

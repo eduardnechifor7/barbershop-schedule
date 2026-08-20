@@ -17,7 +17,7 @@ const verifyToken = async (req, res, next) => {
         );
 
         if (userQuery.rows.length === 0) {
-            return res.status(404).json({ error: 'User not found in database' });
+            return res.status(404).json({ error: 'User not found in database', decodedToken: decodedToken });
         }
 
         req.user = {

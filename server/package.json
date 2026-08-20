@@ -21,7 +21,8 @@
   "overrides": {
     "google-p12-pem": "^4.0.0",
     "@tootallnate/once": "^3.0.1",
-    "got": "^11.8.5"
+    "got": "^11.8.5",
+    "uuid": "^11.1.1"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

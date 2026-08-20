@@ -2,7 +2,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { userService } from "../services/userService.js";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { validateFields, phone, textOnly } from "../utils/validation.js";
+import { validateFields, email, textOnly } from "../utils/validation.js";
 import { ArrowLeft, Pencil, Phone, Mail, Shield, User } from "lucide-react";
 import { BottomNav } from "../components/BottomNav.jsx";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
@@ -32,7 +32,7 @@ export function PersonalInfoPage() {
     const validationRules = {
         first_name: [textOnly],
         last_name: [textOnly],
-        phone_number: [phone]
+        email: [email]
     }
 
     useEffect(() => {
@@ -247,27 +247,6 @@ export function PersonalInfoPage() {
 
                         <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
-                                PHONE NUMBER
-                            </label>
-                            <div className="relative">
-                                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
-                                <input
-                                    type="tel"
-                                    name="phone_number"
-                                    value={formData.phone_number}
-                                    onChange={handleChange}
-                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors"
-                                />
-                                {errors["phone_number"] && (
-                                    <p className="text-red-400 text-xs font-medium flex items-center gap-1 mt-0.5">
-                                        • {errors["phone_number"]}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                 EMAIL ADDRESS
                             </label>
                             <div className="relative">
@@ -276,13 +255,34 @@ export function PersonalInfoPage() {
                                     type="email"
                                     name="email"
                                     value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors"
+                                />
+                                {errors["email"] && (
+                                    <p className="text-red-400 text-xs font-medium flex items-center gap-1 mt-0.5">
+                                        • {errors["email"]}
+                                    </p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                                PHONE NUMBER
+                            </label>
+                            <div className="relative">
+                                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="tel"
+                                    name="phone_number"
+                                    value={formData.phone_number}
                                     disabled
                                     className="w-full bg-[#262424]/50 border border-white/5 rounded-2xl pl-11 pr-11 py-3 mt-1.5 text-sm text-gray-400 cursor-not-allowed"
                                 />
                                 <Shield size={16} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500" />
                             </div>
                             <p className="text-[11px] text-gray-500 px-1">
-                                Email managed via login credentials — read only.
+                                Phone number managed via login credentials — read only.
                             </p>
                         </div>
                     </div>

@@ -40,6 +40,17 @@ export const userService = {
         return response.json();
     },
 
+    async updateNotifcationSettings(formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch("http://localhost:8080/api/users/update-notification", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to update notification settings");
+        return response;
+    },
+
     async getClients() {
         const headers = await getAuthHeaders();
         const response = await fetch("http://localhost:8080/api/users/clients", {
@@ -58,6 +69,17 @@ export const userService = {
             body: JSON.stringify(formData)
         });
         if (!response.ok) throw new Error("Failed to edit user");
+        return response;
+    },
+
+    async editPhoneNumber(formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch("http://localhost:8080/api/users/edit-phone", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to edit phone number");
         return response;
     },
 
