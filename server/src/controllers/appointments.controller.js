@@ -1,10 +1,10 @@
+const createNotification = require('../services/notificationService');
 const db = require('../db');
 
 // Helper for creating an appointment, used across client, barber, and admin routes
 async function executeCreateAppointment(userId, barberId, serviceIds, appointmentDate, startTime, notes) {
     const client = await db.getClient();
     const uniqueServiceIds = [...new Set(serviceIds.map(Number))];
-
     try {
         await client.query('BEGIN');
 
@@ -28,6 +28,12 @@ async function executeCreateAppointment(userId, barberId, serviceIds, appointmen
         if (insertAppServ.rowCount !== uniqueServiceIds.length) {
             throw new Error("One or more selected services don't exist in the database");
         }
+
+        await createNotification(
+            userId,
+            "Appointment Scheduled!",
+            `See you on ${appointmentDate} at ${startTime}!`
+        );
 
         await client.query('COMMIT');
         return { message: "Appointment created successfully", appointment_id: newAppointmentId };
@@ -186,7 +192,7 @@ const createAsBarber = async (req, res) => {
 // Modify appointment as Barber
 const editAsBarber = async (req, res) => {
     const { id } = req.params;
-    const { appointment_date, start_time, notes, status, service_ids } = req.body;
+    const { appointment_date, start_time, notes, status, service_ids, user_id } = req.body;
     const client = await db.getClient();
 
     try {
@@ -234,6 +240,12 @@ const editAsBarber = async (req, res) => {
                 [id, uniqueServiceIds]
             );
         }
+
+        await createNotification(
+            user_id,
+            "Appointment Updated!",
+            `Your appointment has been updated. See you on ${appointmentDate} at ${startTime}!`
+        );
 
         await client.query('COMMIT');
         return res.status(200).json(updateAppointment.rows[0]);
@@ -358,6 +370,12 @@ const editAppointment = async (req, res) => {
                 [id, uniqueServiceIds]
             );
         }
+
+        await createNotification(
+            user_id,
+            "Appointment Updated!",
+            `Your appointment has been updated. See you on ${appointmentDate} at ${startTime}!`
+        );
 
         await client.query('COMMIT');
         return res.status(200).json(updateAppointment.rows[0]);

@@ -9,6 +9,7 @@ const appointmentsRoutes = require('./routes/appointments.routes');
 const barbersRoutes = require('./routes/barbers.routes');
 const usersRoutes = require('./routes/users.routes');
 const skillsRoutes = require('./routes/skills.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -21,6 +22,7 @@ app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/barbers', barbersRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/skills', skillsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.listen(PORT, () => {
     console.log(`Server runs on port ${PORT}`);

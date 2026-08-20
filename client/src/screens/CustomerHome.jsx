@@ -11,20 +11,24 @@ import {
 } from "lucide-react";
 import { appointmentService } from "../services/appointmentService.js";
 import { userService } from "../services/userService.js";
+import { notificationService } from "../services/notificationService.js";
 import { useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { auth } from "../firebase.js";
 import { BottomNav } from "../components/BottomNav.jsx";
 import { ConfirmModal } from "../components/ConfirmModal.jsx";
 import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal.jsx";
+import { NotificationsModal } from "../components/NotificationsModal.jsx";
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
     const [appointments, setAppointments] = useState([]);
     const [user, setUser] = useState(null);
+    const [notifications, setNotifications] = useState([]);
     const [isError, setIsError] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
+    const [openNotificationsModal, setOpenNotificationsModal] = useState(false);
     const [openDetailsModal, setOpenDetailsModal] = useState(false);
 
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -40,12 +44,14 @@ export function CustomerHome() {
             setLoading(true);
             setIsError(false);
             try {
-                const [appointmentsData, userData] = await Promise.all([
+                const [appointmentsData, userData, notificationsData] = await Promise.all([
                     appointmentService.getByUser(),
-                    userService.getProfile()
+                    userService.getProfile(),
+                    notificationService.getUserNotifications()
                 ]);
                 setAppointments(appointmentsData);
                 setUser(userData);
+                setNotifications(notificationsData);
             } catch (error) {
                 setIsError(true);
                 console.error("Error fetching dashboard data:", error);
@@ -79,6 +85,42 @@ export function CustomerHome() {
     const handleAppointmentClick = (appointment) => {
         setSelectedAppointment(appointment);
         setOpenDetailsModal(true);
+    }
+
+    const handleNotificationButton = () => {
+        setOpenNotificationsModal(!openNotificationsModal);
+    }
+
+    const handleNotificationClick = async (notificationId) => {
+        try {
+            await notificationService.markAsRead(notificationId);
+            setNotifications(prevNotifications => prevNotifications.map(notification =>
+                notification.id === notificationId ? { ...notification, is_read: true } : notification
+            ));
+        } catch (error) {
+            console.error("Error marking notification as read:", error);
+        }
+    }
+
+    const handleMarkAllAsRead = async () => {
+        try {
+            await notificationService.markAllAsRead();
+            setNotifications(prevNotifications => prevNotifications.map(notification => ({
+                ...notification,
+                is_read: true
+            })));
+        } catch (error) {
+            console.error("Error marking all notifications as read:", error);
+        }
+    }
+
+    const handleDeleteNotification = async (notificationId) => {
+        try {
+            await notificationService.deleteNotification(notificationId);
+            setNotifications(prevNotifications => prevNotifications.filter(notification => notification.id !== notificationId));
+        } catch (error) {
+            console.error("Error deleting notification:", error);
+        }
     }
 
     const STATUS_ICON_STYLES = {
@@ -129,7 +171,9 @@ export function CustomerHome() {
                                 <ShieldCheck size={18} />
                             </button>
                         )}
-                        <button className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/[0.05] cursor-pointer">
+                        <button
+                            onClick={handleNotificationButton}
+                            className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/[0.05] cursor-pointer">
                             <Bell size={18} />
                             <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DBB668]" />
                         </button>
@@ -315,7 +359,14 @@ export function CustomerHome() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
-
+            <NotificationsModal
+                isOpen={openNotificationsModal}
+                notifications={notifications}
+                onClose={() => setOpenNotificationsModal(false)}
+                onNotificationClick={handleNotificationClick}
+                onMarkAllAsRead={handleMarkAllAsRead}
+                onDeleteNotification={handleDeleteNotification}
+            />
             <ConfirmModal
                 isOpen={showConfirmModal}
                 onClose={() => setShowConfirmModal(false)}
