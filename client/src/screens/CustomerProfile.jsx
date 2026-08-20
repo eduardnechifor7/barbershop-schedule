@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { BottomNav } from "../components/BottomNav.jsx";
 import {
-    Pencil,
     Mail,
     Phone,
     Calendar,
@@ -19,10 +18,17 @@ import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
 import { signOut } from "firebase/auth";
 import { auth } from "../firebase.js";
 import { useNavigate } from "react-router-dom";
+import { NotificationsSettings } from "../components/NotificationsSettings.jsx";
 
 export function CustomerProfile() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [openEditModal, setOpenEditModal] = useState(false);
+    const [preferences, setPreferences] = useState({
+        in_app_notifications: user?.in_app_notifications || true,
+        email_notifications: user?.email_notifications || true,
+        sms_notifications: user?.sms_notifications || true
+    });
 
     const navigate = useNavigate();
 
@@ -32,6 +38,11 @@ export function CustomerProfile() {
                 setLoading(true);
                 const userData = await userService.getProfile();
                 setUser(userData);
+                setPreferences({
+                    in_app_notifications: userData.in_app_notifications,
+                    email_notifications: userData.email_notifications,
+                    sms_notifications: userData.sms_notifications
+                });
             } catch (error) {
                 console.error("Error fetching user data", error);
             } finally {
@@ -51,6 +62,24 @@ export function CustomerProfile() {
             alert("Something went wrong, try again.");
         }
     };
+
+    const editUser = async (key, formData) => {
+        setPreferences((prevPreferences) => ({
+            ...prevPreferences,
+            [key]: formData
+        }));
+        try {
+            await userService.updateNotifcationSettings({
+                [key]: formData
+            });
+        } catch (error) {
+            console.error("Error updating notification settings: ", error.message);
+            setPreferences((prevPreferences) => ({
+                ...prevPreferences,
+                [key]: !formData
+            }));
+        }
+    }
 
     if (loading) {
         return (
@@ -161,7 +190,9 @@ export function CustomerProfile() {
                             <ChevronRight size={18} className="text-gray-500 shrink-0" />
                         </button>
 
-                        <button className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                        <button
+                            onClick = {() => setOpenEditModal(true)}
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <Bell size={18} />
@@ -181,14 +212,18 @@ export function CustomerProfile() {
                         SECURITY & SUPPORT
                     </p>
                     <div className="bg-[#1C1B1B] rounded-3xl border border-white/5 divide-y divide-white/5 overflow-hidden">
-                        <button className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                        <button
+                            onClick = {() => navigate("security", {
+                                state: user
+                            })}
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <ShieldCheck size={18} />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-white">Security & Password</p>
-                                    <p className="text-xs text-gray-400 truncate">Reset password, authentication</p>
+                                    <p className="text-sm font-semibold text-white">Security & Authentication</p>
+                                    <p className="text-xs text-gray-400 truncate">Reset phone number, authentication</p>
                                 </div>
                             </div>
                             <ChevronRight size={18} className="text-gray-500 shrink-0" />
@@ -236,6 +271,12 @@ export function CustomerProfile() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
+            <NotificationsSettings
+                isOpen={openEditModal}
+                onClose={() => setOpenEditModal(false)}
+                preferences={preferences}
+                setUser={editUser}
+            />
         </div>
     );
 }

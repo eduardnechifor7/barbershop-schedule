@@ -10,6 +10,8 @@ router.get('/check/:phone', usersCtrl.checkPhone);
 // Current profile routes (Authenticated users)
 router.get('/by-uid', verifyToken, usersCtrl.getUserByUid);
 router.patch('/me', verifyToken, usersCtrl.updateMe);
+router.patch('/update-notification', verifyToken, usersCtrl.updateNotification);
+router.patch('/edit-phone', verifyToken, usersCtrl.editPhoneNumber);
 
 // Administration routes (Admin only)
 router.get('/list', verifyToken, isAdmin, usersCtrl.listUsers);

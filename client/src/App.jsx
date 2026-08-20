@@ -20,6 +20,7 @@ import { CustomerExplore } from "./screens/CustomerExplore.jsx";
 import { CustomerProfile } from "./screens/CustomerProfile.jsx";
 import { PersonalInfoPage } from "./screens/PersonalInfoPage.jsx";
 import { ManageApptBarber } from "./screens/ManageApptBarber.jsx";
+import { SecurityPage } from "./screens/SecurityPage.jsx";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -72,6 +73,7 @@ function App() {
                 <Route path="/explore" element={<CustomerExplore />} />
                 <Route path="/profile" element={<CustomerProfile />} />
                 <Route path="/profile/personal-info" element={<PersonalInfoPage />} />
+                <Route path="/profile/security" element={<SecurityPage />} />
             </Routes>
         </div>
     );

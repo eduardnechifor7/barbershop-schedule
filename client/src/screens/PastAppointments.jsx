@@ -49,7 +49,6 @@ export function PastAppointments() {
     return (
         <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
-            {/* Header - Rămâne neschimbat, fix sus datorită structurii flex */}
             <div className="bg-[#121212] px-5 pt-6 pb-5 flex items-center gap-3 shrink-0 border-b border-white/5 z-10">
                 <button
                     onClick={() => navigate("/customer")}

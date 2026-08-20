@@ -3,6 +3,8 @@ import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { userService } from "../services/userService.js";
+import {signOut} from "firebase/auth";
+import {auth} from "../firebase.js";
 
 export function OTPScreen () {
     const [otp, setOtp] = useState("");
@@ -14,11 +16,12 @@ export function OTPScreen () {
 
     const role = location.state?.role || "Customer";
     const phone = location.state?.phone || "";
-
+    const userId = location.state?.userId || null;
+    const phoneChange = location.state?.phoneChange || false;
     const registerData = location.state?.registerData || null;
 
     useEffect (() => {
-        if (!window.confirmationResult) {
+        if (!window.confirmationResult && !phoneChange) {
             navigate("/", { replace: true });
         }
     }, [navigate]);
@@ -32,6 +35,25 @@ export function OTPScreen () {
         try {
             setIsLoading(true);
             setError("");
+
+            if (phoneChange) {
+                if (!auth.currentUser) {
+                    throw new Error("No active session found. Please log in again.");
+                }
+
+                const result = await window.confirmationResult.confirm(otp);
+                const verificationToken = await result.user.getIdToken();
+
+                await userService.editPhoneNumber({
+                    userId,
+                    verificationToken,
+                    phone
+                });
+
+                await signOut(auth);
+                navigate("/", { replace: true });
+                return;
+            }
 
             const result = await window.confirmationResult.confirm(otp);
             const firebaseUser = result.user;
@@ -53,9 +75,9 @@ export function OTPScreen () {
             }
 
             if (role === "Admin") {
-                navigate("/admin", { replace: true });
+                navigate("/admin", {replace: true});
             } else {
-                navigate("/customer", { replace: true });
+                navigate("/customer", {replace: true});
             }
         } catch (err) {
             console.error("OTP verification error:", err);
@@ -106,7 +128,7 @@ export function OTPScreen () {
                 <PrimaryButton onClick={handleVerify}
                                isLoading={isLoading}
                                className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">
-                    Your chair is waiting
+                    Verify 6-Digit Code
                 </PrimaryButton>
 
                 <div className="flex flex-row items-center justify-center gap-1">

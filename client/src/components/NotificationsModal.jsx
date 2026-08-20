@@ -7,13 +7,10 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn select-none">
-            {/* Container Modal */}
             <div className="relative w-full max-w-lg bg-[#1C1B1B] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
 
-                {/* Accent Bar */}
                 <div className="h-0.5 bg-gradient-to-r from-[#DBB668] via-[#c9a155] to-transparent shrink-0" />
 
-                {/* Header */}
                 <div className="p-5 pb-4 border-b border-white/5 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-2xl bg-[#262424] flex items-center justify-center text-[#DBB668] border border-white/5">
@@ -55,7 +52,6 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
                     </div>
                 </div>
 
-                {/* Lista Notificari */}
                 <div
                     className="flex-1 overflow-y-auto p-5 space-y-3"
                     style={{ scrollbarWidth: "none" }}
@@ -85,7 +81,6 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
                                     )}
                                 </div>
 
-                                {/* Continut */}
                                 <div className="flex-1 min-w-0">
                                     <div className="flex items-center justify-between gap-2 mb-1">
                                         <p
@@ -96,7 +91,6 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
                                             {item.title}
                                         </p>
 
-                                        {/* Badge Bulina Necitit */}
                                         {!item.is_read && (
                                             <span className="w-2 h-2 rounded-full bg-[#DBB668] shrink-0" />
                                         )}
@@ -131,7 +125,6 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
                             </div>
                         ))
                     ) : (
-                        /* Empty State */
                         <div className="py-12 flex flex-col items-center justify-center text-center">
                             <div className="w-14 h-14 rounded-2xl bg-[#262424] flex items-center justify-center text-gray-500 mb-3 border border-white/5">
                                 <Bell size={24} />
