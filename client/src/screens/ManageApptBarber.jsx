@@ -100,7 +100,10 @@ export function ManageApptBarber() {
 
     const handleEditAppointment = async (formData) => {
         try {
-            await appointmentService.editAsBarber(selectedAppId, formData);
+            await appointmentService.editAsBarber(selectedAppId, {
+                ...formData,
+                user_id: selectedAppointment.user_id
+            });
             closeModal();
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
