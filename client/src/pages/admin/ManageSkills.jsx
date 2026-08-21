@@ -1,18 +1,14 @@
-import {useEffect, useState} from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {skillsService} from "../services/skillsService.js";
-import {ArrowLeft, Edit, Eye, Phone, Plus, Scissors, Trash2, User} from "lucide-react";
-import {FormModal} from "../components/FormModal.jsx";
-import {ViewModal} from "../components/ViewModal.jsx";
-
-const inputLabels = {
-    "Skill Name": "name"
-}
+import { skillsService } from "../../services/skillsService.js";
+import { ArrowLeft, Eye, Plus, Trash2 } from "lucide-react";
+import { FormModal } from "../../components/modals/FormModal.jsx";
+import { ViewModal } from "../../components/modals/ViewModal.jsx";
+import { ADD_VIEW_SKILLS_LABELS } from "../../constants/labelsConfig.js";
 
 export function ManageSkills() {
     const [selectedSkillId, setSelectedSkillId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState("");
+    const [modalType, setModalType] = useState(null);
     const [skills, setSkills] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -39,7 +35,7 @@ export function ManageSkills() {
     const handleAddSkill = async () => {
         try {
             await skillsService.addSkill(name);
-            closeModal();
+            setModalType(null);
             setSelectedSkillId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
@@ -55,16 +51,6 @@ export function ManageSkills() {
         } catch (error) {
             console.error("Error deleting skill:", error);
         }
-    };
-
-    const openModal = (type) => {
-        setModalType(type);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setModalType("");
-        setIsModalOpen(false);
     };
 
     return (
@@ -89,7 +75,7 @@ export function ManageSkills() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
-                    onClick={() => openModal("ADD")}
+                    onClick={() => setModalType("ADD")}
                     className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
                 >
                     <Plus size={16} /> Add
@@ -97,7 +83,7 @@ export function ManageSkills() {
 
                 <button
                     disabled={!selectedSkillId}
-                    onClick={() => openModal("VIEW")}
+                    onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedSkillId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
@@ -187,19 +173,19 @@ export function ManageSkills() {
                         })
                     )}
 
-                    {isModalOpen && modalType === "ADD" && (
+                    {modalType === "ADD" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={ADD_VIEW_SKILLS_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleAddSkill}
                         />
                     )}
-                    {isModalOpen && modalType === "VIEW" && (
+                    {modalType === "VIEW" && (
                         <ViewModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={ADD_VIEW_SKILLS_LABELS}
+                            onClose={() => setModalType(null)}
                             user={selectedSkill}
                         />
                     )}

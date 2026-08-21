@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { BottomNav } from "../components/BottomNav.jsx";
+import { useEffect, useState } from "react";
+import { BottomNav } from "../../components/common/BottomNav.jsx";
 import {
     Mail,
     Phone,
@@ -13,17 +13,20 @@ import {
     LogOut,
     ChevronRight
 } from "lucide-react";
-import { userService } from "../services/userService.js";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
+import { userService } from "../../services/userService.js";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 import { signOut } from "firebase/auth";
-import { auth } from "../firebase.js";
+import { auth } from "../../firebase.js";
 import { useNavigate } from "react-router-dom";
-import { NotificationsSettings } from "../components/NotificationsSettings.jsx";
+import { NotificationsSettings } from "../../components/modals/NotificationsSettings.jsx";
+import { HelpSupportModal } from "../../components/modals/HelpSupportModal.jsx";
+import { TermsPolicyModal } from "../../components/modals/TermsPolicyModal.jsx";
 
 export function CustomerProfile() {
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState(null);
-    const [openEditModal, setOpenEditModal] = useState(false);
+    const [modalType, setModalType] = useState(""); // "edit" or "help" or "policy"
+    const [openModal, setOpenModal] = useState(false);
     const [preferences, setPreferences] = useState({
         in_app_notifications: user?.in_app_notifications || true,
         email_notifications: user?.email_notifications || true,
@@ -90,7 +93,6 @@ export function CustomerProfile() {
     return (
         <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
-            {/* Header */}
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
                     ACCOUNT
@@ -191,7 +193,10 @@ export function CustomerProfile() {
                         </button>
 
                         <button
-                            onClick = {() => setOpenEditModal(true)}
+                            onClick = {() => {
+                                setModalType("edit");
+                                setOpenModal(true);
+                            }}
                             className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
@@ -229,7 +234,12 @@ export function CustomerProfile() {
                             <ChevronRight size={18} className="text-gray-500 shrink-0" />
                         </button>
 
-                        <button className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                        <button
+                            onClick={() => {
+                                setModalType("help");
+                                setOpenModal(true);
+                            }}
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <HelpCircle size={18} />
@@ -242,7 +252,12 @@ export function CustomerProfile() {
                             <ChevronRight size={18} className="text-gray-500 shrink-0" />
                         </button>
 
-                        <button className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                        <button
+                            onClick={() => {
+                                setModalType("policy");
+                                setOpenModal(true);
+                            }}
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <FileText size={18} />
@@ -271,12 +286,37 @@ export function CustomerProfile() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
-            <NotificationsSettings
-                isOpen={openEditModal}
-                onClose={() => setOpenEditModal(false)}
-                preferences={preferences}
-                setUser={editUser}
-            />
+            {modalType === "edit" && (
+                <NotificationsSettings
+                    isOpen={openModal}
+                    onClose={() => {
+                        setOpenModal(false);
+                        setModalType("");
+                    }}
+                    preferences={preferences}
+                    setUser={editUser}
+                />
+            )}
+
+            {modalType === "help" && (
+                <HelpSupportModal
+                    isOpen={openModal}
+                    onClose={() => {
+                        setOpenModal(false);
+                        setModalType("");
+                    }}
+                />
+            )}
+
+            {modalType === "policy" && (
+                <TermsPolicyModal
+                    isOpen={openModal}
+                    onClose={() => {
+                        setOpenModal(false);
+                        setModalType("");
+                    }}
+                />
+            )}
         </div>
     );
 }

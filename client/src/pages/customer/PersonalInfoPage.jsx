@@ -1,12 +1,12 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
-import { userService } from "../services/userService.js";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { validateFields, email, textOnly } from "../utils/validation.js";
+import { userService } from "../../services/userService.js";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
+import { validateFields, email, textOnly } from "../../utils/validation.js";
 import { ArrowLeft, Pencil, Phone, Mail, Shield, User } from "lucide-react";
-import { BottomNav } from "../components/BottomNav.jsx";
+import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { storage } from "../firebase.js";
+import { storage } from "../../firebase.js";
 
 export function PersonalInfoPage() {
     const navigate = useNavigate();
@@ -329,7 +329,6 @@ export function PersonalInfoPage() {
                     </div>
                 </form>
             </div>
-            {/* Bottom Nav */}
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>

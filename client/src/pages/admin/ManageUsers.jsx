@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
-import { FormModal } from "../components/FormModal.jsx";
-import { ViewModal } from "../components/ViewModal.jsx";
-import { userService } from "../services/userService.js";
+import { FormModal } from "../../components/modals/FormModal.jsx";
+import { ViewModal } from "../../components/modals/ViewModal.jsx";
+import { userService } from "../../services/userService.js";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
@@ -13,20 +13,11 @@ import {
     Phone,
     Shield
 } from "lucide-react";
-
-const inputLabels = {
-    "First Name": "first_name",
-    "Last Name": "last_name",
-    "Phone Number": "phone_number",
-    "Email": "email",
-    "Role": "role",
-    "Photo URL": "photo_url"
-};
+import { EDIT_ADD_VIEW_USERS_LABELS } from "../../constants/labelsConfig.js";
 
 export function ManageUsers() {
     const [selectedUserId, setSelectedUserId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState("");
+    const [modalType, setModalType] = useState(null);
     const [users, setUsers] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -52,7 +43,7 @@ export function ManageUsers() {
     const handleEditUser = async (formData) => {
         try {
             await userService.edit(selectedUserId, formData);
-            closeModal();
+            setModalType(null);
             setSelectedUserId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
@@ -68,16 +59,6 @@ export function ManageUsers() {
         } catch (error) {
             console.error("Error in deleteing user: ", error.message);
         }
-    };
-
-    const openModal = (type) => {
-        setModalType(type);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setModalType("");
-        setIsModalOpen(false);
     };
 
     return (
@@ -103,7 +84,7 @@ export function ManageUsers() {
             <div className="grid grid-cols-3 gap-2.5 mb-6">
                 <button
                     disabled={!selectedUserId}
-                    onClick={() => openModal("VIEW")}
+                    onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedUserId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
@@ -115,7 +96,7 @@ export function ManageUsers() {
 
                 <button
                     disabled={!selectedUserId}
-                    onClick={() => openModal("EDIT")}
+                    onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedUserId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
@@ -237,20 +218,20 @@ export function ManageUsers() {
                         })
                     )}
 
-                    {isModalOpen && modalType === "EDIT" && (
+                    {modalType === "EDIT" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_ADD_VIEW_USERS_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleEditUser}
                             isEdit={true}
                         />
                     )}
-                    {isModalOpen && modalType === "VIEW" && (
+                    {modalType === "VIEW" && (
                         <ViewModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_ADD_VIEW_USERS_LABELS}
+                            onClose={() => setModalType(null)}
                             user={selectedUser}
                         />
                     )}

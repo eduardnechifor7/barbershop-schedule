@@ -1,12 +1,11 @@
 import OTPInput from "react-otp-input";
-import { PrimaryButton } from "../components/PrimaryButton.jsx";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { userService } from "../services/userService.js";
-import {signOut} from "firebase/auth";
-import {auth} from "../firebase.js";
+import { userService } from "../../services/userService.js";
+import { signOut } from "firebase/auth";
+import { auth } from "../../firebase.js";
 
-export function OTPScreen () {
+export function OTPScreen() {
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -20,11 +19,11 @@ export function OTPScreen () {
     const phoneChange = location.state?.phoneChange || false;
     const registerData = location.state?.registerData || null;
 
-    useEffect (() => {
+    useEffect(() => {
         if (!window.confirmationResult && !phoneChange) {
             navigate("/", { replace: true });
         }
-    }, [navigate]);
+    }, [navigate, phoneChange]);
 
     const handleVerify = async () => {
         if (otp.length < 6) {
@@ -75,9 +74,9 @@ export function OTPScreen () {
             }
 
             if (role === "Admin") {
-                navigate("/admin", {replace: true});
+                navigate("/admin", { replace: true });
             } else {
-                navigate("/customer", {replace: true});
+                navigate("/customer", { replace: true });
             }
         } catch (err) {
             console.error("OTP verification error:", err);
@@ -89,7 +88,7 @@ export function OTPScreen () {
 
     return (
         <div className="min-h-dvh flex flex-col justify-between px-6 py-8">
-            <div className="flex flex-col justify-center gap-6 flex-1">
+            <div className="flex flex-col justify-center gap-6 flex-1 max-w-sm mx-auto w-full">
                 <div className="flex flex-col items-center">
                     <span className="text-white text-base font-medium">Confirm it's you</span>
                     <span className="text-gray-400 text-sm mt-1">
@@ -111,29 +110,34 @@ export function OTPScreen () {
                             <input
                                 {...props}
                                 inputMode="numeric"
-                                className="!w-12 !h-14 text-2xl text-center bg-white border border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold text-black"
+                                className="!w-12 !h-14 text-2xl text-center bg-white border border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold text-black focus:outline-none"
                             />
                         )}
                     />
                 </div>
 
                 {error && (
-                    <div className="flex flex-col gap-1 mb-4">
+                    <div className="flex flex-col gap-1">
                         <p className="animate-error-shake text-red-400 text-xs font-medium text-center">
                             • {error}
                         </p>
                     </div>
                 )}
 
-                <PrimaryButton onClick={handleVerify}
-                               isLoading={isLoading}
-                               className="bg-brand-gold enabled:hover:bg-yellow-200 text-black focus:ring-yellow-200">
-                    Verify 6-Digit Code
-                </PrimaryButton>
+                <button
+                    type="button"
+                    onClick={handleVerify}
+                    disabled={isLoading}
+                    className="w-full p-2 rounded-lg font-bold text-base bg-brand-gold hover:bg-yellow-200 text-black focus:ring-4 focus:ring-yellow-200 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center cursor-pointer"
+                >
+                    {isLoading ? "Loading..." : "Verify 6-Digit Code"}
+                </button>
 
                 <div className="flex flex-row items-center justify-center gap-1">
                     <span className="text-gray-pc text-sm">Didn't get a code?</span>
-                    <span className="text-white text-sm font-semibold cursor-pointer">Resend</span>
+                    <span className="text-white text-sm font-semibold cursor-pointer hover:underline">
+                        Resend
+                    </span>
                 </div>
             </div>
         </div>

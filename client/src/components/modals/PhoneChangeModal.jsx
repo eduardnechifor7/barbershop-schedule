@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Phone, X, AlertCircle, ArrowRight, Loader2 } from "lucide-react";
-import { phone, required } from "../utils/validation.js";
+import { phone, required } from "../../utils/validation.js";
 
 export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false }) {
     const [phoneNumber, setPhoneNumber] = useState("");

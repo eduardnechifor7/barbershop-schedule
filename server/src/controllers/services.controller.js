@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../config/db');
 
 const createService = async (req, res) => {
     const { service_name, price, minutes_duration, description, skills_ids = [] } = req.body;

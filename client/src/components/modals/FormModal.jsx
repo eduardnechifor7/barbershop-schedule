@@ -1,4 +1,3 @@
-import { PrimaryButton } from "./PrimaryButton.jsx";
 import { useState } from "react";
 import Select from 'react-select';
 import { X } from "lucide-react";
@@ -10,84 +9,10 @@ import {
     url,
     positiveNumber,
     positiveInteger,
-    minItems, textOnly
-} from "../utils/validation.js";
-
-const customSelectStyles = {
-    control: (base, state) => ({
-        ...base,
-        backgroundColor: '#242323',
-        borderColor: state.isFocused ? '#DBB668' : 'rgba(255, 255, 255, 0.1)',
-        borderRadius: '0.75rem',
-        padding: '2px',
-        boxShadow: 'none',
-        '&:hover': {
-            borderColor: 'rgba(219, 182, 104, 0.5)',
-        },
-    }),
-    menu: (base) => ({
-        ...base,
-        backgroundColor: '#242323',
-        border: '1px solid rgba(255, 255, 255, 0.1)',
-        borderRadius: '0.75rem',
-        overflow: 'hidden',
-        zIndex: 60,
-    }),
-    valueContainer: (base) => ({
-        ...base,
-        backgroundColor: 'transparent',
-    }),
-    option: (base, state) => ({
-        ...base,
-        backgroundColor: state.isSelected
-            ? '#DBB668'
-            : state.isFocused
-                ? 'rgba(219, 182, 104, 0.15)'
-                : 'transparent',
-        color: state.isSelected ? '#1A1919' : '#F2EFE9',
-        fontSize: '0.875rem',
-        cursor: 'pointer',
-        '&:active': {
-            backgroundColor: '#DBB668',
-            color: '#1A1919',
-        },
-    }),
-    multiValue: (base) => ({
-        ...base,
-        backgroundColor: 'rgba(219, 182, 104, 0.15)',
-        borderRadius: '0.5rem',
-        border: '1px solid rgba(219, 182, 104, 0.3)',
-    }),
-    multiValueLabel: (base) => ({
-        ...base,
-        color: '#DBB668',
-        fontWeight: '600',
-        fontSize: '0.75rem',
-    }),
-    multiValueRemove: (base) => ({
-        ...base,
-        color: '#DBB668',
-        ':hover': {
-            backgroundColor: '#DBB668',
-            color: '#1A1919',
-        },
-    }),
-    placeholder: (base) => ({
-        ...base,
-        color: '#9CA3AF',
-        fontSize: '0.875rem',
-    }),
-    singleValue: (base) => ({
-        ...base,
-        color: '#F2EFE9',
-        backgroundColor: 'transparent',
-        fontSize: '0.875rem',
-    }),
-    input: (base) => ({
-        ...base,
-        color: '#F2EFE9',
-    }),
-};
+    minItems,
+    textOnly
+} from "../../utils/validation.js";
+import { FORM_SELECT_STYLES } from "../../constants/selectStyles.js";
 
 export function FormModal({ isOpen, onClose, config, onSubmit, options = null, isEdit = false }) {
 
@@ -163,7 +88,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in select-none">
             <div
                 className="bg-[#1A1919] border border-white/10 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col text-[#F2EFE9] animate-scale-up"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -176,6 +101,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                         {isEdit ? "Edit Record" : "Add New Record"}
                     </h2>
                     <button
+                        type="button"
                         onClick={onClose}
                         className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
@@ -202,7 +128,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                                         name={backendKey}
                                         options={currentOptions}
                                         placeholder={`Select ${friendlyName.toLowerCase()}...`}
-                                        styles={customSelectStyles}
+                                        styles={FORM_SELECT_STYLES}
                                         onChange={(selectedOptions) => {
                                             const values = selectedOptions ? selectedOptions.map(o => o.value) : [];
                                             handleChange(backendKey, values);
@@ -248,7 +174,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                                     name={backendKey}
                                     options={currentOptions}
                                     placeholder={`Select ${friendlyName.toLowerCase()}...`}
-                                    styles={customSelectStyles}
+                                    styles={FORM_SELECT_STYLES}
                                     onChange={(selectedOption) => {
                                         handleChange(backendKey, selectedOption ? selectedOption.value : "");
                                     }}
@@ -265,18 +191,20 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                 </div>
 
                 <div className="p-4 border-t border-white/10 bg-[#1A1919] flex gap-3">
-                    <PrimaryButton
+                    <button
+                        type="button"
                         onClick={handleSubmit}
-                        className="flex-1 bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98]"
+                        className="flex-1 bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] font-bold py-2.5 rounded-xl text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center"
                     >
                         Submit
-                    </PrimaryButton>
-                    <PrimaryButton
+                    </button>
+                    <button
+                        type="button"
                         onClick={onClose}
-                        className="flex-1 bg-white/5 hover:bg-white/10 text-[#F2EFE9] border border-white/10 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]"
+                        className="flex-1 bg-white/5 hover:bg-white/10 text-[#F2EFE9] border border-white/10 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center"
                     >
                         Cancel
-                    </PrimaryButton>
+                    </button>
                 </div>
             </div>
         </div>

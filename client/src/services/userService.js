@@ -91,5 +91,27 @@ export const userService = {
         });
         if (!response.ok) throw new Error("Failed to delete user");
         return response;
+    },
+
+    async deleteMyAccount() {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/users/delete-account`, {
+            method: "DELETE",
+            headers
+        });
+        if (!response.ok) throw new Error("Failed to delete account");
+        return response;
+    },
+
+    async checkPhone(phone) {
+        const response = await fetch(`http://localhost:8080/api/users/check-phone`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ phone })
+        });
+        if (!response.ok) throw new Error("Failed to check phone number");
+        return response.json();
     }
 };

@@ -1,4 +1,4 @@
-const db = require('../db');
+const db = require('../config/db');
 const admin = require('firebase-admin');
 
 const syncUser = async (req, res) => {
@@ -33,7 +33,7 @@ const listUsers = async (req, res) => {
 };
 
 const checkPhone = async (req, res) => {
-    const { phone } = req.params;
+    const { phone } = req.body;
 
     try {
         const result = await db.query(
@@ -280,6 +280,32 @@ const getClients = async (req, res) => {
     }
 };
 
+const deleteMyAccount = async (req, res) => {
+    const userId = req.user?.id;
+    const firebaseUid = req.user?.uid;
+
+    if (!userId || !firebaseUid) {
+        return res.status(400).json({ error: "Missing required data" });
+    }
+
+    try {
+        const deleteUserRes = await db.query(
+            `DELETE FROM users WHERE id = $1 RETURNING *`, [userId]
+        );
+
+        if (deleteUserRes.rowCount === 0) {
+            return res.status(404).json({ error: "User was not found in database." });
+        }
+
+        await admin.auth().deleteUser(firebaseUid);
+
+        res.status(200).json(deleteUserRes.rows[0]);
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        res.status(500).json({ error: "Could not delete user" });
+    }
+};
+
 module.exports = {
     syncUser,
     listUsers,
@@ -290,5 +316,6 @@ module.exports = {
     updateMe,
     deleteUser,
     getClients,
-    updateNotification
+    updateNotification,
+    deleteMyAccount
 };

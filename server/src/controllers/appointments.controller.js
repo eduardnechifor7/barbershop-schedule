@@ -1,5 +1,5 @@
 const createNotification = require('../services/notificationService');
-const db = require('../db');
+const db = require('../config/db');
 
 // Helper for creating an appointment, used across client, barber, and admin routes
 async function executeCreateAppointment(userId, barberId, serviceIds, appointmentDate, startTime, notes) {

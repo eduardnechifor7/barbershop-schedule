@@ -1,24 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
     CalendarDays,
     Clock,
     Scissors,
-    User,
     ChevronRight,
     Bell,
     X,
     ShieldCheck
 } from "lucide-react";
-import { appointmentService } from "../services/appointmentService.js";
-import { userService } from "../services/userService.js";
-import { notificationService } from "../services/notificationService.js";
+import { appointmentService } from "../../services/appointmentService.js";
+import { userService } from "../../services/userService.js";
+import { notificationService } from "../../services/notificationService.js";
 import { useNavigate } from "react-router-dom";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
-import { auth } from "../firebase.js";
-import { BottomNav } from "../components/BottomNav.jsx";
-import { ConfirmModal } from "../components/ConfirmModal.jsx";
-import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal.jsx";
-import { NotificationsModal } from "../components/NotificationsModal.jsx";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
+import { auth } from "../../firebase.js";
+import { BottomNav } from "../../components/common/BottomNav.jsx";
+import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
+import { AppointmentDetailsModal } from "../../components/modals/AppointmentDetailsModal.jsx";
+import { NotificationsModal } from "../../components/modals/NotificationsModal.jsx";
+import { STATUS_ICON_STYLES } from "../../constants/selectStyles.js";
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
@@ -62,10 +62,23 @@ export function CustomerHome() {
         return () => fetchDashboardData();
     }, [refreshTrigger]);
 
-    currentDate.setHours(0, 0, 0, 0);
-    const lastAppointment = appointments.find(appt => (appt.status === "scheduled" || appt.status === "cancelled") && (new Date(appt.appointment_date) >= currentDate)) || null;
-    const completedAppointments = appointments.filter(appt => appt.status === "completed");
-    const BARBER_PHOTO = lastAppointment ? lastAppointment.barber_photo_url : null;
+    const { lastAppointment, completedAppointments } = useMemo(() => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const upcoming = appointments.find((appt) => {
+            const isTargetStatus = appt.status === "scheduled" || appt.status === "cancelled";
+            const isFutureOrToday = new Date(appt.appointment_date) >= today;
+            return isTargetStatus && isFutureOrToday;
+        }) || null;
+
+        const completed = appointments.filter((appt) => appt.status === "completed");
+
+        return {
+            lastAppointment: upcoming,
+            completedAppointments: completed
+        };
+    }, [appointments]);
 
     const handleConfirmCancel = async () => {
         if (!lastAppointment) return;
@@ -123,12 +136,10 @@ export function CustomerHome() {
         }
     }
 
-    const STATUS_ICON_STYLES = {
-        completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-        cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
-    };
-
-    const unreadCount = notifications.filter((n) => !n.is_read).length;
+    const unreadCount = useMemo(
+        () => notifications.filter((n) => !n.is_read).length,
+        [notifications]
+    );
 
     if (loading) return <LoadingSpinner label="Loading dashboard..." />;
 
@@ -149,7 +160,6 @@ export function CustomerHome() {
 
     return (
         <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
-            {/* Header */}
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center justify-between">
                     <div>
@@ -181,9 +191,6 @@ export function CustomerHome() {
                                 <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DBB668]" />
                             )}
                         </button>
-                        <div className="w-10 h-10 rounded-full bg-[#DBB668] flex items-center justify-center text-[#121212]">
-                            <User size={18} />
-                        </div>
                     </div>
                 </div>
             </div>
