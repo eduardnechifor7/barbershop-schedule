@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { barberService } from "../services/barberService.js";
-import { servicesService } from "../services/servicesService.js";
+import { barberService } from "../../services/barberService.js";
+import { servicesService } from "../../services/servicesService.js";
 import { useNavigate } from "react-router-dom";
-import { BottomNav } from "../components/BottomNav.jsx";
+import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { User, ArrowRight, Scissors, Clock, ChevronRight } from "lucide-react";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 
 
 export function CustomerExplore() {
@@ -40,7 +40,6 @@ export function CustomerExplore() {
     return (
         <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
-            {/* Header */}
             <div className="bg-[#121212] px-6 pt-6 pb-4 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
                     DISCOVER
@@ -76,7 +75,6 @@ export function CustomerExplore() {
                 </div>
             </div>
 
-            {/* Scrollable Content */}
             <div
                 className="flex-1 min-h-0 overflow-y-auto px-5 py-5 pb-24 space-y-4"
                 style={{ scrollbarWidth: "none" }}
@@ -120,7 +118,6 @@ export function CustomerExplore() {
                                         </div>
                                     </div>
 
-                                    {/* Skills */}
                                     <div className="flex flex-wrap gap-2">
                                         {tags.map((skill) => (
                                             <span
@@ -132,7 +129,6 @@ export function CustomerExplore() {
                                         ))}
                                     </div>
 
-                                    {/* CTA */}
                                     <button
                                         onClick={() => navigate("/bookings", {
                                             state: {
@@ -237,7 +233,6 @@ export function CustomerExplore() {
                 )}
             </div>
 
-            {/* Bottom Nav */}
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>

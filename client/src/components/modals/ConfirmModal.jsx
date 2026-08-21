@@ -1,6 +1,6 @@
 import { AlertTriangle } from "lucide-react";
 
-export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirm", isLoading }) {
+export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confirmText = "Confirm", keepText = "Keep it", isLoading }) {
     if (!isOpen) return null;
 
     return (
@@ -23,7 +23,7 @@ export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confi
                         disabled={isLoading}
                         className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-[#F2EFE9] border border-white/10 bg-white/5 hover:bg-white/10 transition-all cursor-pointer"
                     >
-                        Keep it
+                        {keepText}
                     </button>
                     <button
                         onClick={onConfirm}

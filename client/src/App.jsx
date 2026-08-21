@@ -1,26 +1,26 @@
-import { WelcomeScreen } from "./screens/WelcomeScreen.jsx";
+import { WelcomeScreen } from "./pages/auth/WelcomeScreen.jsx";
 import { Routes, Route } from "react-router-dom";
-import { CustomerHome } from "./screens/CustomerHome.jsx";
-import { CustomerBookings } from "./screens/CustomerBookings.jsx";
-import { PastAppointments } from "./screens/PastAppointments.jsx";
-import { OTPScreen } from "./screens/OTPScreen.jsx";
-import { ContinueRegister } from "./screens/ContinueRegister.jsx";
-import { AdminDashboardMenu } from "./screens/AdminDashboardMenu.jsx";
+import { CustomerHome } from "./pages/customer/CustomerHome.jsx";
+import { CustomerBookings } from "./pages/customer/CustomerBookings.jsx";
+import { PastAppointments } from "./pages/customer/PastAppointments.jsx";
+import { OTPScreen } from "./pages/auth/OTPScreen.jsx";
+import { ContinueRegister } from "./pages/auth/ContinueRegister.jsx";
+import { AdminDashboardMenu } from "./pages/admin/AdminDashboardMenu.jsx";
 import { useEffect, useState } from "react";
-import { LoadingSpinner } from "./components/LoadingSpinner.jsx";
-import { AdminRoute } from "./components/AdminRoute.jsx"
+import { LoadingSpinner } from "./components/common/LoadingSpinner.jsx";
+import { AdminRoute } from "./components/routing/AdminRoute.jsx"
 import { userService } from "./services/userService.js";
 import { auth } from "./firebase.js";
-import { ManageUsers } from "./screens/ManageUsers.jsx";
-import { ManageBarbers } from "./screens/ManageBarbers.jsx";
-import { ManageAppointments } from "./screens/ManageAppointments.jsx";
-import { ManageServices } from "./screens/ManageServices.jsx";
-import { ManageSkills } from "./screens/ManageSkills.jsx";
-import { CustomerExplore } from "./screens/CustomerExplore.jsx";
-import { CustomerProfile } from "./screens/CustomerProfile.jsx";
-import { PersonalInfoPage } from "./screens/PersonalInfoPage.jsx";
-import { ManageApptBarber } from "./screens/ManageApptBarber.jsx";
-import { SecurityPage } from "./screens/SecurityPage.jsx";
+import { ManageUsers } from "./pages/admin/ManageUsers.jsx";
+import { ManageBarbers } from "./pages/admin/ManageBarbers.jsx";
+import { ManageAppointments } from "./pages/admin/ManageAppointments.jsx";
+import { ManageServices } from "./pages/admin/ManageServices.jsx";
+import { ManageSkills } from "./pages/admin/ManageSkills.jsx";
+import { CustomerExplore } from "./pages/customer/CustomerExplore.jsx";
+import { CustomerProfile } from "./pages/customer/CustomerProfile.jsx";
+import { PersonalInfoPage } from "./pages/customer/PersonalInfoPage.jsx";
+import { ManageApptBarber } from "./pages/admin/ManageApptBarber.jsx";
+import { SecurityPage } from "./pages/customer/SecurityPage.jsx";
 
 function App() {
     const [user, setUser] = useState(null);

@@ -1,5 +1,5 @@
 const admin = require('../config/firebase.js');
-const db = require('../db');
+const db = require('../config/db');
 
 
 const verifyToken = async (req, res, next) => {

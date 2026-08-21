@@ -1,58 +1,41 @@
-import {useState, useEffect, useMemo} from "react";
-import { appointmentService } from "../services/appointmentService.js";
-import { userService } from "../services/userService.js";
-import { servicesService } from "../services/servicesService.js";
-import { ViewModal } from "../components/ViewModal.jsx";
+import { useState, useEffect, useMemo } from "react";
+import { FormModal } from "../../components/modals/FormModal.jsx";
+import { ViewModal } from "../../components/modals/ViewModal.jsx";
+import { appointmentService } from "../../services/appointmentService.js";
+import { barberService } from "../../services/barberService.js";
+import { userService } from "../../services/userService.js";
+import { servicesService } from "../../services/servicesService.js";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
+    Plus,
+    Eye,
+    Edit,
+    Trash2,
     Calendar,
     Clock,
     User,
-    CheckCircle2,
-    XCircle,
-    Eye, Edit, Plus, Trash2
+    Filter
 } from "lucide-react";
-import { FormModal } from "../components/FormModal.jsx";
+import { StatusBadge } from "../../components/common/StatusBadge.jsx";
+import { EDIT_APPOINTMENT_LABELS, ADD_APPOINTMENT_LABELS, VIEW_APPOINTMENT_LABELS } from "../../constants/labelsConfig.js";
 
-const editLabelsForm = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Appointment services": "service_ids",
-    "Notes": "notes",
-    "Status": "status",
-};
-
-const inputLabelsForm = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Client name": "user_id",
-    "Appointment services": "service_ids",
-    "Notes": "notes",
-};
-
-const viewLabels = {
-    "Appointment Date": "appointment_date",
-    "Client Name": ["client_first_name", "client_last_name"],
-    "Client Phone": "client_phone",
-    "Notes": "notes",
-    "Services": "services",
-    "Start time": "start_time",
-    "Status": "status"
-};
-
-export function ManageApptBarber() {
-    const [appointments, setAppointments] = useState([]);
-    const [users, setUsers] = useState([]);
+export function ManageAppointments() {
     const [selectedAppId, setSelectedAppId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState(""); // 'ADD' 'VIEW' 'EDIT'
-    const [isLoading, setIsLoading] = useState(true);
-    const [services, setServices] = useState([]);
+    const [modalType, setModalType] = useState(null); // 'ADD' 'VIEW' 'EDIT'
+    const [data, setData] = useState({
+        appointments: [],
+        barbers: [],
+        users: [],
+        services: []
+    })
+    const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [selectedBarberFilter, setSelectedBarberFilter] = useState("all");
 
+    const { appointments, barbers, users, services } = data;
+    const selectedAppointment = appointments.find((a) => a.id === selectedAppId);
     const navigate = useNavigate();
-    const selectedAppointment = appointments.find((a) => a.appointment_id === selectedAppId);
 
     const options = useMemo(
         () => ({
@@ -64,47 +47,77 @@ export function ManageApptBarber() {
                 { value: "completed", label: "Finished" },
                 { value: "cancelled", label: "Cancelled" },
             ],
+            barber_id: barbers.map((b) => ({
+                value: b.id,
+                label: `${b.last_name} ${b.first_name}`,
+            })),
             user_id: users.map((u) => ({
                 value: u.id,
                 label: `${u.last_name} ${u.first_name}`,
             })),
             service_ids: services
                 .filter((s) => s.is_active)
-                .map((s) => ({ value: s.service_id, label: s.service_name })),
+                .map((s) => ({ value: s.id, label: s.service_name })),
         }),
-        [users, services]
+        [barbers, users, services]
     );
 
+    const filteredAppointments = useMemo(() => {
+        if (selectedBarberFilter === "all") return appointments;
+
+        return appointments.filter((appointment) => String(appointment.barber_id) === String(selectedBarberFilter));
+    }, [appointments, selectedBarberFilter]);
+
     useEffect(() => {
-        const loadSchedule = async () => {
+        const fetchGetAllData = async () => {
             try {
                 setIsLoading(true);
-                const [appointmentsData, usersData, servicesData] = await Promise.all([
-                    appointmentService.getAsBarber(),
-                    userService.getClients(),
+                const [
+                    dataAppointments,
+                    dataBarbers,
+                    dataUsers,
+                    dataServices
+                ] = await Promise.all([
+                    appointmentService.getAll(),
+                    barberService.getAll(),
+                    userService.getAll(),
                     servicesService.getAll()
                 ]);
-                setAppointments(appointmentsData);
-                setUsers(usersData);
-                setServices(servicesData);
+
+                setData({
+                    appointments: dataAppointments,
+                    barbers: dataBarbers,
+                    users: dataUsers,
+                    services: dataServices
+                });
             } catch (error) {
-                console.error("Error loading schedule:", error.message);
+                console.error(
+                    "Error in listing dashboard data.",
+                    error.response?.data || error.message
+                );
             } finally {
                 setIsLoading(false);
             }
         };
 
-        loadSchedule();
+        fetchGetAllData();
     }, [refreshTrigger]);
 
+    const handleAddAppointment = async (formData) => {
+        try {
+            await appointmentService.addAppointment(formData);
+            setModalType(null);
+            setSelectedAppId(null);
+            setRefreshTrigger((prev) => prev + 1);
+        } catch (error) {
+            console.error("Error in adding appointment: ", error.message);
+        }
+    };
 
     const handleEditAppointment = async (formData) => {
         try {
-            await appointmentService.editAsBarber(selectedAppId, {
-                ...formData,
-                user_id: selectedAppointment.user_id
-            });
-            closeModal();
+            await appointmentService.edit(selectedAppId, formData);
+            setModalType(null);
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
@@ -122,50 +135,6 @@ export function ManageApptBarber() {
         }
     };
 
-    const handleAddAppointment = async (formData) => {
-        try {
-            await appointmentService.createAsBarber(formData);
-            closeModal();
-            setSelectedAppId(null);
-            setRefreshTrigger((prev) => prev + 1);
-        } catch (error) {
-            console.error("Error in adding appointment: ", error.message);
-        }
-    };
-
-    const getStatusBadge = (status) => {
-        switch (status?.toLowerCase()) {
-            case "completed":
-                return (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-md">
-                        <CheckCircle2 size={12} /> Completed
-                    </span>
-                );
-            case "cancelled":
-                return (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-md">
-                        <XCircle size={12} /> Cancelled
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-md">
-                        <Clock size={12} /> Scheduled
-                    </span>
-                );
-        }
-    };
-
-    const openModal = (type) => {
-        setModalType(type);
-        setIsModalOpen(true);
-    }
-
-    const closeModal = () => {
-        setModalType("");
-        setIsModalOpen(false);
-    }
-
     return (
         <div
             className="w-full max-w-4xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col bg-dark-bg text-[#F2EFE9]"
@@ -176,19 +145,19 @@ export function ManageApptBarber() {
                     onClick={() => navigate("/admin")}
                     className="flex items-center gap-2 bg-[#2D2B2B] hover:bg-[#383535] text-gray-300 hover:text-white px-3.5 py-2 rounded-xl text-xs font-semibold border border-white/5 transition-all"
                 >
-                    <ArrowLeft size={16} /> Back to Dashboard
+                    <ArrowLeft size={16} /> Back
                 </button>
                 <h1
                     className="text-xl sm:text-2xl font-bold text-[#F2EFE9]"
                     style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                    My Daily Schedule
+                    Manage Appointments
                 </h1>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
-                    onClick={() => openModal("ADD")}
+                    onClick={() => setModalType("ADD")}
                     className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm"
                 >
                     <Plus size={16} /> Add
@@ -196,7 +165,7 @@ export function ManageApptBarber() {
 
                 <button
                     disabled={!selectedAppId}
-                    onClick={() => openModal("VIEW")}
+                    onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
@@ -208,7 +177,7 @@ export function ManageApptBarber() {
 
                 <button
                     disabled={!selectedAppId}
-                    onClick={() => openModal("EDIT")}
+                    onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
@@ -229,6 +198,39 @@ export function ManageApptBarber() {
                 >
                     <Trash2 size={16} /> Delete
                 </button>
+            </div>
+
+            <div className="flex items-center justify-between gap-3 mb-4 bg-[#2D2B2B]/50 p-2.5 rounded-2xl border border-white/5">
+                <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 pl-1">
+                    <Filter size={14} className="text-[#DBB668]" />
+                    <span>Filter by Barber:</span>
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    <button
+                        onClick={() => setSelectedBarberFilter("all")}
+                        className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+                            selectedBarberFilter === "all"
+                                ? "bg-[#DBB668] text-[#1A1919]"
+                                : "bg-white/5 text-gray-300 hover:bg-white/10 border border-white/5"
+                        }`}
+                    >
+                        All Barbers
+                    </button>
+
+                    <select
+                        value={selectedBarberFilter}
+                        onChange={(e) => setSelectedBarberFilter(e.target.value)}
+                        className="bg-[#1A1919] text-[#F2EFE9] text-xs font-semibold px-4 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-[#DBB668] cursor-pointer appearance-none"
+                    >
+                        <option value="all">Select Barber...</option>
+                        {barbers.map((b) => (
+                            <option key={b.id} value={b.id}>
+                                {b.first_name} {b.last_name}
+                            </option>
+                        ))}
+                    </select>
+                </div>
             </div>
 
             {isLoading && (
@@ -258,20 +260,20 @@ export function ManageApptBarber() {
 
             {!isLoading && (
                 <div className="flex flex-col gap-3 max-h-[calc(100vh-220px)] overflow-y-auto w-full pr-1">
-                    {appointments.length === 0 ? (
+                    {filteredAppointments.length === 0 ? (
                         <div className="bg-[#2D2B2B] p-8 rounded-2xl border border-white/5 text-center text-gray-400">
                             No appointments found.
                         </div>
                     ) : (
-                        appointments.map((appointment) => {
-                            const isSelected = selectedAppId === appointment.appointment_id;
+                        filteredAppointments.map((appointment) => {
+                            const isSelected = selectedAppId === appointment.id;
                             const appointmentDate = new Date(appointment.appointment_date);
 
                             return (
                                 <div
-                                    key={appointment.appointment_id}
+                                    key={appointment.id}
                                     onClick={() => {
-                                        setSelectedAppId(isSelected ? null : appointment.appointment_id);
+                                        setSelectedAppId(isSelected ? null : appointment.id);
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
@@ -299,7 +301,7 @@ export function ManageApptBarber() {
                                             <div className="flex items-center gap-3">
                                                 <span className="flex items-center gap-1">
                                                       <Calendar size={13} className="text-[#DBB668]" />
-                                                    {appointmentDate.toLocaleDateString("en-US", {})}
+                                                        {appointmentDate.toLocaleDateString("ro-RO")}
                                                 </span>
                                                 <span className="flex items-center gap-1">
                                                     <Clock size={13} className="text-[#DBB668]" />
@@ -307,7 +309,7 @@ export function ManageApptBarber() {
                                                 </span>
                                             </div>
 
-                                            {getStatusBadge(appointment.status)}
+                                            <StatusBadge status={appointment.status} />
                                         </div>
                                     </div>
                                 </div>
@@ -315,30 +317,30 @@ export function ManageApptBarber() {
                         })
                     )}
 
-                    {isModalOpen && modalType === "ADD" && (
+                    {modalType && modalType === "ADD" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabelsForm}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={ADD_APPOINTMENT_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleAddAppointment}
                             options={options}
                         />
                     )}
-                    {isModalOpen && modalType === "EDIT" && (
+                    {modalType && modalType === "EDIT" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={editLabelsForm}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_APPOINTMENT_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleEditAppointment}
                             options={options}
                             isEdit={true}
                         />
                     )}
-                    {isModalOpen && modalType === "VIEW" && (
+                    {modalType && modalType === "VIEW" && (
                         <ViewModal
-                            isOpen={isModalOpen}
-                            config={viewLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={VIEW_APPOINTMENT_LABELS}
+                            onClose={() => setModalType(null)}
                             user={selectedAppointment}
                         />
                     )}

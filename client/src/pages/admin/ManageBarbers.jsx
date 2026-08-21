@@ -1,9 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
-import { FormModal } from "../components/FormModal.jsx";
-import { ViewModal } from "../components/ViewModal.jsx";
-import { barberService } from "../services/barberService.js";
-import { skillsService } from "../services/skillsService.js";
-import { userService } from "../services/userService.js";
+import { FormModal } from "../../components/modals/FormModal.jsx";
+import { ViewModal } from "../../components/modals/ViewModal.jsx";
+import { barberService } from "../../services/barberService.js";
+import { skillsService } from "../../services/skillsService.js";
+import { userService } from "../../services/userService.js";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
@@ -15,33 +15,20 @@ import {
     Phone,
     User
 } from "lucide-react";
-
-const inputLabels = {
-    "Users": "user_id",
-    "Skills": "skills_ids"
-};
-
-const editLabels = {
-    "Skills": "skills_ids"
-};
-
-const viewLabels = {
-    "Barber Name": ["first_name", "last_name"],
-    "Phone Number": "phone_number",
-    "Photo URL": "photo_url",
-    "Skills": "skills"
-}
+import { EDIT_BARBERS_LABELS, ADD_BARBERS_LABELS, VIEW_BARBERS_LABELS } from "../../constants/labelsConfig.js";
 
 export function ManageBarbers() {
     const [selectedBarberId, setSelectedBarberId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState("");
-    const [barbers, setBarbers] = useState([]);
-    const [skills, setSkills] = useState([]);
-    const [users, setUsers] = useState([]);
+    const [modalType, setModalType] = useState(null);
+    const [data, setData] = useState({
+        barbers: [],
+        skills: [],
+        users: []
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+    const { barbers, skills, users } = data;
     const selectedBarber = barbers.find(b => b.id === selectedBarberId);
     const navigate = useNavigate();
 
@@ -59,9 +46,11 @@ export function ManageBarbers() {
                     skillsService.getAll(),
                     userService.getAll()
                 ]);
-                setBarbers(barbersData);
-                setSkills(skillsData);
-                setUsers(userData);
+                setData({
+                    barbers: barbersData,
+                    skills: skillsData,
+                    users: userData
+                });
             } catch (error) {
                 console.error("Error in listing barbers: ", error.response?.data || error.message);
             } finally {
@@ -74,7 +63,7 @@ export function ManageBarbers() {
     const handleAddBarber = async (formData) => {
         try {
             await barberService.addBarber(formData);
-            closeModal();
+            setModalType(null);
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
@@ -85,7 +74,7 @@ export function ManageBarbers() {
     const handleEditBarber = async (formData) => {
         try {
             await barberService.edit(selectedBarberId, formData);
-            closeModal();
+            setModalType(null);
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
@@ -101,16 +90,6 @@ export function ManageBarbers() {
         } catch (error) {
             console.error("Error in deleting barber: ", error.message);
         }
-    };
-
-    const openModal = (type) => {
-        setModalType(type);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setModalType("");
-        setIsModalOpen(false);
     };
 
     return (
@@ -135,7 +114,7 @@ export function ManageBarbers() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
-                    onClick={() => openModal("ADD")}
+                    onClick={() => setModalType("ADD")}
                     className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
                 >
                     <Plus size={16} /> Add
@@ -143,7 +122,7 @@ export function ManageBarbers() {
 
                 <button
                     disabled={!selectedBarberId}
-                    onClick={() => openModal("VIEW")}
+                    onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedBarberId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
@@ -155,7 +134,7 @@ export function ManageBarbers() {
 
                 <button
                     disabled={!selectedBarberId}
-                    onClick={() => openModal("EDIT")}
+                    onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedBarberId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
@@ -269,30 +248,30 @@ export function ManageBarbers() {
                         })
                     )}
 
-                    {isModalOpen && modalType === "ADD" && (
+                    {modalType === "ADD" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={ADD_BARBERS_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleAddBarber}
                             options={options}
                         />
                     )}
-                    {isModalOpen && modalType === "EDIT" && (
+                    {modalType === "EDIT" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={editLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_BARBERS_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleEditBarber}
                             options={options}
                             isEdit={true}
                         />
                     )}
-                    {isModalOpen && modalType === "VIEW" && (
+                    {modalType === "VIEW" && (
                         <ViewModal
-                            isOpen={isModalOpen}
-                            config={viewLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={VIEW_BARBERS_LABELS}
+                            onClose={() => setModalType(null)}
                             user={selectedBarber}
                         />
                     )}

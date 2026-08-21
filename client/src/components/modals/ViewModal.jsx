@@ -1,4 +1,3 @@
-import { PrimaryButton } from "./PrimaryButton.jsx";
 import {
     X,
     User,
@@ -69,7 +68,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in select-none">
             <div
                 className="bg-[#1A1919] border border-white/10 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col text-[#F2EFE9] animate-scale-up"
                 style={{ fontFamily: "'DM Sans', sans-serif" }}
@@ -82,6 +81,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                         Details
                     </h2>
                     <button
+                        type="button"
                         onClick={onClose}
                         className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
@@ -152,14 +152,13 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                         }`}
                                     >
                                         {isCompleted && <CheckCircle2 size={13} />}
-                                                        {isCancelled && <XCircle size={13} />}
-                                                        {!isCompleted && !isCancelled && <AlertCircle size={13} />}
-                                                        {user[backendKey] || "N/A"}
-                                  </span>
+                                        {isCancelled && <XCircle size={13} />}
+                                        {!isCompleted && !isCancelled && <AlertCircle size={13} />}
+                                        {user[backendKey] || "N/A"}
+                                    </span>
                                 </div>
                             );
                         }
-
 
                         if (isServicesSkills && Array.isArray(user[backendKey])) {
                             return (
@@ -213,12 +212,13 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                 </div>
 
                 <div className="p-4 border-t border-white/10 bg-[#1A1919] flex justify-center">
-                    <PrimaryButton
+                    <button
+                        type="button"
                         onClick={onClose}
-                        className="w-full bg-white/5 hover:bg-white/10 text-[#F2EFE9] border border-white/10 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98]"
+                        className="w-full bg-white/5 hover:bg-white/10 text-[#F2EFE9] border border-white/10 py-2.5 rounded-xl font-semibold text-sm transition-all active:scale-[0.98] cursor-pointer"
                     >
                         Close
-                    </PrimaryButton>
+                    </button>
                 </div>
             </div>
         </div>

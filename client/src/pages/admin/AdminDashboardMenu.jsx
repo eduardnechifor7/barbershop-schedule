@@ -2,9 +2,9 @@ import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { User, Scissors, Calendar, FileText, ArrowRight, Sparkles } from "lucide-react";
-import { auth } from "../firebase.js";
-import { userService } from "../services/userService.js";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
+import { auth } from "../../firebase.js";
+import { userService } from "../../services/userService.js";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 
 export function AdminDashboardMenu() {
     const navigate = useNavigate();

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { servicesService } from "../services/servicesService.js";
-import { skillsService } from "../services/skillsService.js";
-import { FormModal } from "../components/FormModal.jsx";
-import { ViewModal } from "../components/ViewModal.jsx";
+import { servicesService } from "../../services/servicesService.js";
+import { skillsService } from "../../services/skillsService.js";
+import { FormModal } from "../../components/modals/FormModal.jsx";
+import { ViewModal } from "../../components/modals/ViewModal.jsx";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowLeft,
@@ -14,34 +14,19 @@ import {
     CheckCircle2,
     XCircle
 } from "lucide-react";
-
-const inputLabels = {
-    "Service Name": "service_name",
-    "Price": "price",
-    "Duration": "minutes_duration",
-    "Description": "description",
-    "Skills": "skills_ids",
-    "Status": "is_active"
-};
-
-const viewLabels = {
-    "Service Name": "service_name",
-    "Price": "price",
-    "Duration": "minutes_duration",
-    "Description": "description",
-    "Skills": "required_skills",
-    "Status": "is_active"
-};
+import { EDIT_ADD_SERVICES_LABELS, VIEW_SERVICES_LABELS } from "../../constants/labelsConfig.js";
 
 export function ManageServices() {
     const [selectedServiceId, setSelectedServiceId] = useState(null);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [modalType, setModalType] = useState("");
-    const [services, setServices] = useState([]);
+    const [modalType, setModalType] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
-    const [skills, setSkills] = useState([]);
+    const [data, setData] = useState({
+        services: [],
+        skills: []
+    });
 
+    const { services, skills } = data;
     const selectedService = services.find(s => s.service_id === selectedServiceId);
     const navigate = useNavigate();
 
@@ -64,8 +49,10 @@ export function ManageServices() {
                     servicesService.getAll(),
                     skillsService.getAll()
                 ]);
-                setServices(servicesData);
-                setSkills(skillsData);
+                setData({
+                    services: servicesData,
+                    skills: skillsData
+                });
             } catch (error) {
                 console.error("Error in listing services: ", error.response?.data || error.message);
             } finally {
@@ -79,7 +66,7 @@ export function ManageServices() {
     const handleAddService = async (formData) => {
         try {
             await servicesService.addService(formData);
-            closeModal();
+            setModalType(null);
             setSelectedServiceId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
@@ -90,22 +77,12 @@ export function ManageServices() {
     const handleEditService = async (formData) => {
         try {
             await servicesService.edit(selectedServiceId, formData);
-            closeModal();
+            setModalType(null);
             setSelectedServiceId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
             console.error("Error in editing service: ", error.message);
         }
-    };
-
-    const openModal = (type) => {
-        setModalType(type);
-        setIsModalOpen(true);
-    };
-
-    const closeModal = () => {
-        setModalType("");
-        setIsModalOpen(false);
     };
 
     return (
@@ -130,7 +107,7 @@ export function ManageServices() {
 
             <div className="grid grid-cols-3 gap-2.5 mb-6">
                 <button
-                    onClick={() => openModal("ADD")}
+                    onClick={() => setModalType("ADD")}
                     className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-brand-gold hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
                 >
                     <Plus size={16} /> Add
@@ -138,7 +115,7 @@ export function ManageServices() {
 
                 <button
                     disabled={!selectedServiceId}
-                    onClick={() => openModal("VIEW")}
+                    onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedServiceId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
@@ -150,7 +127,7 @@ export function ManageServices() {
 
                 <button
                     disabled={!selectedServiceId}
-                    onClick={() => openModal("EDIT")}
+                    onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedServiceId
                             ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
@@ -256,30 +233,30 @@ export function ManageServices() {
                         })
                     )}
 
-                    {isModalOpen && modalType === "ADD" && (
+                    {modalType === "ADD" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_ADD_SERVICES_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleAddService}
                             options={options}
                         />
                     )}
-                    {isModalOpen && modalType === "EDIT" && (
+                    {modalType === "EDIT" && (
                         <FormModal
-                            isOpen={isModalOpen}
-                            config={inputLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={EDIT_ADD_SERVICES_LABELS}
+                            onClose={() => setModalType(null)}
                             onSubmit={handleEditService}
                             options={options}
                             isEdit={true}
                         />
                     )}
-                    {isModalOpen && modalType === "VIEW" && (
+                    {modalType === "VIEW" && (
                         <ViewModal
-                            isOpen={isModalOpen}
-                            config={viewLabels}
-                            onClose={closeModal}
+                            isOpen={true}
+                            config={VIEW_SERVICES_LABELS}
+                            onClose={() => setModalType(null)}
                             user={selectedService}
                         />
                     )}

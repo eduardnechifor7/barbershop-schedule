@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
-import { appointmentService } from "../services/appointmentService.js";
-import { LoadingSpinner } from "../components/LoadingSpinner.jsx";
+import { appointmentService } from "../../services/appointmentService.js";
+import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 import { ArrowLeft, Scissors, ChevronRight, Clock } from "lucide-react";
-import { BottomNav } from "../components/BottomNav.jsx";
+import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { useNavigate } from "react-router-dom";
-import { AppointmentDetailsModal } from "../components/AppointmentDetailsModal.jsx";
+import { AppointmentDetailsModal } from "../../components/modals/AppointmentDetailsModal.jsx";
 
 
 export function PastAppointments() {

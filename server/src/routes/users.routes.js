@@ -5,13 +5,14 @@ const usersCtrl = require('../controllers/users.controller');
 
 // Public routes (No authentication required)
 router.post('/sync', usersCtrl.syncUser);
-router.get('/check/:phone', usersCtrl.checkPhone);
+router.post('/check-phone', usersCtrl.checkPhone);
 
 // Current profile routes (Authenticated users)
 router.get('/by-uid', verifyToken, usersCtrl.getUserByUid);
 router.patch('/me', verifyToken, usersCtrl.updateMe);
 router.patch('/update-notification', verifyToken, usersCtrl.updateNotification);
 router.patch('/edit-phone', verifyToken, usersCtrl.editPhoneNumber);
+router.delete('/delete-account', verifyToken, usersCtrl.deleteMyAccount);
 
 // Administration routes (Admin only)
 router.get('/list', verifyToken, isAdmin, usersCtrl.listUsers);
