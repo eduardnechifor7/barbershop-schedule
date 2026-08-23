@@ -9,6 +9,7 @@ import { validateFields, required, minItems } from "../../utils/validation.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { BOOKING_SELECT_STYLES } from "../../constants/selectStyles.js";
+import { Toast } from "../../components/common/Toast.jsx";
 
 const canBarberDoService = (barber, service) => {
     if (!barber || !service) return false;
@@ -58,6 +59,12 @@ export function CustomerBookings() {
         notes: ""
     });
 
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
+
     const [errors, setErrors] = useState({});
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
@@ -75,7 +82,11 @@ export function CustomerBookings() {
                     services: servicesData
                 }));
             } catch (error) {
-                console.error("Error fetching data:", error);
+                setToast({
+                    isOpen: true,
+                    message: "Failed to laod page. Please try again later.",
+                    type: "error"
+                });
             }
         };
         loadInitialData();
@@ -92,7 +103,11 @@ export function CustomerBookings() {
                 );
                 setData((prev) => ({ ...prev, occupiedBookings: occupiedSlots }));
             } catch (error) {
-                console.error("Error fetching occupied times:", error);
+                setToast({
+                    isOpen: true,
+                    message: "Failed to laod page. Please try again later.",
+                    type: "error"
+                });
             }
         };
         fetchOccupiedTimes();
@@ -219,7 +234,11 @@ export function CustomerBookings() {
             setSuccess(true);
             setTimeout(() => navigate("/customer"), 2000);
         } catch (error) {
-            console.error("Error submitting appointment:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to submit appointment. Please try again later.",
+                type: "error"
+            });
         } finally {
             setSubmitting(false);
         }
@@ -406,6 +425,13 @@ export function CustomerBookings() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast((prev) => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

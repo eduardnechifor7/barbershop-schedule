@@ -5,20 +5,31 @@ import { User, Scissors, Calendar, FileText, ArrowRight, Sparkles } from "lucide
 import { auth } from "../../firebase.js";
 import { userService } from "../../services/userService.js";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 
 export function AdminDashboardMenu() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [refreshTrigger, onRefreshTrigger] = useState(0);
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
+
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
             if (firebaseUser) {
                 try {
+                    setError(null);
                     const userData = await userService.getProfile();
                     setUser(userData);
                 } catch (error) {
-                    console.error("Error fetching user profile:", error);
+                    setError("Failed to load your page. Please try again later.");
                     setUser(null);
                 }
             } else {
@@ -28,17 +39,29 @@ export function AdminDashboardMenu() {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [refreshTrigger]);
 
     const handleLogout = async () => {
         try {
             await signOut(auth);
             navigate("/");
         } catch (error) {
-            console.error("Error in logging out: ", error.message);
-            alert("Something went wrong, try again.");
+            setToast({
+                isOpen: false,
+                message: "Failed to log out. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
+        );
+    }
 
     if (loading) {
         return (
@@ -148,6 +171,13 @@ export function AdminDashboardMenu() {
                     Log out
                 </button>
             </div>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false}))}
+            />
         </div>
     );
 }

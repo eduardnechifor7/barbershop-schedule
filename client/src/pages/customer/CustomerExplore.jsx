@@ -5,10 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { User, ArrowRight, Scissors, Clock, ChevronRight } from "lucide-react";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 
 
 export function CustomerExplore() {
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [barbers, setBarbers] = useState([]);
     const [services, setServices] = useState([]);
     const [activeTab, setActiveTab] = useState("masters"); // "masters" or "services"
@@ -16,6 +19,7 @@ export function CustomerExplore() {
 
     useEffect(() => {
         const loadData = async () => {
+            setError(null);
             setLoading(true);
             try {
                 const [barbersData, servicesData] = await Promise.all([
@@ -25,15 +29,26 @@ export function CustomerExplore() {
                 setBarbers(barbersData);
                 setServices(servicesData);
             } catch (error) {
-                console.error("Error loading explore data:", error);
+                setError("Failed to load your page");
             } finally {
                 setLoading(false);
             }
         };
         loadData();
-    }, []);
+    }, [refreshTrigger]);
 
     const featuredService = services.reduce((max, s) => (s.price > max.price ? s : max), { price: 0 });
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => {
+                    setRefreshTrigger((prev) => prev + 1);
+                }}
+            />
+        );
+    }
 
     if (loading) return <LoadingSpinner />;
 

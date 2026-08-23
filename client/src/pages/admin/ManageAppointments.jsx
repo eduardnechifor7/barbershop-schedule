@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { StatusBadge } from "../../components/common/StatusBadge.jsx";
 import { EDIT_APPOINTMENT_LABELS, ADD_APPOINTMENT_LABELS, VIEW_APPOINTMENT_LABELS } from "../../constants/labelsConfig.js";
+import { Toast } from "../../components/common/Toast.jsx";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 
 export function ManageAppointments() {
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -32,6 +34,12 @@ export function ManageAppointments() {
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [selectedBarberFilter, setSelectedBarberFilter] = useState("all");
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const { appointments, barbers, users, services } = data;
     const selectedAppointment = appointments.find((a) => a.id === selectedAppId);
@@ -71,6 +79,7 @@ export function ManageAppointments() {
     useEffect(() => {
         const fetchGetAllData = async () => {
             try {
+                setError(null);
                 setIsLoading(true);
                 const [
                     dataAppointments,
@@ -91,10 +100,7 @@ export function ManageAppointments() {
                     services: dataServices
                 });
             } catch (error) {
-                console.error(
-                    "Error in listing dashboard data.",
-                    error.response?.data || error.message
-                );
+                setError("Failed to load appointments. Please try again later.");
             } finally {
                 setIsLoading(false);
             }
@@ -110,7 +116,11 @@ export function ManageAppointments() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in adding appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to add appointment. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -121,7 +131,11 @@ export function ManageAppointments() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in editing appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to edit appointment. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -131,9 +145,22 @@ export function ManageAppointments() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in deleting appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete appointment. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -346,6 +373,13 @@ export function ManageAppointments() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

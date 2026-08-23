@@ -15,6 +15,8 @@ import {
     XCircle
 } from "lucide-react";
 import { EDIT_ADD_SERVICES_LABELS, VIEW_SERVICES_LABELS } from "../../constants/labelsConfig.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ManageServices() {
     const [selectedServiceId, setSelectedServiceId] = useState(null);
@@ -24,6 +26,12 @@ export function ManageServices() {
     const [data, setData] = useState({
         services: [],
         skills: []
+    });
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
     });
 
     const { services, skills } = data;
@@ -54,13 +62,13 @@ export function ManageServices() {
                     skills: skillsData
                 });
             } catch (error) {
-                console.error("Error in listing services: ", error.response?.data || error.message);
+                setError("Failed to load services. Please try again.");
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchServices().catch(console.error);
+        fetchServices();
     }, [refreshTrigger]);
 
     const handleAddService = async (formData) => {
@@ -70,7 +78,11 @@ export function ManageServices() {
             setSelectedServiceId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in adding service: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to add service. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -81,9 +93,22 @@ export function ManageServices() {
             setSelectedServiceId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in editing service: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to edit service. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -175,7 +200,7 @@ export function ManageServices() {
 
                             return (
                                 <div
-                                    key={service.id}
+                                    key={service.service_id}
                                     onClick={() => {
                                         setSelectedServiceId(isSelected ? null : service.service_id);
                                     }}
@@ -262,6 +287,13 @@ export function ManageServices() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

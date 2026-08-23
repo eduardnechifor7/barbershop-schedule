@@ -1,3 +1,4 @@
+import {AlertCircle, CheckCircle2, Info} from "lucide-react";
 
 export const BOOKING_SELECT_STYLES = {
     control: () =>
@@ -101,4 +102,28 @@ export const FORM_SELECT_STYLES = {
 export const STATUS_ICON_STYLES = {
     completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
     cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
+};
+
+export const TOAST_TYPES = {
+    error: {
+        icon: AlertCircle,
+        iconColor: "text-red-400",
+        badgeBg: "bg-red-500/10 border-red-500/20",
+        glowBorder: "border-red-500/30",
+        indicator: "bg-red-500"
+    },
+    success: {
+        icon: CheckCircle2,
+        iconColor: "text-[#DBB668]",
+        badgeBg: "bg-[#DBB668]/10 border-[#DBB668]/20",
+        glowBorder: "border-[#DBB668]/30",
+        indicator: "bg-[#DBB668]"
+    },
+    info: {
+        icon: Info,
+        iconColor: "text-gray-300",
+        badgeBg: "bg-white/5 border-white/10",
+        glowBorder: "border-white/10",
+        indicator: "bg-gray-400"
+    }
 };

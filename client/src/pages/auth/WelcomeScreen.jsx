@@ -8,6 +8,7 @@ import appLogo from "../../assets/cuthut_logo.png";
 import { TermsPolicyModal } from "../../components/modals/TermsPolicyModal.jsx";
 import { useRecaptcha } from "../../hooks/useRecaptcha.js";
 import { userService } from "../../services/userService.js";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function WelcomeScreen() {
     const [phone, setPhone] = useState("");
@@ -15,6 +16,11 @@ export function WelcomeScreen() {
     const [isLoading, setIsLoading] = useState(false);
     const [openModal, setOpenModal] = useState(false);
     const [activeTab, setActiveTab] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const navigate = useNavigate();
     useRecaptcha();
@@ -51,8 +57,11 @@ export function WelcomeScreen() {
                 navigate('/register', { state: { phone } });
             }
         } catch (error) {
-            console.error(error);
-            alert("Something went wrong.");
+            setToast({
+                isOpen: true,
+                message: "Something went wrong.",
+                type: "error"
+            });
         } finally {
             setIsLoading(false);
         }
@@ -115,6 +124,13 @@ export function WelcomeScreen() {
                     activeTabProp={activeTab}
                 />
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
 
             <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
         </div>

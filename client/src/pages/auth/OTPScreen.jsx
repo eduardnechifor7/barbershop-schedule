@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { userService } from "../../services/userService.js";
 import { signOut } from "firebase/auth";
 import { auth } from "../../firebase.js";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function OTPScreen() {
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -27,7 +33,11 @@ export function OTPScreen() {
 
     const handleVerify = async () => {
         if (otp.length < 6) {
-            setError("Please enter the 6-digit code.");
+            setToast({
+                isOpen: true,
+                message: "Please enter a 6-digit code.",
+                type: "error"
+            });
             return;
         }
 
@@ -67,8 +77,11 @@ export function OTPScreen() {
                         email: registerData.email
                     });
                 } catch (err) {
-                    console.error("Error adding user:", err);
-                    setError("Failed to register user. Please try again.");
+                    setToast({
+                        isOpen: true,
+                        message: "Failed to register user. Please try again.",
+                        type: "error"
+                    });
                     return;
                 }
             }
@@ -79,8 +92,11 @@ export function OTPScreen() {
                 navigate("/customer", { replace: true });
             }
         } catch (err) {
-            console.error("OTP verification error:", err);
-            setError("Invalid verification code. Please try again.");
+            setToast({
+                isOpen: true,
+                message: "Invalid verification code. Please try again.",
+                type: "error"
+            });
         } finally {
             setIsLoading(false);
         }
@@ -116,14 +132,6 @@ export function OTPScreen() {
                     />
                 </div>
 
-                {error && (
-                    <div className="flex flex-col gap-1">
-                        <p className="animate-error-shake text-red-400 text-xs font-medium text-center">
-                            • {error}
-                        </p>
-                    </div>
-                )}
-
                 <button
                     type="button"
                     onClick={handleVerify}
@@ -140,6 +148,13 @@ export function OTPScreen() {
                     </span>
                 </div>
             </div>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

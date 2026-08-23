@@ -16,6 +16,8 @@ import {
     User
 } from "lucide-react";
 import { EDIT_BARBERS_LABELS, ADD_BARBERS_LABELS, VIEW_BARBERS_LABELS } from "../../constants/labelsConfig.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ManageBarbers() {
     const [selectedBarberId, setSelectedBarberId] = useState(null);
@@ -27,6 +29,12 @@ export function ManageBarbers() {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const { barbers, skills, users } = data;
     const selectedBarber = barbers.find(b => b.id === selectedBarberId);
@@ -40,6 +48,7 @@ export function ManageBarbers() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setError(null);
                 setIsLoading(true);
                 const [barbersData, skillsData, userData] = await Promise.all([
                     barberService.getAll(),
@@ -52,12 +61,12 @@ export function ManageBarbers() {
                     users: userData
                 });
             } catch (error) {
-                console.error("Error in listing barbers: ", error.response?.data || error.message);
+                setError("Failed to load barbers. Please try again.");
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchData().catch(console.error);
+        fetchData();
     }, [refreshTrigger]);
 
     const handleAddBarber = async (formData) => {
@@ -67,7 +76,11 @@ export function ManageBarbers() {
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in adding barber: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to add barber. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -78,7 +91,11 @@ export function ManageBarbers() {
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in editing barber: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to edit barber. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -88,9 +105,22 @@ export function ManageBarbers() {
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in deleting barber: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete barber. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -277,6 +307,13 @@ export function ManageBarbers() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

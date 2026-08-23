@@ -12,6 +12,8 @@ import {auth, firebaseConfig} from "../../firebase.js";
 import {getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut} from "firebase/auth";
 import { initializeApp, getApps } from "firebase/app";
 import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 
 const tempApp = getApps().find(app => app.name === "PhoneVerificationApp")
     || initializeApp(firebaseConfig, "PhoneVerificationApp");
@@ -23,6 +25,7 @@ export function SecurityPage() {
     const location = useLocation();
 
     const passedUser = location.state?.user;
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [confirmModalOpen, setConfirmModalOpen] = useState(false);
     const [isDeleting, setIsDeleting] = useState(false);
     const [loading, setLoading] = useState(!passedUser);
@@ -30,6 +33,12 @@ export function SecurityPage() {
         phone_number: "",
         created_at: ""
     });
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
+    const [error, setError] = useState(null);
     const [openPhoneChangeModal, setOpenPhoneChangeModal] = useState(false);
 
     const handleSubmitPhoneChange = async (newPhoneNumber) => {
@@ -59,7 +68,11 @@ export function SecurityPage() {
                 }
             });
         } catch (err) {
-            console.error("Eroare la SMS:", err);
+            setToast({
+                isOpen: true,
+                message: "Failed to send verification code. Please try again.",
+                type: "error"
+            });
         }
     }
 
@@ -71,7 +84,11 @@ export function SecurityPage() {
             await signOut(auth);
             navigate("/", { replace: true });
         } catch (error) {
-            console.error("Error deleting account:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete account. Please try again.",
+                type: "error"
+            });
             setIsDeleting(false);
         }
     }
@@ -80,17 +97,27 @@ export function SecurityPage() {
         if (!passedUser) {
             const fetchProfile = async () => {
                 try {
+                    setError(null);
                     const data = await userService.getProfile();
                     setUser(data);
                 } catch (error) {
-                    console.error("Error fetching user profile:", error);
+                    setError("Failed to load your page. Please try again.");
                 } finally {
                     setLoading(false);
                 }
             };
             fetchProfile();
         }
-    }, [passedUser]);
+    }, [passedUser, refreshTrigger]);
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
+        );
+    }
 
     if (loading) {
         return <LoadingSpinner />;
@@ -204,6 +231,12 @@ export function SecurityPage() {
                 confirmText={"Delete"}
                 keepText={"Keep Account"}
                 isLoading={isDeleting}
+            />
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
             />
 
             <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>

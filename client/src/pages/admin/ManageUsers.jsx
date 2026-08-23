@@ -14,11 +14,15 @@ import {
     Shield
 } from "lucide-react";
 import { EDIT_ADD_VIEW_USERS_LABELS } from "../../constants/labelsConfig.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ManageUsers() {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [modalType, setModalType] = useState(null);
     const [users, setUsers] = useState([]);
+    const [toast, setToast] = useState({ isOpen: false, message: "", type: "" });
+    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
@@ -32,12 +36,12 @@ export function ManageUsers() {
                 const data = await userService.getAll();
                 setUsers(data);
             } catch (error) {
-                console.error("Error in listing users", error.response?.data || error.message);
+                setError("Failed to fetch users. Please try again.");
             } finally {
                 setIsLoading(false);
             }
         };
-        fetchUsers().catch(console.error);
+        fetchUsers();
     }, [refreshTrigger]);
 
     const handleEditUser = async (formData) => {
@@ -47,7 +51,11 @@ export function ManageUsers() {
             setSelectedUserId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in editing user: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to edit user. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -57,9 +65,22 @@ export function ManageUsers() {
             setSelectedUserId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error in deleteing user: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete user. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -237,6 +258,13 @@ export function ManageUsers() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }
