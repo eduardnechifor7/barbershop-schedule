@@ -19,30 +19,32 @@ import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
 import { AppointmentDetailsModal } from "../../components/modals/AppointmentDetailsModal.jsx";
 import { NotificationsModal } from "../../components/modals/NotificationsModal.jsx";
 import { STATUS_ICON_STYLES } from "../../constants/selectStyles.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
     const [appointments, setAppointments] = useState([]);
     const [user, setUser] = useState(null);
     const [notifications, setNotifications] = useState([]);
-    const [isError, setIsError] = useState(false);
+    const [error, setError] = useState(false);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
-    const [openNotificationsModal, setOpenNotificationsModal] = useState(false);
-    const [openDetailsModal, setOpenDetailsModal] = useState(false);
-
-    const [showConfirmModal, setShowConfirmModal] = useState(false);
-    const [isCancelling, setIsCancelling] = useState(false);
+    const [openModal, setOpenModal] = useState(null); // "notifications" | "details" | "confirm"
 
     const navigate = useNavigate();
-    const currentDate = new Date();
 
     useEffect(() => {
         const fetchDashboardData = auth.onAuthStateChanged(async (firebaseUser) => {
             if (!firebaseUser) return;
 
             setLoading(true);
-            setIsError(false);
+            setError(null);
             try {
                 const [appointmentsData, userData, notificationsData] = await Promise.all([
                     appointmentService.getByUser(),
@@ -53,8 +55,7 @@ export function CustomerHome() {
                 setUser(userData);
                 setNotifications(notificationsData);
             } catch (error) {
-                setIsError(true);
-                console.error("Error fetching dashboard data:", error);
+                setError("Error fetching dashboard data");
             } finally {
                 setLoading(false);
             }
@@ -82,7 +83,7 @@ export function CustomerHome() {
 
     const handleConfirmCancel = async () => {
         if (!lastAppointment) return;
-        setIsCancelling(true);
+        setLoading(true);
 
         try {
             await appointmentService.deleteAsUser(lastAppointment.appointment_id);
@@ -91,17 +92,13 @@ export function CustomerHome() {
         } catch (error) {
             console.error("Error cancelling appointment:", error);
         } finally {
-            setIsCancelling(false);
+            setLoading(false);
         }
     };
 
     const handleAppointmentClick = (appointment) => {
         setSelectedAppointment(appointment);
-        setOpenDetailsModal(true);
-    }
-
-    const handleNotificationButton = () => {
-        setOpenNotificationsModal(!openNotificationsModal);
+        setOpenModal("details");
     }
 
     const handleNotificationClick = async (notificationId) => {
@@ -111,7 +108,11 @@ export function CustomerHome() {
                 notification.id === notificationId ? { ...notification, is_read: true } : notification
             ));
         } catch (error) {
-            console.error("Error marking notification as read:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to mark notification as read.",
+                type: "error"
+            });
         }
     }
 
@@ -123,7 +124,11 @@ export function CustomerHome() {
                 is_read: true
             })));
         } catch (error) {
-            console.error("Error marking all notifications as read:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to mark all notifications as read.",
+                type: "error"
+            });
         }
     }
 
@@ -132,7 +137,11 @@ export function CustomerHome() {
             await notificationService.deleteNotification(notificationId);
             setNotifications(prevNotifications => prevNotifications.filter(notification => notification.id !== notificationId));
         } catch (error) {
-            console.error("Error deleting notification:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete notification.",
+                type: "error"
+            });
         }
     }
 
@@ -143,18 +152,12 @@ export function CustomerHome() {
 
     if (loading) return <LoadingSpinner label="Loading dashboard..." />;
 
-    if (isError) {
+    if (error) {
         return (
-            <div className="min-h-screen bg-[#121212] flex flex-col justify-center items-center p-6 text-center">
-                <p className="text-[#F2EFE9] font-medium mb-2">Something went wrong</p>
-                <p className="text-gray-400 text-sm mb-4">Could not load your appointment details.</p>
-                <button
-                    onClick={() => setRefreshTrigger(prev => prev + 1)}
-                    className="px-4 py-2 bg-[#DBB668] text-[#121212] font-semibold text-sm rounded-xl cursor-pointer"
-                >
-                    Retry
-                </button>
-            </div>
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
         );
     }
 
@@ -184,7 +187,7 @@ export function CustomerHome() {
                             </button>
                         )}
                         <button
-                            onClick={handleNotificationButton}
+                            onClick={() => setOpenModal("notifications")}
                             className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/[0.05] cursor-pointer">
                             <Bell size={18} />
                             {unreadCount > 0 && (
@@ -284,7 +287,7 @@ export function CustomerHome() {
 
                                 <div className="flex gap-2">
                                     <button
-                                        onClick={() => setShowConfirmModal(true)}
+                                        onClick={() => setOpenModal("confirm")}
                                         className="flex-1 rounded-2xl py-2.5 text-sm font-semibold text-red-400 border border-red-500/20 bg-red-500/10 hover:bg-red-500/20 transition-all active:scale-[0.97] flex items-center justify-center gap-1.5 cursor-pointer"
                                     >
                                         <X size={13} />
@@ -370,27 +373,42 @@ export function CustomerHome() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
-            <NotificationsModal
-                isOpen={openNotificationsModal}
-                notifications={notifications}
-                onClose={() => setOpenNotificationsModal(false)}
-                onNotificationClick={handleNotificationClick}
-                onMarkAllAsRead={handleMarkAllAsRead}
-                onDeleteNotification={handleDeleteNotification}
-            />
-            <ConfirmModal
-                isOpen={showConfirmModal}
-                onClose={() => setShowConfirmModal(false)}
-                onConfirm={handleConfirmCancel}
-                title="Cancel Appointment?"
-                message="Are you sure you want to cancel this appointment? This action cannot be undone."
-                confirmText="Yes, Cancel"
-                isLoading={isCancelling}
-            />
-            <AppointmentDetailsModal
-                isOpen={openDetailsModal}
-                appointment={selectedAppointment}
-                onClose={() => setOpenDetailsModal(false)}
+            {openModal === "notifications" && (
+                <NotificationsModal
+                    isOpen={true}
+                    notifications={notifications}
+                    onClose={() => setOpenModal(null)}
+                    onNotificationClick={handleNotificationClick}
+                    onMarkAllAsRead={handleMarkAllAsRead}
+                    onDeleteNotification={handleDeleteNotification}
+                />
+            )}
+
+            {openModal === "confirm" && (
+                <ConfirmModal
+                    isOpen={true}
+                    onClose={() => setOpenModal(null)}
+                    onConfirm={handleConfirmCancel}
+                    title="Cancel Appointment?"
+                    message="Are you sure you want to cancel this appointment? This action cannot be undone."
+                    confirmText="Yes, Cancel"
+                    isLoading={loading}
+                />
+            )}
+
+            {openModal === "details" && (
+                <AppointmentDetailsModal
+                    isOpen={true}
+                    appointment={selectedAppointment}
+                    onClose={() => setOpenModal(null)}
+                />
+            )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
             />
         </div>
     );

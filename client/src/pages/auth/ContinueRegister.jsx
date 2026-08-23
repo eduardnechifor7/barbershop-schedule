@@ -5,6 +5,7 @@ import { signInWithPhoneNumber } from "firebase/auth";
 import { validateFields, required, email as validateEmail, phone as validatePhone, textOnly } from "../../utils/validation.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRecaptcha } from "../../hooks/useRecaptcha.js";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ContinueRegister() {
     const navigate = useNavigate();
@@ -19,15 +20,17 @@ export function ContinueRegister() {
     });
     const [formErrors, setFormErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
-    const [apiError, setApiError] = useState("");
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const updateField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
     const handleRegister = async () => {
-        setApiError("");
-
         const nextErrors = validateFields(form, {
             phone: [required, validatePhone],
             email: [required, validateEmail],
@@ -60,13 +63,15 @@ export function ContinueRegister() {
                 replace: true
             });
         } catch (error) {
-            setApiError("Could not send SMS. Check the phone number.");
+            setToast({
+                isOpen: true,
+                message: "An error occurred during registration.",
+                type: "error"
+            });
         } finally {
             setIsLoading(false);
         }
     };
-
-    const inputClasses = "block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0] focus:outline-none";
 
     return (
         <div className="min-h-screen">
@@ -95,7 +100,7 @@ export function ContinueRegister() {
                             placeholder="Enter your email"
                             value={form.email}
                             onChange={(e) => updateField("email", e.target.value)}
-                            className={inputClasses}
+                            className="block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0] focus:outline-none"
                         />
                         {formErrors.email && (
                             <p className="animate-error-shake text-red-400 text-xs font-medium">
@@ -110,7 +115,7 @@ export function ContinueRegister() {
                             placeholder="First name"
                             value={form.firstName}
                             onChange={(e) => updateField("firstName", e.target.value)}
-                            className={inputClasses}
+                            className="block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0] focus:outline-none"
                         />
                         {formErrors.firstName && (
                             <p className="animate-error-shake text-red-400 text-xs font-medium">
@@ -125,7 +130,7 @@ export function ContinueRegister() {
                             placeholder="Last name"
                             value={form.lastName}
                             onChange={(e) => updateField("lastName", e.target.value)}
-                            className={inputClasses}
+                            className="block w-full border bg-white text-black text-sm placeholder:text-sm placeholder:text-gray-pc border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold p-2 hover:bg-[#e6edf0] focus:outline-none"
                         />
                         {formErrors.lastName && (
                             <p className="animate-error-shake text-red-400 text-xs font-medium">
@@ -133,10 +138,6 @@ export function ContinueRegister() {
                             </p>
                         )}
                     </div>
-
-                    {apiError && (
-                        <p className="text-red-400 text-xs font-medium">{apiError}</p>
-                    )}
 
                     <button
                         type="button"
@@ -158,6 +159,13 @@ export function ContinueRegister() {
                     </button>
                 </div>
             </div>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
 
             <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
         </div>

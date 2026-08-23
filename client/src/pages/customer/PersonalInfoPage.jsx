@@ -7,6 +7,8 @@ import { ArrowLeft, Pencil, Phone, Mail, Shield, User } from "lucide-react";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { storage } from "../../firebase.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function PersonalInfoPage() {
     const navigate = useNavigate();
@@ -16,7 +18,9 @@ export function PersonalInfoPage() {
 
     const fileInputRef = useRef(null);
     const [errors, setErrors] = useState({});
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [formData, setFormData] = useState(passedUser || {
         first_name: "",
         last_name: "",
@@ -25,6 +29,11 @@ export function PersonalInfoPage() {
         role: "Client",
         photo_url: "",
         created_at: "",
+    });
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
     });
 
     const initialAvatarUrlRef = useRef(null);
@@ -39,11 +48,12 @@ export function PersonalInfoPage() {
         const fetchUserFallback = async () => {
             setLoading(true);
             try {
+                setError(null);
                 const userData = await userService.getProfile();
                 setFormData(userData);
                 initialAvatarUrlRef.current = userData?.photo_url || null;
             } catch (error) {
-                console.error("Error fetching user data", error);
+                setError("Failed to load your profile. Please try again.");
             } finally {
                 setLoading(false);
             }
@@ -55,7 +65,7 @@ export function PersonalInfoPage() {
         } else {
             fetchUserFallback();
         }
-    }, [passedUser]);
+    }, [passedUser, refreshTrigger]);
 
     const deleteOldAvatar = async (url) => {
         if (!url || !url.includes("firebase")) return;
@@ -63,7 +73,11 @@ export function PersonalInfoPage() {
             const oldFileRef = ref(storage, url);
             await deleteObject(oldFileRef);
         } catch (error) {
-            console.warn("Could not delete old avatar:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete old avatar. Please try again.",
+                type: "error"
+            })
         }
     };
 
@@ -84,8 +98,11 @@ export function PersonalInfoPage() {
                 await deleteOldAvatar(previousUploadedUrl);
             }
         } catch (error) {
-            console.error("Error uploading file:", error);
-            setErrors((prev) => ({ ...prev, avatar: "Failed to upload avatar. Please try again." }));
+            setToast({
+                isOpen: true,
+                message: "Something went wrong. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -111,7 +128,11 @@ export function PersonalInfoPage() {
         try {
             nextErrors = validateFields(formData, validationRules) || {};
         } catch (err) {
-            console.error("Error in validateFields", err);
+            setToast({
+                isOpen: true,
+                message: "Something went wrong. Please try again.",
+                type: "error"
+            });
         }
 
         Object.keys(nextErrors).forEach((key) => {
@@ -131,9 +152,22 @@ export function PersonalInfoPage() {
             setErrors({});
             navigate(-1);
         } catch (error) {
-            console.error("Error updating user data", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to update personal information.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
+        );
+    }
 
     if (loading) {
         return (
@@ -332,6 +366,13 @@ export function PersonalInfoPage() {
             <div className="shrink-0 z-40">
                 <BottomNav />
             </div>
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

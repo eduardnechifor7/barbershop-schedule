@@ -21,9 +21,13 @@ import { useNavigate } from "react-router-dom";
 import { NotificationsSettings } from "../../components/modals/NotificationsSettings.jsx";
 import { HelpSupportModal } from "../../components/modals/HelpSupportModal.jsx";
 import { TermsPolicyModal } from "../../components/modals/TermsPolicyModal.jsx";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function CustomerProfile() {
     const [loading, setLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(false);
+    const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
     const [modalType, setModalType] = useState(""); // "edit" or "help" or "policy"
     const [openModal, setOpenModal] = useState(false);
@@ -32,11 +36,17 @@ export function CustomerProfile() {
         email_notifications: user?.email_notifications || true,
         sms_notifications: user?.sms_notifications || true
     });
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchUserData = async () => {
+            setError(null);
             try {
                 setLoading(true);
                 const userData = await userService.getProfile();
@@ -47,22 +57,25 @@ export function CustomerProfile() {
                     sms_notifications: userData.sms_notifications
                 });
             } catch (error) {
-                console.error("Error fetching user data", error);
+                setError("Failed to load your profile. Please try again.");
             } finally {
                 setLoading(false);
             }
         }
 
         fetchUserData();
-    }, [])
+    }, [refreshTrigger])
 
     const handleLogout = async () => {
         try {
             await signOut(auth);
             navigate("/");
         } catch (error) {
-            console.error("Error in logging out: ", error.message);
-            alert("Something went wrong, try again.");
+            setToast({
+                isOpen: true,
+                message: "Failed to log out. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -76,12 +89,25 @@ export function CustomerProfile() {
                 [key]: formData
             });
         } catch (error) {
-            console.error("Error updating notification settings: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to update notification settings.",
+                type: "error"
+            });
             setPreferences((prevPreferences) => ({
                 ...prevPreferences,
                 [key]: !formData
             }));
         }
+    }
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
     }
 
     if (loading) {
@@ -317,6 +343,12 @@ export function CustomerProfile() {
                     }}
                 />
             )}
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

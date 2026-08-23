@@ -5,6 +5,8 @@ import { ArrowLeft, Eye, Plus, Trash2 } from "lucide-react";
 import { FormModal } from "../../components/modals/FormModal.jsx";
 import { ViewModal } from "../../components/modals/ViewModal.jsx";
 import { ADD_VIEW_SKILLS_LABELS } from "../../constants/labelsConfig.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ManageSkills() {
     const [selectedSkillId, setSelectedSkillId] = useState(null);
@@ -12,6 +14,12 @@ export function ManageSkills() {
     const [skills, setSkills] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
+    });
 
     const selectedSkill = skills.find(skill => skill.id === selectedSkillId);
     const navigate = useNavigate();
@@ -23,7 +31,7 @@ export function ManageSkills() {
                 const skillsData = await skillsService.getAll();
                 setSkills(skillsData);
             } catch (error) {
-                console.error("Error fetching skills:", error);
+                setError("Failed to fetch skills. Please try again.");
             } finally {
                 setIsLoading(false);
             }
@@ -39,7 +47,11 @@ export function ManageSkills() {
             setSelectedSkillId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error adding skill:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to add skill. Please try again.",
+                type: "error"
+            });
         }
     };
     
@@ -49,9 +61,22 @@ export function ManageSkills() {
             setSelectedSkillId(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error deleting skill:", error);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete skill. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -191,6 +216,13 @@ export function ManageSkills() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

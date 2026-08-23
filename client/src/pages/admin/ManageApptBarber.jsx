@@ -14,6 +14,8 @@ import {
 import { FormModal } from "../../components/modals/FormModal.jsx";
 import { StatusBadge } from "../../components/common/StatusBadge.jsx";
 import { EDIT_B_APPT_LABELS, ADD_B_APPT_LABELS, VIEW_B_APPT_LABELS } from "../../constants/labelsConfig.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { Toast } from "../../components/common/Toast.jsx";
 
 export function ManageApptBarber() {
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -24,6 +26,12 @@ export function ManageApptBarber() {
         appointments: [],
         users: [],
         services: []
+    });
+    const [error, setError] = useState(null);
+    const [toast, setToast] = useState({
+        isOpen: false,
+        message: "",
+        type: "error"
     });
 
     const { appointments, users, services } = data;
@@ -54,6 +62,7 @@ export function ManageApptBarber() {
     useEffect(() => {
         const loadSchedule = async () => {
             try {
+                setError(null);
                 setIsLoading(true);
                 const [appointmentsData, usersData, servicesData] = await Promise.all([
                     appointmentService.getAsBarber(),
@@ -66,7 +75,7 @@ export function ManageApptBarber() {
                     services: servicesData
                 });
             } catch (error) {
-                console.error("Error loading schedule:", error.message);
+                setError("Failed to load your schedule. Please try again.");
             } finally {
                 setIsLoading(false);
             }
@@ -86,7 +95,11 @@ export function ManageApptBarber() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in editing appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to update the appointment. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -96,7 +109,11 @@ export function ManageApptBarber() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in deleting appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to delete the appointment. Please try again.",
+                type: "error"
+            });
         }
     };
 
@@ -107,9 +124,22 @@ export function ManageApptBarber() {
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
         } catch (error) {
-            console.error("Error in adding appointment: ", error.message);
+            setToast({
+                isOpen: true,
+                message: "Failed to add the appointment. Please try again.",
+                type: "error"
+            });
         }
     };
+
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger((prev) => prev + 1)}
+            />
+        );
+    }
 
     return (
         <div
@@ -289,6 +319,13 @@ export function ManageApptBarber() {
                     )}
                 </div>
             )}
+
+            <Toast
+                isOpen={toast.isOpen}
+                message={toast.message}
+                type={toast.type}
+                onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
+            />
         </div>
     );
 }

@@ -5,11 +5,15 @@ import { ArrowLeft, Scissors, ChevronRight, Clock } from "lucide-react";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { useNavigate } from "react-router-dom";
 import { AppointmentDetailsModal } from "../../components/modals/AppointmentDetailsModal.jsx";
+import { STATUS_ICON_STYLES } from "../../constants/selectStyles.js";
+import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 
 
 export function PastAppointments() {
     const [pastAppointments, setPastAppointments] = useState([]);
+    const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [openDetailsModal, setOpenDetailsModal] = useState(false);
 
@@ -18,33 +22,38 @@ export function PastAppointments() {
     useEffect(() => {
         const fetchPastAppointments = async () => {
             try {
+                setError(null);
                 const appointmentsData = await appointmentService.getByUser();
                 const pastAppointmentsData = appointmentsData.filter(appointment => appointment.status === "completed" || appointment.status === "cancelled");
                 setPastAppointments(pastAppointmentsData);
             } catch (error) {
-                console.error("Error fetching past appointments:", error);
+                setError("Failed to load appointments.");
             } finally {
                 setIsLoading(false);
             }
         };
         fetchPastAppointments();
-    }, []);
+    }, [refreshTrigger]);
 
     const handleAppointmentClick = (appointment) => {
         setSelectedAppointment(appointment);
         setOpenDetailsModal(true);
     };
 
+    if (error) {
+        return (
+            <ErrorScreen
+                errorText={error}
+                onRetry={() => setRefreshTrigger(prev => prev + 1)}
+            />
+        );
+    }
+
     if (isLoading) {
         return (
             <LoadingSpinner label="Loading Past Appointments..." />
         );
     }
-
-    const STATUS_ICON_STYLES = {
-        completed: "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20",
-        cancelled: "bg-red-500/10 text-red-400 border border-red-500/20",
-    };
 
     return (
         <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
