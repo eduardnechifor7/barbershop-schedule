@@ -1,7 +1,6 @@
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PHONE_REGEX = /^\+[1-9]\d{7,14}$/;
 const URL_REGEX = /^https?:\/\/.+/i;
-const TIME_REGEX = /^([01]\d|2[0-3]):([0-5]\d)$/;
 const TEXT_ONLY_REGEX = /^[A-Za-z\s]+$/;
 
 const isEmptyValue = (value) => {
@@ -13,12 +12,6 @@ const isEmptyValue = (value) => {
 
 export const required = (value, message = "This field is required") => {
     if (isEmptyValue(value)) return message;
-    return null;
-};
-
-export const minLength = (value, min, message = `Must be at least ${min} characters`) => {
-    if (isEmptyValue(value)) return message;
-    if (String(value).trim().length < min) return message;
     return null;
 };
 
@@ -55,25 +48,6 @@ export const positiveInteger = (value, message = "Please enter a positive whole 
     const numberValue = Number(value);
     if (!Number.isInteger(numberValue) || numberValue <= 0) return message;
     return null;
-};
-
-export const dateNotPast = (value, message = "Please choose today or a future date") => {
-    if (isEmptyValue(value)) return null;
-
-    const selected = String(value);
-    const today = new Date();
-    const todayString = [
-        today.getFullYear(),
-        String(today.getMonth() + 1).padStart(2, "0"),
-        String(today.getDate()).padStart(2, "0"),
-    ].join("-");
-
-    return selected >= todayString ? null : message;
-};
-
-export const time = (value, message = "Please enter a valid time") => {
-    if (isEmptyValue(value)) return null;
-    return TIME_REGEX.test(String(value).trim()) ? null : message;
 };
 
 export const minItems = (value, min = 1, message = `Please select at least ${min} item(s)`) => {

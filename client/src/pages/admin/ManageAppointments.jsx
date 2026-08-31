@@ -1,5 +1,4 @@
 import { useState, useEffect, useMemo } from "react";
-import { FormModal } from "../../components/modals/FormModal.jsx";
 import { ViewModal } from "../../components/modals/ViewModal.jsx";
 import { appointmentService } from "../../services/appointmentService.js";
 import { barberService } from "../../services/barberService.js";
@@ -18,9 +17,10 @@ import {
     Filter
 } from "lucide-react";
 import { StatusBadge } from "../../components/common/StatusBadge.jsx";
-import { EDIT_APPOINTMENT_LABELS, ADD_APPOINTMENT_LABELS, VIEW_APPOINTMENT_LABELS } from "../../constants/labelsConfig.js";
+import { VIEW_APPOINTMENT_LABELS } from "../../constants/labelsConfig.js";
 import { Toast } from "../../components/common/Toast.jsx";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import {AppointmentModal} from "../../components/modals/AppointmentModal.jsx";
 
 export function ManageAppointments() {
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -44,31 +44,6 @@ export function ManageAppointments() {
     const { appointments, barbers, users, services } = data;
     const selectedAppointment = appointments.find((a) => a.id === selectedAppId);
     const navigate = useNavigate();
-
-    const options = useMemo(
-        () => ({
-            appointment_date: null,
-            start_time: null,
-            notes: null,
-            status: [
-                { value: "scheduled", label: "Scheduled" },
-                { value: "completed", label: "Finished" },
-                { value: "cancelled", label: "Cancelled" },
-            ],
-            barber_id: barbers.map((b) => ({
-                value: b.id,
-                label: `${b.last_name} ${b.first_name}`,
-            })),
-            user_id: users.map((u) => ({
-                value: u.id,
-                label: `${u.last_name} ${u.first_name}`,
-            })),
-            service_ids: services
-                .filter((s) => s.is_active)
-                .map((s) => ({ value: s.id, label: s.service_name })),
-        }),
-        [barbers, users, services]
-    );
 
     const filteredAppointments = useMemo(() => {
         if (selectedBarberFilter === "all") return appointments;
@@ -185,7 +160,7 @@ export function ManageAppointments() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
                     onClick={() => setModalType("ADD")}
-                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm"
+                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-brand-gold hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm"
                 >
                     <Plus size={16} /> Add
                 </button>
@@ -195,7 +170,7 @@ export function ManageAppointments() {
                     onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -207,7 +182,7 @@ export function ManageAppointments() {
                     onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -229,7 +204,7 @@ export function ManageAppointments() {
 
             <div className="flex items-center justify-between gap-3 mb-4 bg-[#2D2B2B]/50 p-2.5 rounded-2xl border border-white/5">
                 <div className="flex items-center gap-2 text-xs font-semibold text-gray-400 pl-1">
-                    <Filter size={14} className="text-[#DBB668]" />
+                    <Filter size={14} className="text-brand-gold" />
                     <span>Filter by Barber:</span>
                 </div>
 
@@ -238,7 +213,7 @@ export function ManageAppointments() {
                         onClick={() => setSelectedBarberFilter("all")}
                         className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
                             selectedBarberFilter === "all"
-                                ? "bg-[#DBB668] text-[#1A1919]"
+                                ? "bg-brand-gold text-[#1A1919]"
                                 : "bg-white/5 text-gray-300 hover:bg-white/10 border border-white/5"
                         }`}
                     >
@@ -248,7 +223,7 @@ export function ManageAppointments() {
                     <select
                         value={selectedBarberFilter}
                         onChange={(e) => setSelectedBarberFilter(e.target.value)}
-                        className="bg-[#1A1919] text-[#F2EFE9] text-xs font-semibold px-4 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-[#DBB668] cursor-pointer appearance-none"
+                        className="bg-[#1A1919] text-[#F2EFE9] text-xs font-semibold px-4 py-2 rounded-xl border border-white/10 focus:outline-none focus:border-brand-gold cursor-pointer appearance-none"
                     >
                         <option value="all">Select Barber...</option>
                         {barbers.map((b) => (
@@ -263,7 +238,7 @@ export function ManageAppointments() {
             {isLoading && (
                 <div className="flex justify-center items-center my-12">
                     <svg
-                        className="animate-spin h-8 w-8 text-[#DBB668]"
+                        className="animate-spin h-8 w-8 text-brand-gold"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -304,19 +279,19 @@ export function ManageAppointments() {
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
-                                            ? "bg-[#2D2B2B] border-[#DBB668] shadow-lg shadow-black/40 translate-x-1"
+                                            ? "bg-[#2D2B2B] border-brand-gold shadow-lg shadow-black/40 translate-x-1"
                                             : "bg-[#2D2B2B]/70 border-white/5 hover:bg-[#2D2B2B] hover:border-white/10"
                                     }`}
                                 >
                                     <div
                                         className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${
-                                            isSelected ? "bg-[#DBB668]" : "bg-transparent"
+                                            isSelected ? "bg-brand-gold" : "bg-transparent"
                                         }`}
                                     />
 
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full pl-2 gap-2 sm:gap-4">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-[#DBB668]">
+                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-brand-gold">
                                                 <User size={16} />
                                             </div>
                                             <span className="font-semibold text-sm text-[#F2EFE9] truncate">
@@ -327,11 +302,11 @@ export function ManageAppointments() {
                                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-gray-400">
                                             <div className="flex items-center gap-3">
                                                 <span className="flex items-center gap-1">
-                                                      <Calendar size={13} className="text-[#DBB668]" />
+                                                      <Calendar size={13} className="text-brand-gold" />
                                                         {appointmentDate.toLocaleDateString("ro-RO")}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <Clock size={13} className="text-[#DBB668]" />
+                                                    <Clock size={13} className="text-brand-gold" />
                                                     {appointment.start_time?.substring(0, 5)}
                                                 </span>
                                             </div>
@@ -345,22 +320,31 @@ export function ManageAppointments() {
                     )}
 
                     {modalType && modalType === "ADD" && (
-                        <FormModal
+                        <AppointmentModal
                             isOpen={true}
-                            config={ADD_APPOINTMENT_LABELS}
                             onClose={() => setModalType(null)}
                             onSubmit={handleAddAppointment}
-                            options={options}
+                            isAdmin={true}
+                            parsedData={{
+                                barbers: barbers,
+                                services: services,
+                                users: users
+                            }}
                         />
                     )}
                     {modalType && modalType === "EDIT" && (
-                        <FormModal
+                        <AppointmentModal
                             isOpen={true}
-                            config={EDIT_APPOINTMENT_LABELS}
                             onClose={() => setModalType(null)}
                             onSubmit={handleEditAppointment}
-                            options={options}
+                            parsedData={{
+                                barbers: barbers,
+                                services: services,
+                                users: users
+                            }}
+                            isAdmin={true}
                             isEdit={true}
+                            initialData={selectedAppointment}
                         />
                     )}
                     {modalType && modalType === "VIEW" && (

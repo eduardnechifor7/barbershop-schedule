@@ -56,7 +56,7 @@ const listServices = async (req, res) => {
                  s.description AS description,
                  COALESCE(json_agg(
                           json_build_object('id', sk.id, 'name', sk.name)
-                                  ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS required_skills
+                                  ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS skills_ids
              FROM services AS s
                       LEFT JOIN services_skills AS ss ON s.id = ss.service_id
                       LEFT JOIN skills AS sk ON ss.skill_id = sk.id
@@ -126,7 +126,7 @@ const editService = async (req, res) => {
         }
 
         if (skills_ids !== undefined && Array.isArray(skills_ids)) {
-            const uniqueSkillsIds = [...new Set(skills_ids)];
+            const uniqueSkillsIds = [...new Set(skills_ids)].map(skill => skill.id);
 
             await client.query(`DELETE FROM services_skills WHERE service_id = $1`, [id]);
 

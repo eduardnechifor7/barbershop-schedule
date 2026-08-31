@@ -16,20 +16,25 @@ import {
 import { EDIT_ADD_VIEW_USERS_LABELS } from "../../constants/labelsConfig.js";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
 
 export function ManageUsers() {
     const [selectedUserId, setSelectedUserId] = useState(null);
     const [modalType, setModalType] = useState(null);
+    const [confirmModal, setConfirmModal] = useState(false);
     const [users, setUsers] = useState([]);
     const [toast, setToast] = useState({ isOpen: false, message: "", type: "" });
     const [error, setError] = useState(null);
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const selectedUser = users.find(u => u.id === selectedUserId);
     const navigate = useNavigate();
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchUsers = async () => {
             try {
                 setIsLoading(true);
@@ -38,10 +43,16 @@ export function ManageUsers() {
             } catch (error) {
                 setError("Failed to fetch users. Please try again.");
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
-        fetchUsers();
+        void fetchUsers();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
     const handleEditUser = async (formData) => {
@@ -61,6 +72,7 @@ export function ManageUsers() {
 
     const handleDeleteUser = async (id) => {
         try {
+            setIsDeleting(true);
             await userService.delete(id);
             setSelectedUserId(null);
             setRefreshTrigger(prev => prev + 1);
@@ -70,6 +82,8 @@ export function ManageUsers() {
                 message: "Failed to delete user. Please try again.",
                 type: "error"
             });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -108,7 +122,7 @@ export function ManageUsers() {
                     onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedUserId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -120,7 +134,7 @@ export function ManageUsers() {
                     onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedUserId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -129,7 +143,7 @@ export function ManageUsers() {
 
                 <button
                     disabled={!selectedUserId}
-                    onClick={() => handleDeleteUser(selectedUserId)}
+                    onClick={() => setConfirmModal(true)}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedUserId
                             ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 cursor-pointer"
@@ -143,7 +157,7 @@ export function ManageUsers() {
             {isLoading && (
                 <div className="flex justify-center items-center my-12">
                     <svg
-                        className="animate-spin h-8 w-8 text-[#DBB668]"
+                        className="animate-spin h-8 w-8 text-brand-gold"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -183,19 +197,19 @@ export function ManageUsers() {
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
-                                            ? "bg-[#2D2B2B] border-[#DBB668] shadow-lg shadow-black/40 translate-x-1"
+                                            ? "bg-[#2D2B2B] border-brand-gold shadow-lg shadow-black/40 translate-x-1"
                                             : "bg-[#2D2B2B]/70 border-white/5 hover:bg-[#2D2B2B] hover:border-white/10"
                                     }`}
                                 >
                                     <div
                                         className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${
-                                            isSelected ? "bg-[#DBB668]" : "bg-transparent"
+                                            isSelected ? "bg-brand-gold" : "bg-transparent"
                                         }`}
                                     />
 
                                     <div className="flex items-center justify-between w-full pl-2 gap-4">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
+                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-brand-gold">
                                                 {user.photo_url ? (
                                                     <img
                                                         src={user.photo_url}
@@ -220,7 +234,7 @@ export function ManageUsers() {
                                                 </div>
                                                 {user.email && (
                                                     <span className="text-xs text-gray-400 flex items-center gap-1 mt-0.5 truncate">
-                                                        <Mail size={12} className="text-[#DBB668]/70" />
+                                                        <Mail size={12} className="text-brand-gold/70" />
                                                         {user.email}
                                                     </span>
                                                 )}
@@ -229,7 +243,7 @@ export function ManageUsers() {
 
                                         {user.phone_number && (
                                             <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5 shrink-0">
-                                                <Phone size={13} className="text-[#DBB668]" />
+                                                <Phone size={13} className="text-brand-gold" />
                                                 <span>{user.phone_number}</span>
                                             </div>
                                         )}
@@ -245,7 +259,13 @@ export function ManageUsers() {
                             config={EDIT_ADD_VIEW_USERS_LABELS}
                             onClose={() => setModalType(null)}
                             onSubmit={handleEditUser}
+                            options={ {role: ["Customer", "Barber", "Admin"].map((role) => ({
+                                value: role,
+                                label: role
+                            }))
+                            }}
                             isEdit={true}
+                            initialData={selectedUser}
                         />
                     )}
                     {modalType === "VIEW" && (
@@ -258,6 +278,20 @@ export function ManageUsers() {
                     )}
                 </div>
             )}
+
+            <ConfirmModal
+                isOpen={confirmModal}
+                onClose={() => setConfirmModal(false)}
+                onConfirm={() => {
+                    void handleDeleteUser(selectedUserId);
+                    setConfirmModal(false);
+                }}
+                title="Delete Client"
+                message={"Are you sure you want to delete this client? All associated appointments will also be deleted."}
+                confirmText="Delete"
+                keepText="Keep Client"
+                isLoading={isDeleting}
+            />
 
             <Toast
                 isOpen={toast.isOpen}

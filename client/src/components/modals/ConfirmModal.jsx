@@ -5,7 +5,7 @@ export function ConfirmModal({ isOpen, onClose, onConfirm, title, message, confi
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs animate-fade-in">
-            <div className="bg-[#232222] border border-white/10 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col items-center text-center space-y-4">
+            <div className="bg-dark-bg border border-white/10 rounded-2xl p-5 max-w-xs w-full shadow-2xl flex flex-col items-center text-center space-y-4">
                 <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
                     <AlertTriangle size={22} className="text-red-400" />
                 </div>

@@ -1,23 +1,4 @@
 
-export const EDIT_APPOINTMENT_LABELS = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Client name": "user_id",
-    "Barber name": "barber_id",
-    "Appointment services": "service_ids",
-    "Notes": "notes",
-    "Status": "status"
-};
-
-export const ADD_APPOINTMENT_LABELS = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Client name": "user_id",
-    "Barber name": "barber_id",
-    "Appointment services": "service_ids",
-    "Notes": "notes"
-};
-
 export const VIEW_APPOINTMENT_LABELS = {
     "Appointment Date": "appointment_date",
     "Barber Name": ["barber_first_name", "barber_last_name"],
@@ -28,24 +9,7 @@ export const VIEW_APPOINTMENT_LABELS = {
     "Start time": "start_time",
     "Status": "status"
 };
-
-export const EDIT_B_APPT_LABELS = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Appointment services": "service_ids",
-    "Notes": "notes",
-    "Status": "status"
-};
-
-export const ADD_B_APPT_LABELS = {
-    "Appointment Date": "appointment_date",
-    "Scheduled time": "start_time",
-    "Client name": "user_id",
-    "Appointment services": "service_ids",
-    "Notes": "notes"
-};
-
-export const VIEW_B_APPT_LABELS = {
+export const VIEW_B_APPOINTMENT_LABELS = {
     "Appointment Date": "appointment_date",
     "Client Name": ["client_first_name", "client_last_name"],
     "Client Phone": "client_phone",
@@ -76,8 +40,7 @@ export const EDIT_ADD_SERVICES_LABELS = {
     "Price": "price",
     "Duration": "minutes_duration",
     "Description": "description",
-    "Skills": "skills_ids",
-    "Status": "is_active"
+    "Skills": "skills_ids"
 };
 
 export const VIEW_SERVICES_LABELS = {

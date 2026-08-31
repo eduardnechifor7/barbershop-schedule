@@ -1,4 +1,4 @@
-const createNotification = require('../services/notificationService');
+const { createNotification } = require('../services/notificationService');
 const db = require('../config/db');
 
 // Helper for creating an appointment, used across client, barber, and admin routes
@@ -126,12 +126,15 @@ const listAsBarber = async (req, res) => {
                     appointments.start_time,
                     appointments.notes,
                     appointments.status,
+                    appointments.user_id,
+                    appointments.barber_id,
                     clients.first_name AS client_first_name,
                     clients.last_name AS client_last_name,
                     clients.phone_number AS client_phone,
                     clients.photo_url AS client_photo_url,
                     JSON_AGG(
-                            JSON_BUILD_OBJECT('service_name', services.service_name,
+                            JSON_BUILD_OBJECT('service_id', services.id,
+                                              'service_name', services.service_name,
                                               'price_at_booking', appointment_services.price_at_booking)
                     ) AS services
              FROM appointments
@@ -202,24 +205,26 @@ const editAsBarber = async (req, res) => {
         const cleanTime = start_time === "" ? null : start_time;
         const cleanNotes = notes === "" ? null : notes;
         const cleanStatus = status === "" ? null : status;
+        const clearUserId = user_id === "" ? null : user_id;
 
         const updateAppointment = await client.query(
             `UPDATE appointments
              SET appointment_date = COALESCE($1, appointment_date),
                  start_time = COALESCE($2, start_time),
                  notes = COALESCE($3, notes),
-                 status = COALESCE($4, status)
-             WHERE id = $5
+                 status = COALESCE($4, status),
+                 user_id = COALESCE($5, user_id)
+             WHERE id = $6
                AND (
                  EXISTS (
                      SELECT 1 FROM barbers
                      WHERE barbers.id = appointments.barber_id
-                       AND barbers.user_id = $6
+                       AND barbers.user_id = $7
                  )
-                     OR $7 = 'Admin'
+                     OR $8 = 'Admin'
                  )
              RETURNING *`,
-            [cleanDate, cleanTime, cleanNotes, cleanStatus, id, req.user.id, req.user.role]
+            [cleanDate, cleanTime, cleanNotes, cleanStatus, clearUserId, id, req.user.id, req.user.role]
         );
 
         if (updateAppointment.rows.length === 0) {
@@ -244,7 +249,7 @@ const editAsBarber = async (req, res) => {
         await createNotification(
             user_id,
             "Appointment Updated!",
-            `Your appointment has been updated. See you on ${appointmentDate} at ${startTime}!`
+            `Your appointment has been updated. See you on ${appointment_date} at ${start_time}!`
         );
 
         await client.query('COMMIT');
@@ -267,14 +272,16 @@ const listAllAppointments = async (req, res) => {
                     appointments.start_time,
                     appointments.notes,
                     appointments.status,
+                    appointments.user_id,
+                    appointments.barber_id,
                     clients.first_name AS client_first_name,
                     clients.last_name AS client_last_name,
                     clients.phone_number AS client_phone,
-                    barbers.id AS barber_id,
                     barbers_users.first_name AS barber_first_name,
                     barbers_users.last_name AS barber_last_name,
                     JSON_AGG(
-                            JSON_BUILD_OBJECT('service_name', services.service_name,
+                            JSON_BUILD_OBJECT('service_id', services.id,
+                                              'service_name', services.service_name,
                                               'price_at_booking', appointment_services.price_at_booking)
                     ) AS services
              FROM appointments
@@ -329,15 +336,25 @@ const editAppointment = async (req, res) => {
     const { user_id, barber_id, appointment_date, start_time, notes, status, service_ids } = req.body;
     const client = await db.getClient();
 
+    const parseNumOrNull = (val) => {
+        if (!val || isNaN(Number(val))) return null;
+        return Number(val);
+    };
+
+    const parseStringOrNull = (val) => {
+        if (!val || String(val).trim() === "") return null;
+        return String(val).trim();
+    };
+
     try {
         await client.query('BEGIN');
 
-        const cleanDate = appointment_date === "" ? null : appointment_date;
-        const cleanTime = start_time === "" ? null : start_time;
-        const cleanNotes = notes === "" ? null : notes;
-        const cleanStatus = status === "" ? null : status;
-        const cleanUser = user_id === "" ? null : user_id;
-        const cleanBarber = barber_id === "" ? null : barber_id;
+        const cleanDate = parseStringOrNull(appointment_date);
+        const cleanTime = parseStringOrNull(start_time);
+        const cleanNotes = parseStringOrNull(notes);
+        const cleanStatus = parseStringOrNull(status);
+        const cleanUser = parseNumOrNull(user_id);
+        const cleanBarber = parseNumOrNull(barber_id);
 
         const updateAppointment = await client.query(
             `UPDATE appointments
@@ -374,7 +391,7 @@ const editAppointment = async (req, res) => {
         await createNotification(
             user_id,
             "Appointment Updated!",
-            `Your appointment has been updated. See you on ${appointmentDate} at ${startTime}!`
+            `Your appointment has been updated. See you on ${appointment_date} at ${start_time}!`
         );
 
         await client.query('COMMIT');
@@ -419,6 +436,30 @@ const deleteAppointment = async (req, res) => {
     }
 };
 
+// Cancel appointment by Client (soft delete)
+const cancelAppointment = async (req, res) => {
+    const { id } = req.params;
+    try {
+        const cancelRes = await db.query(
+            `UPDATE appointments SET status = 'cancelled' WHERE id = $1 AND user_id = $2 RETURNING *`,
+            [id, req.user.id]
+        );
+
+        if (cancelRes.rows.length === 0) {
+            return res.status(404).json({
+                message: "Appointment not found or you are not authorized to cancel it."
+            });
+        }
+
+        return res.status(200).json({
+            message: "Appointment cancelled successfully.",
+            appointment: cancelRes.rows[0]
+        });
+    } catch (error) {
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 module.exports = {
     createMyAppointent,
     createAppointment,
@@ -429,5 +470,6 @@ module.exports = {
     editAppointment,
     deleteAppointment,
     createAsBarber,
-    editAsBarber
+    editAsBarber,
+    cancelAppointment
 };

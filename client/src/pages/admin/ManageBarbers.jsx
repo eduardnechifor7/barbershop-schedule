@@ -18,6 +18,7 @@ import {
 import { EDIT_BARBERS_LABELS, ADD_BARBERS_LABELS, VIEW_BARBERS_LABELS } from "../../constants/labelsConfig.js";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import {ConfirmModal} from "../../components/modals/ConfirmModal.jsx";
 
 export function ManageBarbers() {
     const [selectedBarberId, setSelectedBarberId] = useState(null);
@@ -28,6 +29,7 @@ export function ManageBarbers() {
         users: []
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [isDeleting, setIsDeleting] = useState(false);
     const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState({
@@ -41,11 +43,13 @@ export function ManageBarbers() {
     const navigate = useNavigate();
 
     const options = useMemo(() => ({
-        user_id: users.map(user => ({ value: user.id, label: `${user.first_name} ${user.last_name}` })),
+        user_id: users.filter(user => user.role !== "Barber").map(user => ({ value: user.id, label: `${user.first_name} ${user.last_name}` })),
         skills_ids: skills.map(skill => ({ value: skill.id, label: skill.name }))
     }), [skills, users]);
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchData = async () => {
             try {
                 setError(null);
@@ -63,10 +67,16 @@ export function ManageBarbers() {
             } catch (error) {
                 setError("Failed to load barbers. Please try again.");
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
-        fetchData();
+        void fetchData();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
     const handleAddBarber = async (formData) => {
@@ -101,6 +111,7 @@ export function ManageBarbers() {
 
     const handleDeleteBarber = async (id) => {
         try {
+            setIsDeleting(true);
             await barberService.delete(id);
             setSelectedBarberId(null);
             setRefreshTrigger(prev => prev + 1);
@@ -110,6 +121,8 @@ export function ManageBarbers() {
                 message: "Failed to delete barber. Please try again.",
                 type: "error"
             });
+        } finally {
+            setIsDeleting(false);
         }
     };
 
@@ -145,7 +158,7 @@ export function ManageBarbers() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
                     onClick={() => setModalType("ADD")}
-                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
+                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-brand-gold hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm cursor-pointer"
                 >
                     <Plus size={16} /> Add
                 </button>
@@ -155,7 +168,7 @@ export function ManageBarbers() {
                     onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedBarberId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -167,7 +180,7 @@ export function ManageBarbers() {
                     onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedBarberId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30 cursor-pointer"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30 cursor-pointer"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -176,7 +189,7 @@ export function ManageBarbers() {
 
                 <button
                     disabled={!selectedBarberId}
-                    onClick={() => handleDeleteBarber(selectedBarberId)}
+                    onClick={() => setModalType("CONFIRM")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedBarberId
                             ? "bg-red-500/10 hover:bg-red-500/20 text-red-400 border-red-500/20 cursor-pointer"
@@ -190,7 +203,7 @@ export function ManageBarbers() {
             {isLoading && (
                 <div className="flex justify-center items-center my-12">
                     <svg
-                        className="animate-spin h-8 w-8 text-[#DBB668]"
+                        className="animate-spin h-8 w-8 text-brand-gold"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -230,19 +243,19 @@ export function ManageBarbers() {
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
-                                            ? "bg-[#2D2B2B] border-[#DBB668] shadow-lg shadow-black/40 translate-x-1"
+                                            ? "bg-[#2D2B2B] border-brand-gold shadow-lg shadow-black/40 translate-x-1"
                                             : "bg-[#2D2B2B]/70 border-white/5 hover:bg-[#2D2B2B] hover:border-white/10"
                                     }`}
                                 >
                                     <div
                                         className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${
-                                            isSelected ? "bg-[#DBB668]" : "bg-transparent"
+                                            isSelected ? "bg-brand-gold" : "bg-transparent"
                                         }`}
                                     />
 
                                     <div className="flex items-center justify-between w-full pl-2 gap-4">
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-[#DBB668]">
+                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/5 border border-white/10 shrink-0 flex items-center justify-center text-brand-gold">
                                                 {barber.photo_url ? (
                                                     <img
                                                         src={barber.photo_url}
@@ -258,7 +271,7 @@ export function ManageBarbers() {
                                                     {barber.first_name} {barber.last_name}
                                                 </span>
                                                 {barber.specialization && (
-                                                    <span className="text-xs text-[#DBB668] font-medium flex items-center gap-1 mt-0.5">
+                                                    <span className="text-xs text-brand-gold font-medium flex items-center gap-1 mt-0.5">
                                                         <Scissors size={11} />
                                                         {barber.specialization}
                                                     </span>
@@ -268,7 +281,7 @@ export function ManageBarbers() {
 
                                         {barber.phone_number && (
                                             <div className="hidden sm:flex items-center gap-1.5 text-xs text-gray-400 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">
-                                                <Phone size={13} className="text-[#DBB668]" />
+                                                <Phone size={13} className="text-brand-gold" />
                                                 <span>{barber.phone_number}</span>
                                             </div>
                                         )}
@@ -295,6 +308,7 @@ export function ManageBarbers() {
                             onSubmit={handleEditBarber}
                             options={options}
                             isEdit={true}
+                            initialData={selectedBarber}
                         />
                     )}
                     {modalType === "VIEW" && (
@@ -306,6 +320,22 @@ export function ManageBarbers() {
                         />
                     )}
                 </div>
+            )}
+
+            {modalType === "CONFIRM" && (
+                <ConfirmModal
+                    isOpen={true}
+                    onClose={() => setModalType(null)}
+                    onConfirm={() => {
+                         void handleDeleteBarber(selectedBarberId);
+                        setModalType(null);
+                    }}
+                    title="Delete Barber"
+                    message={"Are you sure you want to delete this barber? All associated appointments will also be deleted."}
+                    confirmText="Delete"
+                    keepText="Keep Barber"
+                    isLoading={isDeleting}
+                />
             )}
 
             <Toast

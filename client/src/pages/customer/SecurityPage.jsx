@@ -1,19 +1,16 @@
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import {
-    ArrowLeft, Smartphone,
-    Trash2, AlertCircle, AlertTriangle
-} from "lucide-react";
-import { BottomNav } from "../../components/common/BottomNav.jsx";
-import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
-import { userService } from "../../services/userService.js";
-import { PhoneChangeModal } from "../../components/modals/PhoneChangeModal.jsx";
+import {useEffect, useState} from "react";
+import {useLocation, useNavigate} from "react-router-dom";
+import {AlertCircle, AlertTriangle, ArrowLeft, Smartphone, Trash2} from "lucide-react";
+import {BottomNav} from "../../components/common/BottomNav.jsx";
+import {LoadingSpinner} from "../../components/common/LoadingSpinner.jsx";
+import {userService} from "../../services/userService.js";
+import {PhoneChangeModal} from "../../components/modals/PhoneChangeModal.jsx";
 import {auth, firebaseConfig} from "../../firebase.js";
 import {getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut} from "firebase/auth";
-import { initializeApp, getApps } from "firebase/app";
-import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
-import { Toast } from "../../components/common/Toast.jsx";
-import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import {getApps, initializeApp} from "firebase/app";
+import {ConfirmModal} from "../../components/modals/ConfirmModal.jsx";
+import {Toast} from "../../components/common/Toast.jsx";
+import {ErrorScreen} from "../../components/common/ErrorScreen.jsx";
 
 const tempApp = getApps().find(app => app.name === "PhoneVerificationApp")
     || initializeApp(firebaseConfig, "PhoneVerificationApp");
@@ -52,13 +49,11 @@ export function SecurityPage() {
                 size: "invisible"
             });
 
-            const confirmationResult = await signInWithPhoneNumber(
+            window.confirmationResult = await signInWithPhoneNumber(
                 tempAuth,
                 newPhoneNumber,
                 window.recaptchaVerifier
             );
-
-            window.confirmationResult = confirmationResult;
 
             navigate("/welcome/otp", {
                 state: {
@@ -124,7 +119,7 @@ export function SecurityPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen h-dvh bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
             <div className="bg-[#121212] px-6 pt-4 pb-3 shrink-0 border-b border-white/5 flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}

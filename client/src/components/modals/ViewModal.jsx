@@ -104,7 +104,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                     className="bg-[#242323] p-3 rounded-2xl border border-white/5 flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <IconComponent size={16} className="text-[#DBB668]" />
+                                        <IconComponent size={16} className="text-brand-gold" />
                                         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             {friendlyName}
                                         </span>
@@ -129,7 +129,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                         if (isStatus) {
                             const statusVal = String(user[backendKey]).toLowerCase();
                             const isCompleted = statusVal === "completed" || statusVal === "true" || statusVal === "active";
-                            const isCancelled = statusVal === "cancelled" || statusVal === "inactive";
+                            const isCancelled = statusVal === "cancelled" || statusVal === "inactive" || statusVal === "false";
 
                             return (
                                 <div
@@ -137,7 +137,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                     className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 flex items-center justify-between"
                                 >
                                     <div className="flex items-center gap-2">
-                                        {IconComponent && <IconComponent size={16} className="text-[#DBB668]" />}
+                                        {IconComponent && <IconComponent size={16} className="text-brand-gold" />}
                                         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             {friendlyName}
                                         </span>
@@ -154,7 +154,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                         {isCompleted && <CheckCircle2 size={13} />}
                                         {isCancelled && <XCircle size={13} />}
                                         {!isCompleted && !isCancelled && <AlertCircle size={13} />}
-                                        {user[backendKey] || "N/A"}
+                                        {user[backendKey]}
                                     </span>
                                 </div>
                             );
@@ -167,7 +167,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                     className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 space-y-2"
                                 >
                                     <div className="flex items-center gap-2">
-                                        <IconComponent size={16} className="text-[#DBB668]" />
+                                        <IconComponent size={16} className="text-brand-gold" />
                                         <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                             {friendlyName}
                                         </span>
@@ -177,7 +177,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                             user[backendKey].map((s, idx) => (
                                                 <span
                                                     key={idx}
-                                                    className="bg-white/5 border border-white/10 text-xs px-2.5 py-1 rounded-lg text-[#DBB668] font-medium"
+                                                    className="bg-white/5 border border-white/10 text-xs px-2.5 py-1 rounded-lg text-brand-gold font-medium"
                                                 >
                                                     {friendlyName === "Services"
                                                         ? `${s.service_name} • ${s.price_at_booking} RON`
@@ -198,7 +198,7 @@ export function ViewModal({ isOpen, onClose, config, user }) {
                                 className="bg-[#242323] p-3.5 rounded-2xl border border-white/5 flex items-center justify-between gap-3"
                             >
                                 <div className="flex items-center gap-2 shrink-0">
-                                    {IconComponent && <IconComponent size={16} className="text-[#DBB668]" />}
+                                    {IconComponent && <IconComponent size={16} className="text-brand-gold" />}
                                     <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
                                         {friendlyName}:
                                     </span>

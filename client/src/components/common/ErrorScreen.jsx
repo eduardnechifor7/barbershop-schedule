@@ -7,7 +7,7 @@ export function ErrorScreen({ errorText = "Failed to load your page", onRetry })
             <p className="text-gray-400 text-sm mb-4">{errorText}</p>
             <button
                 onClick={onRetry}
-                className="px-4 py-2 bg-[#DBB668] text-[#121212] font-semibold text-sm rounded-xl cursor-pointer"
+                className="px-4 py-2 bg-brand-gold text-[#121212] font-semibold text-sm rounded-xl cursor-pointer"
             >
                 Retry
             </button>

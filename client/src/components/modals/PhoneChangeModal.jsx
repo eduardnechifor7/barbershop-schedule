@@ -32,11 +32,11 @@ export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn select-none">
             <div className="relative w-full max-w-md bg-[#1C1B1B] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-                <div className="h-0.5 bg-gradient-to-r from-[#DBB668] via-[#c9a155] to-transparent shrink-0" />
+                <div className="h-0.5 bg-linear-to-r from-brand-gold via-[#c9a155] to-transparent shrink-0" />
 
                 <div className="p-5 pb-4 border-b border-white/5 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#262424] flex items-center justify-center text-[#DBB668] border border-white/5">
+                        <div className="w-10 h-10 rounded-2xl bg-[#262424] flex items-center justify-center text-brand-gold border border-white/5">
                             <Phone size={18} />
                         </div>
                         <div>
@@ -55,7 +55,7 @@ export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false 
                     <button
                         onClick={onClose}
                         disabled={isLoading}
-                        className="w-9 h-9 rounded-xl bg-[#262424] hover:bg-white/[0.08] text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/5 disabled:opacity-50"
+                        className="w-9 h-9 rounded-xl bg-[#262424] hover:bg-white/8 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/5 disabled:opacity-50"
                     >
                         <X size={18} />
                     </button>
@@ -77,7 +77,7 @@ export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false 
                                 }}
                                 placeholder="Enter new phone number..."
                                 disabled={isLoading}
-                                className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 text-sm text-[#F2EFE9] placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors disabled:opacity-50"
+                                className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 text-sm text-[#F2EFE9] placeholder-gray-500 focus:outline-none focus:border-brand-gold/50 transition-colors disabled:opacity-50"
                             />
                         </div>
                         {error.phoneNumber && (
@@ -87,8 +87,8 @@ export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false 
                         )}
                     </div>
 
-                    <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-white/[0.02] border border-white/5 text-gray-400 text-xs leading-relaxed">
-                        <AlertCircle size={15} className="text-[#DBB668] shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-white/2 border border-white/5 text-gray-400 text-xs leading-relaxed">
+                        <AlertCircle size={15} className="text-brand-gold shrink-0 mt-0.5" />
                         <p>
                             We will send a 6-digit SMS verification code to verify this new number.
                         </p>
@@ -97,7 +97,7 @@ export function PhoneChangeModal({ isOpen, onClose, onSubmit, isLoading = false 
                     <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-3.5 rounded-2xl bg-[#DBB668] text-[#121212] font-bold text-sm hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
+                        className="w-full py-3.5 rounded-2xl bg-brand-gold text-[#121212] font-bold text-sm hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                         {isLoading ? (
                             <Loader2 size={18} className="animate-spin text-[#121212]" />

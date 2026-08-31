@@ -45,6 +45,8 @@ export function PersonalInfoPage() {
     }
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchUserFallback = async () => {
             setLoading(true);
             try {
@@ -55,7 +57,9 @@ export function PersonalInfoPage() {
             } catch (error) {
                 setError("Failed to load your profile. Please try again.");
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         }
 
@@ -63,7 +67,11 @@ export function PersonalInfoPage() {
             initialAvatarUrlRef.current = passedUser.photo_url || null;
             setLoading(false);
         } else {
-            fetchUserFallback();
+            void fetchUserFallback();
+        }
+
+        return () => {
+            controller.abort();
         }
     }, [passedUser, refreshTrigger]);
 
@@ -109,8 +117,10 @@ export function PersonalInfoPage() {
     const handleFileChange = (e) => {
         const selectedFile = e.target.files[0];
         if (selectedFile) {
-            handleUpload(selectedFile);
+            void handleUpload(selectedFile);
         }
+
+        e.target.value = "";
     };
 
     const handleAvatarClick = () => {
@@ -145,7 +155,7 @@ export function PersonalInfoPage() {
         }
 
         try {
-            await userService.edit(formData.id, formData)
+            await userService.updateMe(formData);
             if (initialAvatarUrlRef.current && initialAvatarUrlRef.current !== formData.photo_url) {
                 await deleteOldAvatar(initialAvatarUrlRef.current);
             }
@@ -176,7 +186,7 @@ export function PersonalInfoPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -211,7 +221,7 @@ export function PersonalInfoPage() {
             >
                 <div className="flex flex-col items-center justify-center">
                     <div className="relative">
-                        <div className="w-24 h-24 rounded-full bg-[#DBB668] text-[#121212] flex items-center justify-center font-bold text-2xl overflow-hidden border-2 border-white/10 shadow-lg">
+                        <div className="w-24 h-24 rounded-full bg-brand-gold text-[#121212] flex items-center justify-center font-bold text-2xl overflow-hidden border-2 border-white/10 shadow-lg">
                             {formData.photo_url ? (
                                 <img
                                     src={formData.photo_url}
@@ -251,7 +261,7 @@ export function PersonalInfoPage() {
                                     name="first_name"
                                     value={formData.first_name}
                                     onChange={handleChange}
-                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl px-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors"
+                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl px-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold/50 transition-colors"
                                 />
                                 {errors["first_name"] && (
                                     <p className="text-red-400 text-xs font-medium flex items-center gap-1 mt-0.5">
@@ -269,7 +279,7 @@ export function PersonalInfoPage() {
                                     name="last_name"
                                     value={formData.last_name}
                                     onChange={handleChange}
-                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl px-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors"
+                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl px-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold/50 transition-colors"
                                 />
                                 {errors["last_name"] && (
                                     <p className="text-red-400 text-xs font-medium flex items-center gap-1 mt-0.5">
@@ -290,7 +300,7 @@ export function PersonalInfoPage() {
                                     name="email"
                                     value={formData.email}
                                     onChange={handleChange}
-                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-[#DBB668]/50 transition-colors"
+                                    className="w-full bg-[#262424] border border-white/5 rounded-2xl pl-11 pr-4 py-3 mt-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-gold/50 transition-colors"
                                 />
                                 {errors["email"] && (
                                     <p className="text-red-400 text-xs font-medium flex items-center gap-1 mt-0.5">
@@ -339,7 +349,7 @@ export function PersonalInfoPage() {
                                     </p>
                                 </div>
                             </div>
-                            <span className="text-[10px] font-bold tracking-wider text-[#DBB668] bg-[#DBB668]/15 px-2.5 py-1 rounded-md uppercase border border-[#DBB668]/30">
+                            <span className="text-[10px] font-bold tracking-wider text-brand-gold bg-brand-gold/15 px-2.5 py-1 rounded-md uppercase border border-brand-gold/30">
                                 {formData.role}
                             </span>
                         </div>
@@ -348,7 +358,7 @@ export function PersonalInfoPage() {
                     <div className="space-y-3 py-2">
                         <button
                             type="submit"
-                            className="w-full py-4 rounded-2xl bg-[#DBB668] text-[#121212] font-bold text-sm hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer shadow-md"
+                            className="w-full py-4 rounded-2xl bg-brand-gold text-[#121212] font-bold text-sm hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer shadow-md"
                         >
                             Save Changes
                         </button>

@@ -9,11 +9,11 @@ export function TermsPolicyModal({ isOpen, onClose, activeTabProp = "terms" }) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm animate-fadeIn select-none">
             <div className="relative w-full max-w-xl bg-[#1C1B1B] border border-white/10 rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[85vh]">
-                <div className="h-0.5 bg-gradient-to-r from-[#DBB668] via-[#c9a155] to-transparent shrink-0" />
+                <div className="h-0.5 bg-linear-to-r from-brand-gold via-[#c9a155] to-transparent shrink-0" />
 
                 <div className="p-5 pb-4 border-b border-white/5 flex items-center justify-between shrink-0">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-2xl bg-[#262424] flex items-center justify-center text-[#DBB668] border border-white/5">
+                        <div className="w-10 h-10 rounded-2xl bg-[#262424] flex items-center justify-center text-brand-gold border border-white/5">
                             {activeTab === "terms" ? <Scale size={18} /> : <ShieldCheck size={18} />}
                         </div>
                         <div>
@@ -31,7 +31,7 @@ export function TermsPolicyModal({ isOpen, onClose, activeTabProp = "terms" }) {
 
                     <button
                         onClick={onClose}
-                        className="w-9 h-9 rounded-xl bg-[#262424] hover:bg-white/[0.08] text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/5"
+                        className="w-9 h-9 rounded-xl bg-[#262424] hover:bg-white/8 text-gray-400 hover:text-white flex items-center justify-center transition-colors cursor-pointer border border-white/5"
                     >
                         <X size={18} />
                     </button>
@@ -43,7 +43,7 @@ export function TermsPolicyModal({ isOpen, onClose, activeTabProp = "terms" }) {
                             onClick={() => setActiveTab("terms")}
                             className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
                                 activeTab === "terms"
-                                    ? "bg-[#DBB668] text-black shadow-md"
+                                    ? "bg-brand-gold text-black shadow-md"
                                     : "text-gray-400 hover:text-white"
                             }`}
                         >
@@ -54,7 +54,7 @@ export function TermsPolicyModal({ isOpen, onClose, activeTabProp = "terms" }) {
                             onClick={() => setActiveTab("privacy")}
                             className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
                                 activeTab === "privacy"
-                                    ? "bg-[#DBB668] text-black shadow-md"
+                                    ? "bg-brand-gold text-black shadow-md"
                                     : "text-gray-400 hover:text-white"
                             }`}
                         >
@@ -137,9 +137,9 @@ export function TermsPolicyModal({ isOpen, onClose, activeTabProp = "terms" }) {
                     </p>
                     <button
                         onClick={onClose}
-                        className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-gray-300 hover:text-white text-xs font-medium border border-white/10 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+                        className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-white/4 hover:bg-white/8 text-gray-300 hover:text-white text-xs font-medium border border-white/10 transition-all cursor-pointer flex items-center justify-center gap-1.5"
                     >
-                        <CheckCircle2 size={14} className="text-[#DBB668]" />
+                        <CheckCircle2 size={14} className="text-brand-gold" />
                         I Understand
                     </button>
                 </div>

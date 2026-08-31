@@ -12,7 +12,7 @@ export function AdminDashboardMenu() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [refreshTrigger, onRefreshTrigger] = useState(0);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
     const [error, setError] = useState(null);
     const [toast, setToast] = useState({
         isOpen: false,
@@ -82,9 +82,9 @@ export function AdminDashboardMenu() {
                 <div className="grid grid-cols-1 gap-4 w-full max-w-sm mb-6">
                     <button
                         onClick={() => navigate("/admin/appointments-barber")}
-                        className="bg-[#2D2B2B] p-5 rounded-2xl border border-white/5 flex items-center justify-start gap-4 hover:border-[#DBB668]/40 hover:bg-[#383535] transition-all group"
+                        className="bg-[#2D2B2B] p-5 rounded-2xl border border-white/5 flex items-center justify-start gap-4 hover:border-brand-gold/40 hover:bg-[#383535] transition-all group"
                     >
-                        <div className="p-3 rounded-xl bg-white/5 text-[#DBB668] group-hover:scale-105 transition-transform">
+                        <div className="p-3 rounded-xl bg-white/5 text-brand-gold group-hover:scale-105 transition-transform">
                             <Calendar size={24} />
                         </div>
                         <div className="text-left">
@@ -124,32 +124,32 @@ export function AdminDashboardMenu() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 w-full max-w-sm mb-6">
-                <button onClick={() => navigate("/admin/users")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
-                    <User className="text-[#DBB668]" size={24} />
+                <button onClick={() => navigate("/admin/users")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-brand-gold/40 transition-all">
+                    <User className="text-brand-gold" size={24} />
                     <span className="text-xs font-semibold text-[#F2EFE9]">Users</span>
                 </button>
 
-                <button onClick={() => navigate("/admin/barbers")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
-                    <Scissors className="text-[#DBB668]" size={24} />
+                <button onClick={() => navigate("/admin/barbers")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-brand-gold/40 transition-all">
+                    <Scissors className="text-brand-gold" size={24} />
                     <span className="text-xs font-semibold text-[#F2EFE9]">Barbers</span>
                 </button>
 
-                <button onClick={() => navigate("/admin/appointments")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
-                    <Calendar className="text-[#DBB668]" size={24} />
+                <button onClick={() => navigate("/admin/appointments")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-brand-gold/40 transition-all">
+                    <Calendar className="text-brand-gold" size={24} />
                     <span className="text-xs font-semibold text-[#F2EFE9]">Appointments</span>
                 </button>
 
-                <button onClick={() => navigate("/admin/services")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all">
-                    <FileText className="text-[#DBB668]" size={24} />
+                <button onClick={() => navigate("/admin/services")} className="bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-brand-gold/40 transition-all">
+                    <FileText className="text-brand-gold" size={24} />
                     <span className="text-xs font-semibold text-[#F2EFE9]">Services</span>
                 </button>
 
                 <div className="col-span-2 flex justify-center">
                     <button
                         onClick={() => navigate("/admin/skills")}
-                        className="w-[calc(50%-0.5rem)] bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-[#DBB668]/40 transition-all"
+                        className="w-[calc(50%-0.5rem)] bg-[#2D2B2B] p-4 rounded-2xl border border-white/5 flex flex-col items-center justify-center gap-2 hover:border-brand-gold/40 transition-all"
                     >
-                        <Sparkles className="text-[#DBB668]" size={24} />
+                        <Sparkles className="text-brand-gold" size={24} />
                         <span className="text-xs font-semibold text-[#F2EFE9]">Skills</span>
                     </button>
                 </div>
