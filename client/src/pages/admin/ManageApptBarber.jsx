@@ -1,7 +1,8 @@
-import {useState, useEffect, useMemo} from "react";
+import { useState, useEffect } from "react";
 import { appointmentService } from "../../services/appointmentService.js";
 import { userService } from "../../services/userService.js";
 import { servicesService } from "../../services/servicesService.js";
+import { barberService } from "../../services/barberService.js";
 import { ViewModal } from "../../components/modals/ViewModal.jsx";
 import { useNavigate } from "react-router-dom";
 import {
@@ -11,11 +12,11 @@ import {
     User,
     Eye, Edit, Plus, Trash2
 } from "lucide-react";
-import { FormModal } from "../../components/modals/FormModal.jsx";
 import { StatusBadge } from "../../components/common/StatusBadge.jsx";
-import { EDIT_B_APPT_LABELS, ADD_B_APPT_LABELS, VIEW_B_APPT_LABELS } from "../../constants/labelsConfig.js";
+import { VIEW_B_APPOINTMENT_LABELS } from "../../constants/labelsConfig.js";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import { AppointmentModal } from "../../components/modals/AppointmentModal.jsx";
 
 export function ManageApptBarber() {
     const [selectedAppId, setSelectedAppId] = useState(null);
@@ -25,7 +26,8 @@ export function ManageApptBarber() {
     const [data, setData] = useState({
         appointments: [],
         users: [],
-        services: []
+        services: [],
+        barbers: []
     });
     const [error, setError] = useState(null);
     const [toast, setToast] = useState({
@@ -34,63 +36,49 @@ export function ManageApptBarber() {
         type: "error"
     });
 
-    const { appointments, users, services } = data;
+    const { appointments, users, services, barbers } = data;
     const navigate = useNavigate();
     const selectedAppointment = appointments.find((a) => a.appointment_id === selectedAppId);
 
-    const options = useMemo(
-        () => ({
-            appointment_date: null,
-            start_time: null,
-            notes: null,
-            status: [
-                { value: "scheduled", label: "Scheduled" },
-                { value: "completed", label: "Finished" },
-                { value: "cancelled", label: "Cancelled" },
-            ],
-            user_id: users.map((u) => ({
-                value: u.id,
-                label: `${u.last_name} ${u.first_name}`,
-            })),
-            service_ids: services
-                .filter((s) => s.is_active)
-                .map((s) => ({ value: s.service_id, label: s.service_name })),
-        }),
-        [users, services]
-    );
-
     useEffect(() => {
+        const controller = new AbortController();
+
         const loadSchedule = async () => {
             try {
                 setError(null);
                 setIsLoading(true);
-                const [appointmentsData, usersData, servicesData] = await Promise.all([
+                const [appointmentsData, usersData, servicesData, myProfile] = await Promise.all([
                     appointmentService.getAsBarber(),
                     userService.getClients(),
-                    servicesService.getAll()
+                    servicesService.getAll(),
+                    barberService.getMyProfile()
                 ]);
                 setData({
                     appointments: appointmentsData,
                     users: usersData,
-                    services: servicesData
+                    services: servicesData,
+                    barbers: [myProfile]
                 });
             } catch (error) {
                 setError("Failed to load your schedule. Please try again.");
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
 
-        loadSchedule();
+        void loadSchedule();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
 
     const handleEditAppointment = async (formData) => {
         try {
-            await appointmentService.editAsBarber(selectedAppId, {
-                ...formData,
-                user_id: selectedAppointment.user_id
-            });
+            await appointmentService.editAsBarber(selectedAppId, formData);
             setModalType(null);
             setSelectedAppId(null);
             setRefreshTrigger((prev) => prev + 1);
@@ -164,7 +152,7 @@ export function ManageApptBarber() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
                 <button
                     onClick={() => setModalType("ADD")}
-                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-[#DBB668] hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm"
+                    className="flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl bg-brand-gold hover:bg-[#c9a155] text-[#1A1919] transition active:scale-[0.98] text-sm shadow-sm"
                 >
                     <Plus size={16} /> Add
                 </button>
@@ -174,7 +162,7 @@ export function ManageApptBarber() {
                     onClick={() => setModalType("VIEW")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -186,7 +174,7 @@ export function ManageApptBarber() {
                     onClick={() => setModalType("EDIT")}
                     className={`flex items-center justify-center gap-2 font-semibold px-4 py-2.5 rounded-xl text-sm border transition active:scale-[0.98] ${
                         selectedAppId
-                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-[#DBB668] border-[#DBB668]/30"
+                            ? "bg-[#2D2B2B] hover:bg-[#383535] text-brand-gold border-brand-gold/30"
                             : "bg-[#2D2B2B]/40 text-gray-600 border-white/5 cursor-not-allowed"
                     }`}
                 >
@@ -209,7 +197,7 @@ export function ManageApptBarber() {
             {isLoading && (
                 <div className="flex justify-center items-center my-12">
                     <svg
-                        className="animate-spin h-8 w-8 text-[#DBB668]"
+                        className="animate-spin h-8 w-8 text-brand-gold"
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
@@ -250,19 +238,19 @@ export function ManageApptBarber() {
                                     }}
                                     className={`relative flex items-center justify-between p-4 rounded-2xl cursor-pointer transition-all duration-200 border ${
                                         isSelected
-                                            ? "bg-[#2D2B2B] border-[#DBB668] shadow-lg shadow-black/40 translate-x-1"
+                                            ? "bg-[#2D2B2B] border-brand-gold shadow-lg shadow-black/40 translate-x-1"
                                             : "bg-[#2D2B2B]/70 border-white/5 hover:bg-[#2D2B2B] hover:border-white/10"
                                     }`}
                                 >
                                     <div
                                         className={`absolute left-0 top-3 bottom-3 w-1 rounded-r-full transition-all ${
-                                            isSelected ? "bg-[#DBB668]" : "bg-transparent"
+                                            isSelected ? "bg-brand-gold" : "bg-transparent"
                                         }`}
                                     />
 
                                     <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full pl-2 gap-2 sm:gap-4">
                                         <div className="flex items-center gap-2.5 min-w-0">
-                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-[#DBB668]">
+                                            <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center shrink-0 text-brand-gold">
                                                 <User size={16} />
                                             </div>
                                             <span className="font-semibold text-sm text-[#F2EFE9] truncate">
@@ -273,11 +261,11 @@ export function ManageApptBarber() {
                                         <div className="flex items-center justify-between sm:justify-end gap-3 text-xs text-gray-400">
                                             <div className="flex items-center gap-3">
                                                 <span className="flex items-center gap-1">
-                                                      <Calendar size={13} className="text-[#DBB668]" />
+                                                      <Calendar size={13} className="text-brand-gold" />
                                                     {appointmentDate.toLocaleDateString("en-US", {})}
                                                 </span>
                                                 <span className="flex items-center gap-1">
-                                                    <Clock size={13} className="text-[#DBB668]" />
+                                                    <Clock size={13} className="text-brand-gold" />
                                                     {appointment.start_time?.substring(0, 5)}
                                                 </span>
                                             </div>
@@ -291,28 +279,35 @@ export function ManageApptBarber() {
                     )}
 
                     {modalType === "ADD" && (
-                        <FormModal
+                        <AppointmentModal
                             isOpen={true}
-                            config={ADD_B_APPT_LABELS}
                             onClose={() => setModalType(null)}
                             onSubmit={handleAddAppointment}
-                            options={options}
+                            parsedData={{
+                                barbers: barbers,
+                                services: services,
+                                users: users
+                            }}
                         />
                     )}
                     {modalType === "EDIT" && (
-                        <FormModal
+                        <AppointmentModal
                             isOpen={true}
-                            config={EDIT_B_APPT_LABELS}
                             onClose={() => setModalType(null)}
                             onSubmit={handleEditAppointment}
-                            options={options}
+                            parsedData={{
+                                barbers: barbers,
+                                services: services,
+                                users: users
+                            }}
                             isEdit={true}
+                            initialData={selectedAppointment}
                         />
                     )}
                     {modalType === "VIEW" && (
                         <ViewModal
                             isOpen={true}
-                            config={VIEW_B_APPT_LABELS}
+                            config={VIEW_B_APPOINTMENT_LABELS}
                             onClose={() => setModalType(null)}
                             user={selectedAppointment}
                         />

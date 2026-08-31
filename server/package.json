@@ -16,7 +16,9 @@
     "express": "^5.2.1",
     "firebase": "^12.13.0",
     "firebase-admin": "^13.10.0",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "resend": "^6.22.1",
+    "twilio": "^6.1.0"
   },
   "overrides": {
     "google-p12-pem": "^4.0.0",

@@ -6,7 +6,8 @@ import {
     ChevronRight,
     Bell,
     X,
-    ShieldCheck
+    ShieldCheck,
+    User
 } from "lucide-react";
 import { appointmentService } from "../../services/appointmentService.js";
 import { userService } from "../../services/userService.js";
@@ -68,7 +69,7 @@ export function CustomerHome() {
         today.setHours(0, 0, 0, 0);
 
         const upcoming = appointments.find((appt) => {
-            const isTargetStatus = appt.status === "scheduled" || appt.status === "cancelled";
+            const isTargetStatus = appt.status === "scheduled";
             const isFutureOrToday = new Date(appt.appointment_date) >= today;
             return isTargetStatus && isFutureOrToday;
         }) || null;
@@ -87,7 +88,7 @@ export function CustomerHome() {
 
         try {
             await appointmentService.deleteAsUser(lastAppointment.appointment_id);
-            setShowConfirmModal(false);
+            setOpenModal(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
             console.error("Error cancelling appointment:", error);
@@ -162,7 +163,7 @@ export function CustomerHome() {
     }
 
     return (
-        <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center justify-between">
                     <div>
@@ -180,7 +181,7 @@ export function CustomerHome() {
                         {(user?.role === "Admin" || user?.role === "Barber") && (
                             <button
                                 onClick={() => navigate("/admin")}
-                                className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#DBB668] text-[#121212] transition-colors hover:bg-[#c9a155] cursor-pointer"
+                                className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-brand-gold text-[#121212] transition-colors hover:bg-[#c9a155] cursor-pointer"
                                 title="Admin Panel"
                             >
                                 <ShieldCheck size={18} />
@@ -188,10 +189,10 @@ export function CustomerHome() {
                         )}
                         <button
                             onClick={() => setOpenModal("notifications")}
-                            className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/[0.05] cursor-pointer">
+                            className="relative w-10 h-10 rounded-full flex items-center justify-center border border-white/10 bg-[#1C1B1B] text-gray-300 transition-colors hover:bg-white/5 cursor-pointer">
                             <Bell size={18} />
                             {unreadCount > 0 && (
-                                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-[#DBB668]" />
+                                <span className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-brand-gold" />
                             )}
                         </button>
                     </div>
@@ -232,18 +233,22 @@ export function CustomerHome() {
 
                     {lastAppointment ? (
                         <div className="bg-[#1C1B1B] rounded-3xl overflow-hidden border border-white/5">
-                            <div className="h-0.5 bg-gradient-to-r from-[#DBB668] via-[#c9a155] to-transparent" />
+                            <div className="h-0.5 bg-linear-to-r from-brand-gold via-[#c9a155] to-transparent" />
                             <div className="p-5">
                                 <div className="flex gap-4 items-start">
                                     <div className="relative shrink-0">
-                                        <img
-                                            src={BARBER_PHOTO}
-                                            alt="Barber"
-                                            width={64}
-                                            height={64}
-                                            className="w-16 h-16 rounded-2xl object-cover bg-[#262424] border border-white/10"
-                                        />
-                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-[#DBB668] text-[#121212] rounded-full flex items-center justify-center">
+                                        {lastAppointment.barber_photo_url ? (
+                                            <img
+                                                src={lastAppointment.barber_photo_url}
+                                                alt="Profile"
+                                                className="w-10 h-10 rounded-full object-cover"
+                                            />
+                                        ) : (
+                                            <div className="w-10 h-10 rounded-full bg-[#262424] border border-white/10 flex items-center justify-center text-brand-gold">
+                                                <User size={18} />
+                                            </div>
+                                        )}
+                                        <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-brand-gold text-[#121212] rounded-full flex items-center justify-center">
                                             <Scissors size={10} />
                                         </div>
                                     </div>
@@ -254,11 +259,11 @@ export function CustomerHome() {
                                                 <p className="text-white font-semibold text-base leading-tight">
                                                     {`${lastAppointment.barber_first_name} ${lastAppointment.barber_last_name}`}
                                                 </p>
-                                                <p className="text-[#DBB668] text-sm font-medium mt-0.5">
+                                                <p className="text-brand-gold text-sm font-medium mt-0.5">
                                                     {lastAppointment.services?.[0]?.service_name || "No service"}
                                                 </p>
                                             </div>
-                                            <span className="text-[#DBB668] text-sm font-bold">
+                                            <span className="text-brand-gold text-sm font-bold">
                                                 {lastAppointment?.services?.[0]?.price_at_booking} RON
                                             </span>
                                         </div>
@@ -298,14 +303,14 @@ export function CustomerHome() {
                         </div>
                     ) : (
                         <div className="bg-[#1C1B1B] rounded-3xl p-5 border border-white/5 flex flex-col items-center gap-2 text-center">
-                            <div className="w-12 h-12 rounded-2xl bg-[#262424] flex items-center justify-center mb-1 text-[#DBB668]">
+                            <div className="w-12 h-12 rounded-2xl bg-[#262424] flex items-center justify-center mb-1 text-brand-gold">
                                 <CalendarDays size={22} />
                             </div>
                             <p className="text-white font-semibold">No upcoming appointments</p>
                             <p className="text-gray-400 text-sm">Book your next cut to see it here.</p>
                             <button
                                 onClick={() => navigate("/bookings")}
-                                className="mt-1 px-5 py-2 rounded-xl text-sm font-semibold bg-[#DBB668] text-[#121212] transition-opacity hover:opacity-90 cursor-pointer"
+                                className="mt-1 px-5 py-2 rounded-xl text-sm font-semibold bg-brand-gold text-[#121212] transition-opacity hover:opacity-90 cursor-pointer"
                             >
                                 Book Now
                             </button>
@@ -320,7 +325,7 @@ export function CustomerHome() {
                         </h2>
                         <button
                             onClick={() => navigate("/past-appointments")}
-                            className="flex items-center gap-0.5 text-[#DBB668] text-xs font-medium hover:underline cursor-pointer"
+                            className="flex items-center gap-0.5 text-brand-gold text-xs font-medium hover:underline cursor-pointer"
                         >
                             See all <ChevronRight size={14} />
                         </button>
@@ -334,7 +339,7 @@ export function CustomerHome() {
                             <button
                                 key={appt.appointment_id}
                                 onClick={() => handleAppointmentClick(appt)}
-                                className="bg-[#1C1B1B] w-full rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:bg-white/[0.02] hover:border-white/10 transition-colors text-left"
+                                className="bg-[#1C1B1B] w-full rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:bg-white/2 hover:border-white/10 transition-colors text-left"
                             >
                                 <div
                                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${

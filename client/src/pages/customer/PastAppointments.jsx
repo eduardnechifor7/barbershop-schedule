@@ -20,6 +20,8 @@ export function PastAppointments() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchPastAppointments = async () => {
             try {
                 setError(null);
@@ -29,10 +31,16 @@ export function PastAppointments() {
             } catch (error) {
                 setError("Failed to load appointments.");
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
-        fetchPastAppointments();
+        void fetchPastAppointments();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
     const handleAppointmentClick = (appointment) => {
@@ -56,12 +64,12 @@ export function PastAppointments() {
     }
 
     return (
-        <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
             <div className="bg-[#121212] px-5 pt-6 pb-5 flex items-center gap-3 shrink-0 border-b border-white/5 z-10">
                 <button
                     onClick={() => navigate("/customer")}
-                    className="w-9 h-9 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-center hover:bg-white/[0.02] transition-colors cursor-pointer"
+                    className="w-9 h-9 rounded-xl bg-[#1C1B1B] border border-white/10 flex items-center justify-center hover:bg-white/2 transition-colors cursor-pointer"
                 >
                     <ArrowLeft size={17} className="text-[#F2EFE9]" />
                 </button>
@@ -88,7 +96,7 @@ export function PastAppointments() {
                             <button
                                 onClick={() => handleAppointmentClick(appt)}
                                 key={appt.appointment_id}
-                                className="bg-[#1C1B1B] rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:bg-white/[0.02] hover:border-white/10 transition-colors text-left"
+                                className="bg-[#1C1B1B] rounded-2xl px-4 py-3.5 border border-white/5 flex items-center gap-4 group cursor-pointer hover:bg-white/2 hover:border-white/10 transition-colors text-left"
                             >
                                 <div
                                     className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${

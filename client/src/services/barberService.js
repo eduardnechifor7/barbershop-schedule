@@ -22,13 +22,13 @@ export const barberService = {
         return response.json();
     },
 
-    async getBarberById(id) {
+    async getMyProfile() {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/barbers/${id}`, {
+        const response = await fetch("http://localhost:8080/api/barbers/me", {
             method: "GET",
             headers
         });
-        if (!response.ok) throw new Error("Failed to fetch barber");
+        if (!response.ok) throw new Error("Failed to fetch barber profile");
         return response.json();
     },
 

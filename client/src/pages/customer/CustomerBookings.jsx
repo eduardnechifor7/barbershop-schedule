@@ -1,22 +1,15 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar, Clock, User, Scissors, FileText, Check } from "lucide-react";
 import { barberService } from "../../services/barberService.js";
 import { servicesService } from "../../services/servicesService.js";
 import { appointmentService } from "../../services/appointmentService.js";
-import { timeStringToMinutes, generateTimeSlots } from "../../utils/timeUtils.js";
 import Select, { components } from "react-select";
 import { validateFields, required, minItems } from "../../utils/validation.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { BOOKING_SELECT_STYLES } from "../../constants/selectStyles.js";
 import { Toast } from "../../components/common/Toast.jsx";
-
-const canBarberDoService = (barber, service) => {
-    if (!barber || !service) return false;
-    const barberSkillIds = (barber.skills || []).map((sk) => sk.id);
-    const serviceSkillIds = (service.required_skills || []).map((sk) => sk.id);
-    return serviceSkillIds.every((id) => barberSkillIds.includes(id));
-};
+import { getFilteredBarbers, getFilteredServices, getAvailableTimeSlots, canBarberDoService } from "../../utils/bookingUtils.js";
 
 const CustomControl = ({ children, ...props }) => {
     const Icon = props.selectProps.icon;
@@ -89,7 +82,7 @@ export function CustomerBookings() {
                 });
             }
         };
-        loadInitialData();
+        void loadInitialData();
     }, []);
 
     useEffect(() => {
@@ -110,63 +103,35 @@ export function CustomerBookings() {
                 });
             }
         };
-        fetchOccupiedTimes();
+        void fetchOccupiedTimes();
     }, [form.selectedDate, form.selectedBarber]);
 
     const updateField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
     };
 
-    const filteredBarbers = useMemo(() => {
-        if (!form.selectedService?.length) return data.barbers;
+    const filteredBarbers = useMemo(
+        () => getFilteredBarbers(data.barbers, data.services, form.selectedService),
+        [data.barbers, data.services, form.selectedService]
+    );
 
-        const activeServices = form.selectedService
-            .map((id) => data.services.find((s) => (s.id || s.service_id) === id))
-            .filter(Boolean);
-
-        return data.barbers.filter((barber) =>
-            activeServices.every((service) => canBarberDoService(barber, service))
-        );
-    }, [data.barbers, data.services, form.selectedService]);
-
-    const filteredServices = useMemo(() => {
-        if (!form.selectedBarber) return data.services;
-        const currentBarber = data.barbers.find((b) => String(b.id) === String(form.selectedBarber));
-        return data.services.filter((service) => canBarberDoService(currentBarber, service));
-    }, [data.services, data.barbers, form.selectedBarber]);
+    const filteredServices = useMemo(
+        () => getFilteredServices(data.services, data.barbers, form.selectedBarber),
+        [data.services, data.barbers, form.selectedBarber]
+    );
 
 
-    const availableTimeSlots = useMemo(() => {
-        const allSlots = generateTimeSlots(9, 17, 30);
-        const workEndMinutes = timeStringToMinutes("17:00");
-
-        const serviceDuration =
-            data.services
-                .filter((s) => form.selectedService.includes(s.id || s.service_id))
-                .reduce((sum, s) => sum + (s.minutes_duration || 30), 0) || 30;
-
-        const occupiedIntervals = data.occupiedBookings.map((b) => {
-            const start = timeStringToMinutes(b.start_time);
-            return { start, end: start + (b.minutes_duration || 30) };
-        });
-
-        return allSlots.filter((slot) => {
-            const slotStart = timeStringToMinutes(slot);
-            const slotEnd = slotStart + serviceDuration;
-
-            if (slotEnd > workEndMinutes) return false;
-
-            if (form.selectedDate === todayDate) {
-                const now = new Date();
-                const currentTimeMinutes = now.getHours() * 60 + now.getMinutes();
-                if (slotStart <= currentTimeMinutes) return false;
-            }
-
-            return !occupiedIntervals.some(
-                (booking) => slotStart < booking.end && slotEnd > booking.start
-            );
-        });
-    }, [data.services, data.occupiedBookings, form.selectedService, form.selectedDate, todayDate]);
+    const availableTimeSlots = useMemo(
+        () =>
+            getAvailableTimeSlots({
+                services: data.services,
+                occupiedBookings: data.occupiedBookings,
+                selectedServiceIds: form.selectedService,
+                selectedDate: form.selectedDate,
+                todayDate
+            }),
+        [data.services, data.occupiedBookings, form.selectedService, form.selectedDate, todayDate]
+    );
 
     const barberOptions = useMemo(
         () => filteredBarbers.map((b) => ({ value: b.id, label: `${b.first_name} ${b.last_name}` })),
@@ -248,8 +213,8 @@ export function CustomerBookings() {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen bg-[#121212] p-4 text-center">
                 <div className="relative flex items-center justify-center mb-4">
-                    <div className="w-12 h-12 rounded-full border-2 border-[#DBB668]/20 bg-[#DBB668]/10 flex items-center justify-center" />
-                    <Check size={20} className="absolute text-[#DBB668]" />
+                    <div className="w-12 h-12 rounded-full border-2 border-brand-gold/20 bg-brand-gold/10 flex items-center justify-center" />
+                    <Check size={20} className="absolute text-brand-gold" />
                 </div>
                 <p className="text-xs font-medium text-gray-400 tracking-wider uppercase">
                     Appointment Booked!
@@ -259,7 +224,7 @@ export function CustomerBookings() {
     }
 
     return (
-        <div className="animate-fade-in flex flex-col h-screen h-[100dvh] bg-[#121212] overflow-hidden">
+        <div className="animate-fade-in flex flex-col h-screen bg-[#121212] overflow-hidden">
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-3 mb-1">
                     <div>
@@ -335,7 +300,7 @@ export function CustomerBookings() {
                             DATE
                         </label>
                         <div className="relative">
-                            <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#DBB668]" />
+                            <Calendar size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-brand-gold" />
                             <input
                                 type="date"
                                 value={form.selectedDate}
@@ -344,7 +309,7 @@ export function CustomerBookings() {
                                     updateField("selectedDate", e.target.value);
                                     updateField("selectedTime", "");
                                 }}
-                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] focus:outline-none focus:border-[#DBB668]"
+                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] focus:outline-none focus:border-brand-gold"
                             />
                             {errors["selectedDate"] && (
                                 <p className="animate-error-shake text-red-400 text-xs font-medium p-1">
@@ -397,7 +362,7 @@ export function CustomerBookings() {
                                 value={form.notes}
                                 onChange={(e) => updateField("notes", e.target.value)}
                                 placeholder="Any special requests or notes for your barber..."
-                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] placeholder-gray-400/60 focus:outline-none focus:border-[#DBB668] resize-none"
+                                className="w-full bg-[#262424] border border-white/10 rounded-xl py-3 pl-11 pr-4 text-sm text-[#F2EFE9] placeholder-gray-400/60 focus:outline-none focus:border-brand-gold resize-none"
                             />
                         </div>
                     </div>
@@ -407,7 +372,7 @@ export function CustomerBookings() {
                             type="button"
                             onClick={handleSubmit}
                             disabled={submitting}
-                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#121212] bg-[#DBB668] hover:bg-[#c9a458] transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
+                            className="flex-1 rounded-xl py-4 text-sm font-semibold text-[#121212] bg-brand-gold hover:bg-[#c9a458] transition-all active:scale-[0.97] disabled:opacity-50 cursor-pointer"
                         >
                             {submitting ? "Booking..." : "Submit"}
                         </button>

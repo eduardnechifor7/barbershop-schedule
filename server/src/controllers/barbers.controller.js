@@ -10,7 +10,7 @@ const listBarbers = async (req, res) => {
                        u.phone_number AS phone_number,
                        u.photo_url AS photo_url,
                        COALESCE(json_agg(
-                                json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
+                                json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills_ids
                    FROM barbers AS b
                    INNER JOIN users AS u ON b.user_id = u.id
                    LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
@@ -35,7 +35,7 @@ const getBarberById = async (req, res) => {
                  u.phone_number AS phone_number,
                  u.photo_url AS photo_url,
                  COALESCE(json_agg(
-                          json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills
+                          json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills_ids
              FROM barbers AS b
                       INNER JOIN users AS u ON b.user_id = u.id
                       LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
@@ -43,6 +43,42 @@ const getBarberById = async (req, res) => {
              WHERE b.id = $1
              GROUP BY b.id, u.id, u.first_name
              ORDER BY u.first_name`, [id]
+        );
+
+        if (barbers.rows.length === 0) {
+            return res.status(404).json({ error: "The barber does not exist" });
+        }
+
+        res.status(200).json(barbers.rows[0]);
+    } catch (error) {
+        res.status(500).json({ error: "Error in loading barbers details", details: error.message });
+    }
+};
+
+const getBarberProfile = async (req, res) => {
+    const userId = req.user.id;
+    try {
+        const barbers = await db.query(
+            `SELECT
+                 b.id,
+                 u.first_name AS first_name,
+                 u.last_name AS last_name,
+                 u.phone_number AS phone_number,
+                 u.photo_url AS photo_url,
+                 COALESCE(json_agg(
+                          json_build_object('id', s.id, 'name', s.name)) FILTER (WHERE s.name IS NOT NULL), '[]') AS skills_ids
+             FROM barbers AS b
+                      INNER JOIN users AS u ON b.user_id = u.id
+                      LEFT JOIN barber_skills AS bs ON b.id = bs.barber_id
+                      LEFT JOIN skills AS s ON bs.skill_id = s.id
+             WHERE b.user_id = $1
+             GROUP BY
+                 b.id,
+                 u.first_name,
+                 u.last_name,
+                 u.phone_number,
+                 u.photo_url
+             ORDER BY u.first_name`, [userId]
         );
 
         if (barbers.rows.length === 0) {
@@ -157,8 +193,8 @@ const editBarber = async (req, res) => {
 };
 
 const deleteBarber = async (req, res) => {
+    const { id } = req.params;
     try {
-        const { id } = req.params;
         const deleteBarber = await db.query(
             `DELETE FROM barbers
              WHERE id = $1
@@ -168,6 +204,17 @@ const deleteBarber = async (req, res) => {
 
         if (deleteBarber.rows.length === 0) {
             return res.status(404).json({ error: "The barber does not exist" });
+        }
+
+        const userId = deleteBarber.rows[0].user_id;
+
+        if (userId) {
+            await db.query(
+                `UPDATE users 
+                 SET role = 'Customer' 
+                 WHERE id = $1`,
+                [userId]
+            );
         }
 
         res.status(200).json({ message: "Barber deleted successfully", barber: deleteBarber.rows[0] });
@@ -181,5 +228,6 @@ module.exports = {
     getBarberById,
     addBarber,
     editBarber,
-    deleteBarber
+    deleteBarber,
+    getBarberProfile
 };

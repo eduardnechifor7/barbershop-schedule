@@ -47,7 +47,12 @@ export function OTPScreen() {
 
             if (phoneChange) {
                 if (!auth.currentUser) {
-                    throw new Error("No active session found. Please log in again.");
+                    setToast({
+                        isOpen: true,
+                        message: "No active session found. Please log in again.",
+                        type: "error"
+                    });
+                    return;
                 }
 
                 const result = await window.confirmationResult.confirm(otp);
@@ -126,7 +131,7 @@ export function OTPScreen() {
                             <input
                                 {...props}
                                 inputMode="numeric"
-                                className="!w-12 !h-14 text-2xl text-center bg-white border border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold text-black focus:outline-none"
+                                className="w-12! h-14! text-2xl text-center bg-white border border-gray-300 rounded-lg focus:ring-brand-gold focus:border-brand-gold text-black focus:outline-none"
                             />
                         )}
                     />

@@ -45,6 +45,8 @@ export function CustomerProfile() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchUserData = async () => {
             setError(null);
             try {
@@ -59,11 +61,17 @@ export function CustomerProfile() {
             } catch (error) {
                 setError("Failed to load your profile. Please try again.");
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         }
 
-        fetchUserData();
+        void fetchUserData();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger])
 
     const handleLogout = async () => {
@@ -117,7 +125,7 @@ export function CustomerProfile() {
     }
 
     return (
-        <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
@@ -137,7 +145,7 @@ export function CustomerProfile() {
             >
                 <div className="bg-[#1C1B1B] rounded-3xl p-5 border border-white/5 flex items-center gap-4">
                     <div className="relative shrink-0">
-                        <div className="w-16 h-16 rounded-2xl bg-[#DBB668] text-[#121212] flex items-center justify-center font-bold text-xl overflow-hidden border border-white/10">
+                        <div className="w-16 h-16 rounded-2xl bg-brand-gold text-[#121212] flex items-center justify-center font-bold text-xl overflow-hidden border border-white/10">
                             {user.photo_url ? (
                                 <img
                                     src={user.photo_url}
@@ -155,7 +163,7 @@ export function CustomerProfile() {
                             <h2 className="font-bold text-lg text-white truncate">
                                 {user.first_name} {user.last_name}
                             </h2>
-                            <span className="text-[10px] font-bold tracking-wider text-[#DBB668] bg-[#DBB668]/15 px-2 py-0.5 rounded-md uppercase border border-[#DBB668]/30 shrink-0">
+                            <span className="text-[10px] font-bold tracking-wider text-brand-gold bg-brand-gold/15 px-2 py-0.5 rounded-md uppercase border border-brand-gold/30 shrink-0">
                                 {user.role}
                             </span>
                         </div>
@@ -172,7 +180,7 @@ export function CustomerProfile() {
 
                 <div className="grid grid-cols-2 gap-3">
                     <div className="bg-[#1C1B1B] rounded-3xl p-4 border border-white/5 flex flex-col justify-between">
-                        <div className="w-9 h-9 rounded-xl bg-[#262424] flex items-center justify-center text-[#DBB668]">
+                        <div className="w-9 h-9 rounded-xl bg-[#262424] flex items-center justify-center text-brand-gold">
                             <Calendar size={18} />
                         </div>
                         <div className="mt-4">
@@ -184,7 +192,7 @@ export function CustomerProfile() {
                     </div>
 
                     <div className="bg-[#1C1B1B] rounded-3xl p-4 border border-white/5 flex flex-col justify-between">
-                        <div className="w-9 h-9 rounded-xl bg-[#262424] flex items-center justify-center text-[#DBB668]">
+                        <div className="w-9 h-9 rounded-xl bg-[#262424] flex items-center justify-center text-brand-gold">
                             <Scissors size={18} />
                         </div>
                         <div className="mt-4">
@@ -205,7 +213,7 @@ export function CustomerProfile() {
                             onClick = {() => navigate("personal-info", {
                                 state: user
                             })}
-                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/2 transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <User size={18} />
@@ -223,7 +231,7 @@ export function CustomerProfile() {
                                 setModalType("edit");
                                 setOpenModal(true);
                             }}
-                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/2 transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <Bell size={18} />
@@ -247,7 +255,7 @@ export function CustomerProfile() {
                             onClick = {() => navigate("security", {
                                 state: user
                             })}
-                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/2 transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <ShieldCheck size={18} />
@@ -265,7 +273,7 @@ export function CustomerProfile() {
                                 setModalType("help");
                                 setOpenModal(true);
                             }}
-                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/2 transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <HelpCircle size={18} />
@@ -283,7 +291,7 @@ export function CustomerProfile() {
                                 setModalType("policy");
                                 setOpenModal(true);
                             }}
-                            className="w-full p-4 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer text-left">
+                            className="w-full p-4 flex items-center justify-between hover:bg-white/2 transition-colors cursor-pointer text-left">
                             <div className="flex items-center gap-3.5 min-w-0">
                                 <div className="w-10 h-10 rounded-xl bg-[#262424] flex items-center justify-center text-gray-300 shrink-0">
                                     <FileText size={18} />

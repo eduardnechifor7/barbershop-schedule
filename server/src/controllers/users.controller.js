@@ -123,7 +123,7 @@ const editUserById = async (req, res) => {
                  last_name = COALESCE(NULLIF($2, ''), last_name),
                  phone_number = COALESCE(NULLIF($3, ''), phone_number),
                  email = COALESCE(NULLIF($4, ''), email),
-                 photo_url = COALESCE($5, photo_url),
+                 photo_url = COALESCE(NULLIF($5, ''), photo_url),
                  role = COALESCE(NULLIF($6, ''), role)
              WHERE id = $7 RETURNING *`,
             [first_name, last_name, phone_number, email, photo_url, role, id]

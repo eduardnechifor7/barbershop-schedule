@@ -50,6 +50,8 @@ export function ManageServices() {
     }), [skills]);
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const fetchServices = async () => {
             try {
                 setIsLoading(true);
@@ -64,11 +66,17 @@ export function ManageServices() {
             } catch (error) {
                 setError("Failed to load services. Please try again.");
             } finally {
-                setIsLoading(false);
+                if (!controller.signal.aborted) {
+                    setIsLoading(false);
+                }
             }
         };
 
-        fetchServices();
+        void fetchServices();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
     const handleAddService = async (formData) => {
@@ -270,11 +278,15 @@ export function ManageServices() {
                     {modalType === "EDIT" && (
                         <FormModal
                             isOpen={true}
-                            config={EDIT_ADD_SERVICES_LABELS}
+                            config={{
+                                ...EDIT_ADD_SERVICES_LABELS,
+                                "Status": "is_active"
+                            }}
                             onClose={() => setModalType(null)}
                             onSubmit={handleEditService}
                             options={options}
                             isEdit={true}
+                            initialData={selectedService}
                         />
                     )}
                     {modalType === "VIEW" && (

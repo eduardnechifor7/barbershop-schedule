@@ -18,6 +18,8 @@ export function CustomerExplore() {
     const navigate = useNavigate();
 
     useEffect(() => {
+        const controller = new AbortController();
+
         const loadData = async () => {
             setError(null);
             setLoading(true);
@@ -31,10 +33,16 @@ export function CustomerExplore() {
             } catch (error) {
                 setError("Failed to load your page");
             } finally {
-                setLoading(false);
+                if (!controller.signal.aborted) {
+                    setLoading(false);
+                }
             }
         };
-        loadData();
+        void loadData();
+
+        return () => {
+            controller.abort();
+        }
     }, [refreshTrigger]);
 
     const featuredService = services.reduce((max, s) => (s.price > max.price ? s : max), { price: 0 });
@@ -53,7 +61,7 @@ export function CustomerExplore() {
     if (loading) return <LoadingSpinner />;
 
     return (
-        <div className="flex flex-col h-screen h-[100dvh] bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
             <div className="bg-[#121212] px-6 pt-6 pb-4 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
@@ -71,7 +79,7 @@ export function CustomerExplore() {
                         onClick={() => setActiveTab("masters")}
                         className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
                             activeTab === "masters"
-                                ? "bg-[#DBB668] text-[#121212] shadow-sm"
+                                ? "bg-brand-gold text-[#121212] shadow-sm"
                                 : "text-gray-400 hover:text-white"
                         }`}
                     >
@@ -81,7 +89,7 @@ export function CustomerExplore() {
                         onClick={() => setActiveTab("services")}
                         className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all duration-200 cursor-pointer ${
                             activeTab === "services"
-                                ? "bg-[#DBB668] text-[#121212] shadow-sm"
+                                ? "bg-brand-gold text-[#121212] shadow-sm"
                                 : "text-gray-400 hover:text-white"
                         }`}
                     >
@@ -97,7 +105,7 @@ export function CustomerExplore() {
                 {activeTab === "masters" && (
                     <div className="space-y-4 animate-fade-in">
                         {barbers.map((barber) => {
-                            const tags = barber.skills;
+                            const tags = barber.skills_ids;
 
                             return (
                                 <div
@@ -150,7 +158,7 @@ export function CustomerExplore() {
                                                 preselectedBarber: barber.id
                                             }
                                         })}
-                                        className="w-full py-3.5 rounded-2xl bg-[#DBB668] text-[#121212] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer"
+                                        className="w-full py-3.5 rounded-2xl bg-brand-gold text-[#121212] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer"
                                     >
                                         Book with {barber.first_name}
                                         <ArrowRight size={16} />
@@ -164,10 +172,10 @@ export function CustomerExplore() {
                 {activeTab === "services" && (
                     <div className="space-y-4 animate-fade-in">
                         {featuredService && (
-                            <div className="bg-[#1C1B1B] rounded-3xl p-6 border-2 border-[#DBB668]/40 space-y-4 shadow-xl">
+                            <div className="bg-[#1C1B1B] rounded-3xl p-6 border-2 border-brand-gold/40 space-y-4 shadow-xl">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <span className="text-[10px] font-bold tracking-widest text-[#DBB668] bg-[#DBB668]/15 px-2.5 py-1 rounded-md uppercase border border-[#DBB668]/30">
+                                        <span className="text-[10px] font-bold tracking-widest text-brand-gold bg-brand-gold/15 px-2.5 py-1 rounded-md uppercase border border-brand-gold/30">
                                             FEATURED EXPERIENCE
                                         </span>
                                         <h2
@@ -181,7 +189,7 @@ export function CustomerExplore() {
                                         </p>
                                     </div>
                                     <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                                        <span className="text-2xl font-bold text-[#DBB668]">
+                                        <span className="text-2xl font-bold text-brand-gold">
                                             {featuredService.price} <span className="text-xs font-normal">RON</span>
                                         </span>
                                         <p className="text-xs text-gray-400">
@@ -196,7 +204,7 @@ export function CustomerExplore() {
                                             preselectedServices: [featuredService.service_id]
                                         }
                                     })}
-                                    className="w-full py-3.5 rounded-2xl bg-[#DBB668] text-[#121212] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer"
+                                    className="w-full py-3.5 rounded-2xl bg-brand-gold text-[#121212] font-bold text-sm flex items-center justify-center gap-2 hover:bg-[#c9a458] transition-all active:scale-[0.98] cursor-pointer"
                                 >
                                     Reserve this Service
                                     <ArrowRight size={16} />
@@ -211,7 +219,7 @@ export function CustomerExplore() {
                             >
                                 <div className="flex items-center gap-3.5 min-w-0">
                                     <div className="w-12 h-12 rounded-xl bg-[#262424] border border-white/5 flex items-center justify-center shrink-0">
-                                        <Scissors size={20} className="text-[#DBB668]" />
+                                        <Scissors size={20} className="text-brand-gold" />
                                     </div>
                                     <div className="min-w-0">
                                         <h4 className="font-bold text-sm text-white truncate">
@@ -228,7 +236,7 @@ export function CustomerExplore() {
                                 </div>
 
                                 <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                                    <span className="font-bold text-base text-[#DBB668]">
+                                    <span className="font-bold text-base text-brand-gold">
                                         {service.price} <span className="text-xs font-normal">RON</span>
                                     </span>
                                     <button
@@ -237,7 +245,7 @@ export function CustomerExplore() {
                                                 preselectedServices: [service.service_id]
                                             }
                                         })}
-                                        className="text-xs text-gray-400 hover:text-[#DBB668] flex items-center gap-0.5 transition-colors cursor-pointer"
+                                        className="text-xs text-gray-400 hover:text-brand-gold flex items-center gap-0.5 transition-colors cursor-pointer"
                                     >
                                         Book <ChevronRight size={14} />
                                     </button>

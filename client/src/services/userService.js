@@ -113,5 +113,16 @@ export const userService = {
         });
         if (!response.ok) throw new Error("Failed to check phone number");
         return response.json();
+    },
+
+    async updateMe(formData) {
+        const headers = await getAuthHeaders(true);
+        const response = await fetch("http://localhost:8080/api/users/me", {
+            method: "PATCH",
+            headers,
+            body: JSON.stringify(formData)
+        });
+        if (!response.ok) throw new Error("Failed to update user");
+        return response.json();
     }
 };

@@ -5,12 +5,6 @@ export function timeStringToMinutes(timeString) {
     return hours * 60 + minutes;
 }
 
-export function minutesToTimeString(minutes) {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
-}
-
 export function generateTimeSlots(startHour = 9, endHour = 17, intervalMinutes = 30) {
     const slots = [];
     const start = new Date();
