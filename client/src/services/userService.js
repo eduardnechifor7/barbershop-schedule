@@ -103,15 +103,13 @@ export const userService = {
         return response;
     },
 
-    async checkPhone(phone) {
-        const response = await fetch(`http://localhost:8080/api/users/check-phone`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ phone })
+    async checkStatus() {
+        const headers = await getAuthHeaders();
+        const response = await fetch(`http://localhost:8080/api/users/check-status`, {
+            method: "GET",
+            headers
         });
-        if (!response.ok) throw new Error("Failed to check phone number");
+        if (!response.ok) throw new Error("Failed to check user status");
         return response.json();
     },
 

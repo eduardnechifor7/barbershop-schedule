@@ -47,19 +47,16 @@ export function WelcomeScreen() {
 
         try {
             setIsLoading(true);
-            const data = await userService.checkPhone(phone);
+            const appVerifier = window.recaptchaVerifier;
 
-            if (data.exists) {
-                const appVerifier = window.recaptchaVerifier;
-                window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
-                navigate('/welcome/otp', { state: { phone, role: data.role } });
-            } else {
-                navigate('/register', { state: { phone } });
-            }
-        } catch (error) {
+            window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+
+            navigate('/welcome/otp', { state: { phone } });
+        } catch (err) {
+            console.error("Firebase SMS error:", err);
             setToast({
                 isOpen: true,
-                message: "Something went wrong.",
+                message: "Failed to send verification code. Please try again later.",
                 type: "error"
             });
         } finally {

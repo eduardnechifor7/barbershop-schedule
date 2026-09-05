@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, isAdmin } = require('../middleware/auth.js');
+const { verifyTokenRegistered, isAdmin } = require('../middleware/auth.js');
+const { moderateLimiter, strictLimiter } = require('../middleware/rateLimiters.js');
 const skillsCtrl = require('../controllers/skills.controller.js');
 
-router.get('/list', verifyToken, skillsCtrl.listSkills);
-router.post('/add', verifyToken, isAdmin, skillsCtrl.addSkill);
-router.delete('/delete/:id', verifyToken, isAdmin, skillsCtrl.deleteSkill);
+router.get('/list', verifyTokenRegistered, skillsCtrl.listSkills);
+router.post('/add', verifyTokenRegistered, isAdmin, strictLimiter, skillsCtrl.addSkill);
+router.delete('/delete/:id', verifyTokenRegistered, isAdmin, moderateLimiter, skillsCtrl.deleteSkill);
 
 module.exports = router;

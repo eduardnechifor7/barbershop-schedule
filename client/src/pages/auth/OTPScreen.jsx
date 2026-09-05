@@ -2,7 +2,7 @@ import OTPInput from "react-otp-input";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { userService } from "../../services/userService.js";
-import { signOut } from "firebase/auth";
+import {signInWithPhoneNumber, signOut} from "firebase/auth";
 import { auth } from "../../firebase.js";
 import { Toast } from "../../components/common/Toast.jsx";
 
@@ -19,11 +19,9 @@ export function OTPScreen() {
     const navigate = useNavigate();
     const location = useLocation();
 
-    const role = location.state?.role || "Customer";
     const phone = location.state?.phone || "";
     const userId = location.state?.userId || null;
     const phoneChange = location.state?.phoneChange || false;
-    const registerData = location.state?.registerData || null;
 
     useEffect(() => {
         if (!window.confirmationResult && !phoneChange) {
@@ -45,6 +43,9 @@ export function OTPScreen() {
             setIsLoading(true);
             setError("");
 
+            const result = await window.confirmationResult.confirm(otp);
+            const firebaseUser = result.user;
+
             if (phoneChange) {
                 if (!auth.currentUser) {
                     setToast({
@@ -55,13 +56,10 @@ export function OTPScreen() {
                     return;
                 }
 
-                const result = await window.confirmationResult.confirm(otp);
-                const verificationToken = await result.user.getIdToken();
+                const verificationToken = await firebaseUser.getIdToken();
 
                 await userService.editPhoneNumber({
-                    userId,
-                    verificationToken,
-                    phone
+                    verificationToken
                 });
 
                 await signOut(auth);
@@ -69,37 +67,30 @@ export function OTPScreen() {
                 return;
             }
 
-            const result = await window.confirmationResult.confirm(otp);
-            const firebaseUser = result.user;
+            try {
+                const data = await userService.checkStatus();
 
-            if (registerData) {
-                try {
-                    await userService.addUser({
-                        firebase_uid: firebaseUser.uid,
-                        first_name: registerData.first_name,
-                        last_name: registerData.last_name,
-                        phone_number: firebaseUser.phoneNumber || phone,
-                        email: registerData.email
-                    });
-                } catch (err) {
-                    setToast({
-                        isOpen: true,
-                        message: "Failed to register user. Please try again.",
-                        type: "error"
-                    });
-                    return;
+                if (data.isRegistered) {
+                    if (data.user.role === "Admin") {
+                        navigate("/admin", { replace: true });
+                    } else {
+                        navigate("/customer", { replace: true });
+                    }
+                } else {
+                    navigate('/register', { state: { phone }, replace: true });
                 }
-            }
-
-            if (role === "Admin") {
-                navigate("/admin", { replace: true });
-            } else {
-                navigate("/customer", { replace: true });
+            } catch (error) {
+                console.error("Error during phone number verification:", error);
+                setToast({
+                    isOpen: true,
+                    message: "Something went wrong.",
+                    type: "error"
+                });
             }
         } catch (err) {
             setToast({
                 isOpen: true,
-                message: "Invalid verification code. Please try again.",
+                message: "Something went wrong. Please try again.",
                 type: "error"
             });
         } finally {

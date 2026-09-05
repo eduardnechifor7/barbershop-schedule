@@ -47,21 +47,20 @@ const createService = async (req, res) => {
 const listServices = async (req, res) => {
     try {
         const serviceData = await db.query(
-            `SELECT
-                 s.id AS service_id,
-                 s.service_name AS service_name,
-                 s.price AS price,
-                 s.minutes_duration AS minutes_duration,
-                 s.is_active AS is_active,
-                 s.description AS description,
-                 COALESCE(json_agg(
-                          json_build_object('id', sk.id, 'name', sk.name)
-                                  ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS skills_ids
+            `SELECT s.id                                                         AS service_id,
+                    s.service_name                                               AS service_name,
+                    s.price                                                      AS price,
+                    s.minutes_duration                                           AS minutes_duration,
+                    s.is_active                                                  AS is_active,
+                    s.description                                                AS description,
+                    COALESCE(json_agg(
+                             json_build_object('id', sk.id, 'name', sk.name)
+                                     ) FILTER (WHERE sk.name IS NOT NULL), '[]') AS skills_ids
              FROM services AS s
                       LEFT JOIN services_skills AS ss ON s.id = ss.service_id
                       LEFT JOIN skills AS sk ON ss.skill_id = sk.id
              GROUP BY s.id
-             ORDER BY s.id ASC`
+             ORDER BY s.id `
         );
         res.status(200).json(serviceData.rows);
     } catch (error) {

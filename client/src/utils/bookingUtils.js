@@ -42,20 +42,29 @@ export const getAvailableTimeSlots = ({
                                       }) => {
     const allSlots = generateTimeSlots(startHour, endHour, slotInterval);
     const workEndMinutes = timeStringToMinutes(`${endHour}:00`);
-    const day = new Date(selectedDate).getUTCDay();
+
+    const [year, month, dayNum] = selectedDate.split("-").map(Number);
+    const dateObj = new Date(year, month - 1, dayNum);
+    const day = dateObj.getDay();
 
     if (day === 0 || day === 6) {
-        return []; // No slots available on weekends
+        return []; // No weekend slots available
     }
 
     const serviceDuration =
         services
-            .filter((s) => selectedServiceIds.includes(s.id || s.service_id))
-            .reduce((sum, s) => sum + (s.minutes_duration || 30), 0) || 30;
+            .filter((s) => selectedServiceIds.map(Number).includes(Number(s.id || s.service_id)))
+            .reduce((sum, s) => sum + Number(s.minutes_duration || 30), 0) || 30;
 
     const occupiedIntervals = occupiedBookings.map((b) => {
         const start = timeStringToMinutes(b.start_time);
-        return { start, end: start + (b.minutes_duration || 30) };
+
+        const duration = Number(b.total_duration ?? b.minutes_duration ?? 30);
+
+        return {
+            start,
+            end: start + duration
+        };
     });
 
     return allSlots.filter((slot) => {

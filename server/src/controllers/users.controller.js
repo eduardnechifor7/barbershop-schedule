@@ -32,27 +32,17 @@ const listUsers = async (req, res) => {
     }
 };
 
-const checkPhone = async (req, res) => {
-    const { phone } = req.body;
+const checkUserStatus = async (req, res) => {
+    const result = await db.query(
+        "SELECT id, first_name, last_name, role FROM users WHERE firebase_uid = $1",
+        [req.user.uid]
+    );
 
-    try {
-        const result = await db.query(
-            'SELECT id, role FROM users WHERE phone_number = $1',
-            [phone]
-        );
-
-        if (result.rows.length > 0) {
-            return res.status(200).json({
-                exists: true,
-                role: result.rows[0].role
-            });
-        } else {
-            return res.status(200).json({ exists: false });
-        }
-    } catch (err) {
-        console.error("Error in checkPhone:", err);
-        return res.status(500).json({ error: "Error in finding phone number" });
+    if (result.rows.length === 0) {
+        return res.json({ isRegistered: false, user: null });
     }
+
+    return res.json({ isRegistered: true, user: result.rows[0] });
 };
 
 const getUserByUid = async (req, res) => {
@@ -140,10 +130,15 @@ const editUserById = async (req, res) => {
 };
 
 const editPhoneNumber = async (req, res) => {
-    const { verificationToken, userId } = req.body;
+    const { verificationToken } = req.body;
+    const userId = req.user?.id;
 
-    if (!verificationToken || !userId) {
-        return res.status(400).json({ error: "Missing token or user ID" });
+    if (!verificationToken) {
+        return res.status(400).json({ error: "Missing verification token" });
+    }
+
+    if (!userId) {
+        return res.status(401).json({ error: "Unauthorized session" });
     }
 
     try {
@@ -151,8 +146,24 @@ const editPhoneNumber = async (req, res) => {
         const verifiedPhoneNumber = decodedToken.phone_number;
         const tempUid = decodedToken.uid;
 
+        if (!verifiedPhoneNumber) {
+            return res.status(400).json({ error: "Provided token does not contain a verified phone number" });
+        }
+
+        const phoneConflict = await db.query(
+            "SELECT id FROM users WHERE phone_number = $1 AND id <> $2",
+            [verifiedPhoneNumber, userId]
+        );
+
+        if (phoneConflict.rows.length > 0) {
+            if (tempUid) {
+                await admin.auth().deleteUser(tempUid).catch(() => null);
+            }
+            return res.status(409).json({ error: "This phone number is already linked to another account." });
+        }
+
         const userRes = await db.query(
-            "SELECT firebase_uid FROM users WHERE id = $1",
+            "SELECT firebase_uid, phone_number FROM users WHERE id = $1",
             [userId]
         );
         const originalUser = userRes.rows[0];
@@ -161,7 +172,7 @@ const editPhoneNumber = async (req, res) => {
             return res.status(404).json({ error: "User not found in database" });
         }
 
-        if (tempUid !== originalUser.firebase_uid) {
+        if (tempUid && tempUid !== originalUser.firebase_uid) {
             await admin.auth().deleteUser(tempUid).catch(() => null);
         }
 
@@ -268,10 +279,10 @@ const deleteUser = async (req, res) => {
 const getClients = async (req, res) => {
     try {
         const result = await db.query(
-            `SELECT id, first_name, last_name, phone_number 
-             FROM users 
+            `SELECT id, first_name, last_name, phone_number
+             FROM users
              WHERE role = 'Customer'
-             ORDER BY last_name, first_name ASC`
+             ORDER BY last_name, first_name `
         );
         res.status(200).json(result.rows);
     } catch (error) {
@@ -309,7 +320,6 @@ const deleteMyAccount = async (req, res) => {
 module.exports = {
     syncUser,
     listUsers,
-    checkPhone,
     getUserByUid,
     editUserById,
     editPhoneNumber,
@@ -317,5 +327,6 @@ module.exports = {
     deleteUser,
     getClients,
     updateNotification,
-    deleteMyAccount
+    deleteMyAccount,
+    checkUserStatus
 };

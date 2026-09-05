@@ -1,25 +1,26 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, isAdmin, isBarber } = require('../middleware/auth');
+const { verifyTokenRegistered, verifyFirebaseToken, isAdmin, isBarber } = require('../middleware/auth');
+const { moderateLimiter, strictLimiter } = require('../middleware/rateLimiters');
 const usersCtrl = require('../controllers/users.controller');
 
-// Public routes (No authentication required)
-router.post('/sync', usersCtrl.syncUser);
-router.post('/check-phone', usersCtrl.checkPhone);
+// Public routes
+router.post('/sync', verifyFirebaseToken, moderateLimiter, usersCtrl.syncUser);
+router.get('/check-status', verifyFirebaseToken, usersCtrl.checkUserStatus);
 
 // Current profile routes (Authenticated users)
-router.get('/by-uid', verifyToken, usersCtrl.getUserByUid);
-router.patch('/me', verifyToken, usersCtrl.updateMe);
-router.patch('/update-notification', verifyToken, usersCtrl.updateNotification);
-router.patch('/edit-phone', verifyToken, usersCtrl.editPhoneNumber);
-router.delete('/delete-account', verifyToken, usersCtrl.deleteMyAccount);
+router.get('/by-uid', verifyTokenRegistered, usersCtrl.getUserByUid);
+router.patch('/me', verifyTokenRegistered, moderateLimiter, usersCtrl.updateMe);
+router.patch('/update-notification', verifyTokenRegistered, usersCtrl.updateNotification);
+router.patch('/edit-phone', verifyTokenRegistered, moderateLimiter, usersCtrl.editPhoneNumber);
+router.delete('/delete-account', verifyTokenRegistered, strictLimiter, usersCtrl.deleteMyAccount);
 
 // Administration routes (Admin only)
-router.get('/list', verifyToken, isAdmin, usersCtrl.listUsers);
-router.patch('/edit/:id', verifyToken, isAdmin, usersCtrl.editUserById);
-router.delete('/delete/:id', verifyToken, isAdmin, usersCtrl.deleteUser);
+router.get('/list', verifyTokenRegistered, isAdmin, usersCtrl.listUsers);
+router.patch('/edit/:id', verifyTokenRegistered, isAdmin, moderateLimiter, usersCtrl.editUserById);
+router.delete('/delete/:id', verifyTokenRegistered, isAdmin, moderateLimiter, usersCtrl.deleteUser);
 
 // Barber-specific routes
-router.get('/clients', verifyToken, isBarber, usersCtrl.getClients);
+router.get('/clients', verifyTokenRegistered, isBarber, usersCtrl.getClients);
 
 module.exports = router;

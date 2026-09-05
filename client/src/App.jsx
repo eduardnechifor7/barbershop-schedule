@@ -30,10 +30,16 @@ function App() {
         const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
             if (firebaseUser) {
                 try {
-                    const userData = await userService.getProfile();
-                    setUser(userData);
+                    const { isRegistered, user } = await userService.checkStatus();
+
+                    if (isRegistered) {
+                        setUser(user);
+                    } else {
+                        setUser(null);
+                    }
                 } catch (error) {
                     console.error("Error fetching user profile:", error);
+                    setUser(null);
                 }
             } else {
                 setUser(null);
@@ -57,14 +63,14 @@ function App() {
                 <Route path="/register" element={<ContinueRegister />} />
                 <Route path="/welcome/otp" element={<OTPScreen />} />
 
-                <Route path="/admin" element={ <AdminRoute user={user} /> }>
-                    <Route index element={<AdminDashboardMenu />} />
-                    <Route path="users" element={<ManageUsers />} />
-                    <Route path="barbers" element={<ManageBarbers />} />
-                    <Route path="appointments" element={<ManageAppointments />} />
-                    <Route path="appointments-barber" element={<ManageApptBarber />} />
-                    <Route path="services" element={<ManageServices />} />
-                    <Route path="skills" element={<ManageSkills />} />
+                <Route path="/admin" element={<AdminRoute user={user}/>}>
+                    <Route index element={<AdminDashboardMenu/>}/>
+                    <Route path="users" element={<ManageUsers/>}/>
+                    <Route path="barbers" element={<ManageBarbers/>}/>
+                    <Route path="appointments" element={<ManageAppointments/>}/>
+                    <Route path="appointments-barber" element={<ManageApptBarber/>}/>
+                    <Route path="services" element={<ManageServices/>}/>
+                    <Route path="skills" element={<ManageSkills/>}/>
                 </Route>
 
                 <Route path="past-appointments" element={<PastAppointments />} />

@@ -28,7 +28,14 @@ export function AppointmentModal({
                                      isAdmin = false,
                                      parsedData = {}
                                  }) {
-    const todayDate = useMemo(() => new Date().toLocaleDateString('en-CA'), []);
+    const todayDate = useMemo(() => {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Bucharest',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date());
+    }, []);
 
     const [formData, setFormData] = useState({
         service_ids: [],

@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, isAdmin, isBarber } = require('../middleware/auth.js');
+const { verifyTokenRegistered, isAdmin, isBarber } = require('../middleware/auth.js');
+const { moderateLimiter, strictLimiter } = require('../middleware/rateLimiters.js');
 const barbersCtrl = require('../controllers/barbers.controller.js');
 
-router.get('/list', verifyToken, barbersCtrl.listBarbers);
-router.get('/me', verifyToken, isBarber, barbersCtrl.getBarberProfile);
-router.get('/:id', verifyToken, barbersCtrl.getBarberById);
-router.post('/addBarber', verifyToken, isAdmin, barbersCtrl.addBarber);
-router.patch('/edit/:id', verifyToken, isAdmin, barbersCtrl.editBarber);
-router.delete('/delete/:id', verifyToken, isAdmin, barbersCtrl.deleteBarber);
+router.get('/list', verifyTokenRegistered, barbersCtrl.listBarbers);
+router.get('/me', verifyTokenRegistered, isBarber, barbersCtrl.getBarberProfile);
+router.get('/:id', verifyTokenRegistered, barbersCtrl.getBarberById);
+router.post('/addBarber', verifyTokenRegistered, strictLimiter, isAdmin, barbersCtrl.addBarber);
+router.patch('/edit/:id', verifyTokenRegistered, isAdmin, moderateLimiter, barbersCtrl.editBarber);
+router.delete('/delete/:id', verifyTokenRegistered, isAdmin, moderateLimiter, barbersCtrl.deleteBarber);
 
 module.exports = router;
