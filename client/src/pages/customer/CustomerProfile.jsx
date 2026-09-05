@@ -32,9 +32,9 @@ export function CustomerProfile() {
     const [modalType, setModalType] = useState(""); // "edit" or "help" or "policy"
     const [openModal, setOpenModal] = useState(false);
     const [preferences, setPreferences] = useState({
-        in_app_notifications: user?.in_app_notifications || true,
-        email_notifications: user?.email_notifications || true,
-        sms_notifications: user?.sms_notifications || true
+        in_app_notifications: user?.in_app_notifications ?? true,
+        email_notifications: user?.email_notifications ?? true,
+        sms_notifications: user?.sms_notifications ?? true
     });
     const [toast, setToast] = useState({
         isOpen: false,

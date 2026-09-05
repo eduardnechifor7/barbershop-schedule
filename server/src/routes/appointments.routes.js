@@ -1,25 +1,24 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, isAdmin, isBarber } = require('../middleware/auth.js');
+const { verifyTokenRegistered, isAdmin, isBarber } = require('../middleware/auth.js');
+const { strictLimiter, moderateLimiter } = require('../middleware/rateLimiters');
 const appointmentsCtrl = require('../controllers/appointments.controller.js');
 
 // Client routes
-router.post('/me/addAppointment', verifyToken, appointmentsCtrl.createMyAppointent);
-router.get('/me', verifyToken, appointmentsCtrl.getMyAppointments);
-router.patch('/me/cancel/:id', verifyToken, appointmentsCtrl.cancelAppointment);
+router.get('/list', verifyTokenRegistered, isAdmin, appointmentsCtrl.listAllAppointments);
+router.post('/me/addAppointment', verifyTokenRegistered, strictLimiter, appointmentsCtrl.createMyAppointment);
+router.get('/me', verifyTokenRegistered, appointmentsCtrl.getMyAppointments);
+router.patch('/me/cancel/:id', verifyTokenRegistered, moderateLimiter, appointmentsCtrl.cancelAppointment);
 
 // Barber / Admin common routes
-router.post('/addAppointment', verifyToken, isBarber, appointmentsCtrl.createAppointment);
-router.get('/list-as-barber', verifyToken, isBarber, appointmentsCtrl.listAsBarber);
-router.post('/create-as-barber', verifyToken, isBarber, appointmentsCtrl.createAsBarber);
-router.patch('/edit/:id', verifyToken, isBarber, appointmentsCtrl.editAppointment);
-router.delete('/delete/:id', verifyToken, isBarber, appointmentsCtrl.deleteAppointment);
-router.patch('/edit-as-barber/:id', verifyToken, isBarber, appointmentsCtrl.editAsBarber);
+router.post('/addAppointment', verifyTokenRegistered, isBarber, strictLimiter, appointmentsCtrl.createAppointment);
+router.get('/list-as-barber', verifyTokenRegistered, isBarber, appointmentsCtrl.listAsBarber);
+router.post('/create-as-barber', verifyTokenRegistered, isBarber, strictLimiter, appointmentsCtrl.createAsBarber);
+router.patch('/edit/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.editAppointment);
+router.delete('/delete/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.deleteAppointment);
+router.patch('/edit-as-barber/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.editAsBarber);
 
 // Public / Availability check
-router.get('/:id/existing-bookings', verifyToken, appointmentsCtrl.getExistingBookings);
-
-// Admin-only route
-router.get('/list', verifyToken, isAdmin, appointmentsCtrl.listAllAppointments);
+router.get('/:id/existing-bookings', verifyTokenRegistered, appointmentsCtrl.getExistingBookings);
 
 module.exports = router;

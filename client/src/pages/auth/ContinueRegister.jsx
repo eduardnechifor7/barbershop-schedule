@@ -6,11 +6,11 @@ import { validateFields, required, email as validateEmail, phone as validatePhon
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRecaptcha } from "../../hooks/useRecaptcha.js";
 import { Toast } from "../../components/common/Toast.jsx";
+import {userService} from "../../services/userService.js";
 
 export function ContinueRegister() {
     const navigate = useNavigate();
     const location = useLocation();
-    useRecaptcha();
 
     const [form, setForm] = useState({
         phone: location.state?.phone || "",
@@ -25,6 +25,8 @@ export function ContinueRegister() {
         message: "",
         type: "error"
     });
+
+    const phone = location.state?.phone || auth.currentUser?.phoneNumber || "";
 
     const updateField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -43,29 +45,31 @@ export function ContinueRegister() {
             return;
         }
 
-        try {
-            setIsLoading(true);
-            setFormErrors({});
-
-            const appVerifier = window.recaptchaVerifier;
-            window.confirmationResult = await signInWithPhoneNumber(auth, form.phone, appVerifier);
-
-            navigate("/welcome/otp", {
-                state: {
-                    phone: form.phone,
-                    role: "Customer",
-                    registerData: {
-                        first_name: form.firstName,
-                        last_name: form.lastName,
-                        email: form.email
-                    }
-                },
-                replace: true
-            });
-        } catch (error) {
+        const currentUser = auth.currentUser;
+        if (!currentUser) {
             setToast({
                 isOpen: true,
-                message: "An error occurred during registration.",
+                message: "Session expired. Please restart login.",
+                type: "error"
+            });
+            setTimeout(() => navigate("/"), 1500);
+            return;
+        }
+
+        try {
+            await userService.addUser({
+                firebase_uid: currentUser.uid,
+                first_name: form.firstName,
+                last_name: form.lastName,
+                phone_number: currentUser.phoneNumber || phone,
+                email: form.email
+            });
+
+            navigate("/customer", {replace: true});
+        } catch (err) {
+            setToast({
+                isOpen: true,
+                message: "Failed to register user. Please try again.",
                 type: "error"
             });
         } finally {

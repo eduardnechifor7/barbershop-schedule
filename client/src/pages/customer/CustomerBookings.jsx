@@ -36,7 +36,14 @@ const VALIDATION_RULES = {
 export function CustomerBookings() {
     const navigate = useNavigate();
     const location = useLocation();
-    const todayDate = useMemo(() => new Date().toISOString().split("T")[0], []);
+    const todayDate = useMemo(() => {
+        return new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Europe/Bucharest',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        }).format(new Date());
+    }, []);
 
     const [data, setData] = useState({
         services: [],

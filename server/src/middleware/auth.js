@@ -1,8 +1,24 @@
 const admin = require('../config/firebase.js');
 const db = require('../config/db');
 
+const verifyFirebaseToken = async (req, res, next) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
 
-const verifyToken = async (req, res, next) => {
+        const decodedToken = await admin.auth().verifyIdToken(token);
+
+        req.user = decodedToken;
+        next();
+    } catch (error) {
+        console.error("Firebase Auth Error:", error);
+        return res.status(401).json({ error: 'Invalid or expired token' });
+    }
+};
+
+const verifyTokenRegistered = async (req, res, next) => {
     try {
         const token = req.headers.authorization?.split(' ')[1];
         if (!token) {
@@ -52,4 +68,4 @@ const isBarber = (req, res, next) => {
     }
 }
 
-module.exports = { verifyToken, isAdmin, isBarber };
+module.exports = { verifyTokenRegistered, verifyFirebaseToken, isAdmin, isBarber };

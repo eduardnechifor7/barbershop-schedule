@@ -41,8 +41,8 @@ const createNotification = async (userId, title, message) => {
 
         if (user.email_notifications && user.email) {
             const htmlContent = baseTemplate
-                .replace(/\{\{title\}\}/g, title)
-                .replace(/\{\{message\}\}/g, message);
+                .replace(/\{\{title}}/g, title)
+                .replace(/\{\{message}}/g, message);
 
             try {
                 await resendClient.emails.send({

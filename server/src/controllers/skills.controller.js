@@ -3,7 +3,9 @@ const db = require('../config/db');
 const listSkills = async (req, res) => {
     try {
         const skills = await db.query(
-            `SELECT id, name FROM skills ORDER BY name ASC`
+            `SELECT id, name
+             FROM skills
+             ORDER BY name `
         );
         return res.status(200).json(skills.rows);
     } catch (error) {
