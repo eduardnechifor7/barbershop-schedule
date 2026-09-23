@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const logger = require('../config/logger');
 
 const listBarbers = async (req, res) => {
     try {
@@ -20,7 +21,8 @@ const listBarbers = async (req, res) => {
         );
         res.status(200).json(barbers.rows);
     } catch (error) {
-        res.status(500).json({ error: "Error in loading barbers list", details: error.message });
+        logger.error({error}, "Error in listBarbers");
+        res.status(500).json({ error: "Error in loading barbers list" });
     }
 };
 
@@ -51,7 +53,8 @@ const getBarberById = async (req, res) => {
 
         res.status(200).json(barbers.rows[0]);
     } catch (error) {
-        res.status(500).json({ error: "Error in loading barbers details", details: error.message });
+        logger.error({error}, "Error in getBarberById");
+        res.status(500).json({ error: "Error in loading barbers details" });
     }
 };
 
@@ -87,7 +90,8 @@ const getBarberProfile = async (req, res) => {
 
         res.status(200).json(barbers.rows[0]);
     } catch (error) {
-        res.status(500).json({ error: "Error in loading barbers details", details: error.message });
+        logger.error({error}, "Error in getBarberProfile");
+        res.status(500).json({ error: "Error in loading barbers details" });
     }
 };
 
@@ -144,7 +148,8 @@ const addBarber = async (req, res) => {
         });
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ error: "Error in adding barber", details: err.message });
+        logger.error({err}, "Error in addBarber");
+        res.status(500).json({ error: "Error in adding barber" });
     } finally {
         client.release();
     }
@@ -186,7 +191,8 @@ const editBarber = async (req, res) => {
         });
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ error: "Error in updating barber", details: err.message });
+        logger.error({err}, "Error in editBarber");
+        res.status(500).json({ error: "Error in updating barber" });
     } finally {
         client.release();
     }
@@ -219,7 +225,8 @@ const deleteBarber = async (req, res) => {
 
         res.status(200).json({ message: "Barber deleted successfully", barber: deleteBarber.rows[0] });
     } catch (err) {
-        res.status(500).json({ error: "Error in deleting barber", details: err.message });
+        logger.error({err}, "Error in deleteBarber");
+        res.status(500).json({ error: "Error in deleting barber" });
     }
 };
 

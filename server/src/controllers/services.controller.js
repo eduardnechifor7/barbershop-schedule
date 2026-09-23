@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const logger = require('../config/logger');
 
 const createService = async (req, res) => {
     const { service_name, price, minutes_duration, description, skills_ids = [] } = req.body;
@@ -38,7 +39,8 @@ const createService = async (req, res) => {
         res.status(201).json({ message: "Service created successfully", service: newService.rows[0] });
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ message: "Error in saving barber service", error: err.message });
+        logger.error({ err }, "Error in creating barber service");
+        res.status(500).json({ message: "Error in saving barber service" });
     } finally {
         client.release();
     }
@@ -64,7 +66,8 @@ const listServices = async (req, res) => {
         );
         res.status(200).json(serviceData.rows);
     } catch (error) {
-        res.status(500).json({ error: "Error in retrieving data", details: error.message });
+        logger.error({ error }, "Error in retrieving services");
+        res.status(500).json({ error: "Error in retrieving data" });
     }
 };
 
@@ -86,7 +89,7 @@ const deleteService = async (req, res) => {
             deletedService: deletedService.rows[0]
         });
     } catch (err) {
-        console.error(err);
+        logger.error({ err }, "Error in updating barber service");
         res.status(500).json({ error: "Error in updating barber service" });
     }
 };
@@ -152,7 +155,8 @@ const editService = async (req, res) => {
         });
     } catch (err) {
         await client.query('ROLLBACK');
-        res.status(500).json({ message: "Error in updating barber service", error: err.message });
+        logger.error({ err }, "Error in updating barber service");
+        res.status(500).json({ message: "Error in updating barber service" });
     } finally {
         client.release();
     }

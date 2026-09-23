@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const logger = require('../config/logger');
 
 // Get all notifications
 const getNotifications = async (req, res) => {
@@ -12,7 +13,8 @@ const getNotifications = async (req, res) => {
 
         res.status(200).json(notifications.rows);
     } catch (error) {
-        res.status(500).json({ error: "Error in loading notifications", details: error.message });
+        logger.error({error}, "Error in getNotifications");
+        res.status(500).json({ error: "Error in loading notifications" });
     }
 }
 
@@ -25,7 +27,7 @@ const markAsRead = async (req, res) => {
         const result = await db.query(
             `UPDATE notifications
        SET is_read = TRUE
-       WHERE id = $1 AND user_id = $2
+       WHERE id = $1 AND user_id = $2 AND is_read = false
        RETURNING *`,
             [parseInt(id, 10), parseInt(userId, 10)]
         );
@@ -36,7 +38,8 @@ const markAsRead = async (req, res) => {
 
         return res.status(200).json(result.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error updating notification", details: error.message });
+        logger.error({error}, "Error in markAsRead");
+        return res.status(500).json({ error: "Error updating notification" });
     }
 };
 
@@ -54,6 +57,7 @@ const markAllAsRead = async (req, res) => {
 
         return res.status(200).json({ message: "All notifications marked as read" });
     } catch (error) {
+        logger.error({error}, "Error in markAllAsRead");
         return res.status(500).json({ error: error.message });
     }
 };
@@ -74,6 +78,7 @@ const deleteNotification = async (req, res) => {
         }
         return res.status(200).json({ message: "Notification deleted", notification: result.rows[0] });
     } catch (error) {
+        logger.error({error}, "Error in deleting notification");
         return res.status(500).json({ error: error.message });
     }
 };

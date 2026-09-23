@@ -91,7 +91,7 @@ export function CustomerHome() {
             setOpenModal(null);
             setRefreshTrigger(prev => prev + 1);
         } catch (error) {
-            console.error("Error cancelling appointment:", error);
+            Sentry.captureException(error, { details: "Error cancelling appointment" });
         } finally {
             setLoading(false);
         }
@@ -102,7 +102,13 @@ export function CustomerHome() {
         setOpenModal("details");
     }
 
-    const handleNotificationClick = async (notificationId) => {
+    const handleNotificationClick = async (notification) => {
+        if (notification.is_read) {
+            return;
+        }
+
+        const notificationId = notification.id;
+
         try {
             await notificationService.markAsRead(notificationId);
             setNotifications(prevNotifications => prevNotifications.map(notification =>

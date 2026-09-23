@@ -1,5 +1,8 @@
 const db = require('../config/db');
-const { createNotification } = require("./notificationService");
+const {
+    createInAppNotification,
+    sendExternalNotifications
+} = require("./notificationService");
 
 const appointmentValidation =  async (client, requiredData) => {
     const { barberId, appointmentDate, startTime, serviceIds, excludeAppointmentId } = requiredData;
@@ -103,13 +106,28 @@ const executeCreateAppointment = async (requiredData) => {
             throw err;
         }
 
-        await createNotification(
+        await createInAppNotification(
+            client,
             userId,
             "Appointment Scheduled!",
             `See you on ${appointmentDate} at ${startTime}!`
         );
 
         await client.query('COMMIT');
+
+        try {
+            await sendExternalNotifications(
+                userId,
+                "Appointment Scheduled!",
+                `See you on ${appointmentDate} at ${startTime}!`
+            );
+        } catch (error) {
+            logger.error(
+                { error, userId, appointmentId: newAppointmentId },
+                "External notification delivery failed"
+            );
+        }
+
         return { message: "Appointment created successfully", appointment_id: newAppointmentId };
     } catch (error) {
         await client.query('ROLLBACK');

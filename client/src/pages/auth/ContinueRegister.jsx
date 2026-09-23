@@ -1,10 +1,8 @@
 import { AuthPhoneInput } from "../../components/common/AuthPhoneInput.jsx";
 import { useState } from "react";
 import { auth } from "../../firebase.js";
-import { signInWithPhoneNumber } from "firebase/auth";
 import { validateFields, required, email as validateEmail, phone as validatePhone, textOnly } from "../../utils/validation.js";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useRecaptcha } from "../../hooks/useRecaptcha.js";
 import { Toast } from "../../components/common/Toast.jsx";
 import {userService} from "../../services/userService.js";
 
@@ -58,7 +56,6 @@ export function ContinueRegister() {
 
         try {
             await userService.addUser({
-                firebase_uid: currentUser.uid,
                 first_name: form.firstName,
                 last_name: form.lastName,
                 phone_number: currentUser.phoneNumber || phone,

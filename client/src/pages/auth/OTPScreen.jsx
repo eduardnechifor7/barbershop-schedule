@@ -80,7 +80,7 @@ export function OTPScreen() {
                     navigate('/register', { state: { phone }, replace: true });
                 }
             } catch (error) {
-                console.error("Error during phone number verification:", error);
+                Sentry.captureException(error, { details: "Error during phone number verification" });
                 setToast({
                     isOpen: true,
                     message: "Something went wrong.",

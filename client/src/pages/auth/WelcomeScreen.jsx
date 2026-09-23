@@ -53,7 +53,7 @@ export function WelcomeScreen() {
 
             navigate('/welcome/otp', { state: { phone } });
         } catch (err) {
-            console.error("Firebase SMS error:", err);
+            Sentry.captureException(err, { details: "Firebase SMS error" });
             setToast({
                 isOpen: true,
                 message: "Failed to send verification code. Please try again later.",

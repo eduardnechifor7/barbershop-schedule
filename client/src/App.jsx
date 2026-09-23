@@ -38,7 +38,7 @@ function App() {
                         setUser(null);
                     }
                 } catch (error) {
-                    console.error("Error fetching user profile:", error);
+                    Sentry.captureException(error, { details: "Error fetching user profile" });
                     setUser(null);
                 }
             } else {

@@ -1,6 +1,7 @@
-const { createNotification } = require('../services/notificationService');
+const { createInAppNotification, sendExternalNotifications } = require("./notificationService");
 const { appointmentValidation, executeCreateAppointment } = require('../services/appointmentValidation');
 const db = require('../config/db');
+const logger = require('../config/logger');
 
 // Add appointment by Client
 const createMyAppointment = async (req, res) => {
@@ -20,9 +21,10 @@ const createMyAppointment = async (req, res) => {
             startTime: start_time,
             notes: notes
         });
+
         return res.status(201).json(result);
     } catch (err) {
-        console.error("Error creating appointment (Client):", err);
+        logger.error({ err }, "Error creating appointment by client");
         const status = err.statusCode || 500;
         return res.status(status).json({ error: err.message || "Error creating appointment" });
     }
@@ -45,9 +47,10 @@ const createAppointment = async (req, res) => {
             startTime: start_time,
             notes: notes
         });
+
         return res.status(201).json(result);
     } catch (err) {
-        console.error("Error creating appointment (Barber/Admin):", err);
+        logger.error({ err }, "Error creating appointment (Barber/Admin)");
         const status = err.statusCode || 500;
         return res.status(status).json({ error: err.message || "Error creating appointment" });
     }
@@ -83,7 +86,7 @@ const getMyAppointments = async (req, res) => {
         );
         return res.status(200).json(result.rows);
     } catch (error) {
-        console.error("Error in getMyAppointments:", error);
+        logger.error({ error }, "Error in getMyAppointments");
         return res.status(500).json({ error: "Error in listing appointments" });
     }
 };
@@ -124,7 +127,7 @@ const listAsBarber = async (req, res) => {
         );
         return res.status(200).json(result.rows);
     } catch (error) {
-        console.error("Error in listAsBarber:", error);
+        logger.error({ error }, "Error in listAsBarber");
         return res.status(500).json({ error: "Error in listing appointments" });
     }
 };
@@ -160,9 +163,11 @@ const createAsBarber = async (req, res) => {
 
         return res.status(201).json(result);
     } catch (error) {
-        console.error("Error in createAsBarber:", error);
+        logger.error({ error }, "Error creating appointment as barber");
         const status = error.statusCode || 500;
-        return res.status(status).json({ error: error.message || "Error creating appointment" });
+        return res.status(status).json({
+            error: "Unable to create appointment"
+        });
     }
 };
 
@@ -244,18 +249,30 @@ const editAsBarber = async (req, res) => {
             }
         }
 
-        await createNotification(
+        await createInAppNotification(
+            client,
             cleanUserId,
             "Appointment Updated!",
             `Your appointment has been updated. See you on ${targetDate} at ${targetTime}!`
         );
 
         await client.query('COMMIT');
+
+        try {
+            await sendExternalNotifications(
+                cleanUserId,
+                "Appointment Updated!",
+                `Your appointment has been updated. See you on ${targetDate} at ${targetTime}!`
+            );
+        } catch (error) {
+            logger.error({ error, appointmentId: id }, "External notification delivery failed");
+        }
+
         return res.status(200).json(updateAppointment.rows[0]);
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error("Error updating appointment:", error);
-        return res.status(500).json({ error: "Error in updating appointment.", details: error.message });
+        logger.error({ error }, "Error updating appointment");
+        return res.status(500).json({ error: "Error in updating appointment." });
     } finally {
         client.release();
     }
@@ -295,7 +312,7 @@ const listAllAppointments = async (req, res) => {
         );
         return res.status(200).json(result.rows);
     } catch (error) {
-        console.error("Error in listAllAppointments:", error);
+        logger.error({ error }, "Error in listAllAppointments");
         return res.status(500).json({ error: "Error in listing appointments" });
     }
 };
@@ -324,7 +341,7 @@ const getExistingBookings = async (req, res) => {
 
         return res.status(200).json(existingBookings.rows);
     } catch (error) {
-        console.error("Error in getExistingBookings:", error);
+        logger.error({ error }, "Error in getExistingBookings");
         return res.status(500).json({ error: "Failed in fetching existing bookings" });
     }
 };
@@ -402,19 +419,33 @@ const editAppointment = async (req, res) => {
             }
         }
 
-        await createNotification(
+        await createInAppNotification(
+            client,
             cleanUserId,
             "Appointment Updated!",
             `Your appointment has been updated. See you on ${targetDate} at ${targetTime}!`
         );
 
         await client.query('COMMIT');
+
+        try {
+            await sendExternalNotifications(
+                cleanUserId,
+                "Appointment Updated!",
+                `Your appointment has been updated. See you on ${targetDate} at ${targetTime}!`
+            );
+        } catch (error) {
+            logger.error({ error, appointmentId: id }, "External notification delivery failed");
+        }
+
         return res.status(200).json(updateAppointment.rows[0]);
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error("Error updating appointment:", error);
+        logger.error({ error }, "Error updating appointment by admin");
         const status = error.statusCode || 500;
-        return res.status(status).json({ error: error.message || "Error in updating appointment." });
+        return res.status(status).json({
+            error: "Unable to update appointment"
+        });
     } finally {
         client.release();
     }
@@ -428,7 +459,25 @@ const deleteAppointment = async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        await client.query(`DELETE FROM appointment_services WHERE appointment_id = $1`, [id]);
+        const appointmentRes = await client.query(
+            `SELECT a.id
+             FROM appointments a
+                      LEFT JOIN barbers b ON b.id = a.barber_id
+             WHERE a.id = $1
+               AND (
+                 $2 = 'Admin'
+                     OR (b.user_id = $3 AND b.id IS NOT NULL)
+                 )
+                 FOR UPDATE`,
+            [id, req.user.role, req.user.id]
+        );
+
+        if (appointmentRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({
+                error: "Appointment doesn't exist or you are not authorized to delete it."
+            });
+        }
 
         const deleteAppointmentRes = await client.query(
             `DELETE FROM appointments WHERE id = $1 RETURNING *`,
@@ -444,8 +493,8 @@ const deleteAppointment = async (req, res) => {
         return res.status(200).json(deleteAppointmentRes.rows[0]);
     } catch (error) {
         await client.query('ROLLBACK');
-        console.error("Error deleting appointment:", error);
-        return res.status(500).json({ error: "Error in deleting appointment.", details: error.message });
+        logger.error({ error }, "Error deleting appointment");
+        return res.status(500).json({ error: "Error in deleting appointment." });
     } finally {
         client.release();
     }
@@ -471,6 +520,7 @@ const cancelAppointment = async (req, res) => {
             appointment: cancelRes.rows[0]
         });
     } catch (error) {
+        logger.error({ error }, "Error cancelling appointment");
         return res.status(500).json({ message: "Internal server error" });
     }
 }
