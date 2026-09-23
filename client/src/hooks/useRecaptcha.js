@@ -18,7 +18,7 @@ export function useRecaptcha(containerId = "recaptcha-container") {
                 });
                 window.recaptchaVerifier.render();
             } catch (err) {
-                console.error("Recaptcha init error:", err);
+                Sentry.captureException(err, { details: "Recaptcha init error" });
             }
         }
 

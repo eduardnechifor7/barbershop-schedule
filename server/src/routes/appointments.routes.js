@@ -11,10 +11,10 @@ router.get('/me', verifyTokenRegistered, appointmentsCtrl.getMyAppointments);
 router.patch('/me/cancel/:id', verifyTokenRegistered, moderateLimiter, appointmentsCtrl.cancelAppointment);
 
 // Barber / Admin common routes
-router.post('/addAppointment', verifyTokenRegistered, isBarber, strictLimiter, appointmentsCtrl.createAppointment);
+router.post('/addAppointment', verifyTokenRegistered, isAdmin, strictLimiter, appointmentsCtrl.createAppointment);
 router.get('/list-as-barber', verifyTokenRegistered, isBarber, appointmentsCtrl.listAsBarber);
 router.post('/create-as-barber', verifyTokenRegistered, isBarber, strictLimiter, appointmentsCtrl.createAsBarber);
-router.patch('/edit/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.editAppointment);
+router.patch('/edit/:id', verifyTokenRegistered, isAdmin, moderateLimiter, appointmentsCtrl.editAppointment);
 router.delete('/delete/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.deleteAppointment);
 router.patch('/edit-as-barber/:id', verifyTokenRegistered, isBarber, moderateLimiter, appointmentsCtrl.editAsBarber);
 

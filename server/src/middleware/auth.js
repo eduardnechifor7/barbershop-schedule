@@ -1,5 +1,8 @@
 const admin = require('../config/firebase.js');
 const db = require('../config/db');
+const logger = require('../config/logger');
+
+
 
 const verifyFirebaseToken = async (req, res, next) => {
     try {
@@ -13,7 +16,7 @@ const verifyFirebaseToken = async (req, res, next) => {
         req.user = decodedToken;
         next();
     } catch (error) {
-        console.error("Firebase Auth Error:", error);
+        logger.error({error}, "Error verifying Firebase token");
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 };
@@ -43,7 +46,7 @@ const verifyTokenRegistered = async (req, res, next) => {
         };
         next();
     } catch (error) {
-        console.error("Firebase error:", error);
+        logger.error({ error }, "Error in verifyTokenRegistered");
         return res.status(401).json({ error: 'Invalid or expired token' });
     }
 };

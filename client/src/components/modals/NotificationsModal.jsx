@@ -60,7 +60,7 @@ export function NotificationsModal({ isOpen, onClose, notifications = [], onNoti
                         notifications.map((item) => (
                             <div
                                 key={item.id}
-                                onClick={() => onNotificationClick && onNotificationClick(item.id)}
+                                onClick={item.is_read ? undefined : () => onNotificationClick?.(item)}
                                 className={`group relative w-full p-4 rounded-2xl border transition-all duration-200 cursor-pointer text-left flex gap-3.5 items-start ${
                                     item.is_read
                                         ? "bg-[#262424]/40 border-white/5 opacity-70 hover:opacity-100 hover:border-white/10"

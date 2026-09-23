@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const logger = require('../config/logger');
 
 const listSkills = async (req, res) => {
     try {
@@ -9,7 +10,7 @@ const listSkills = async (req, res) => {
         );
         return res.status(200).json(skills.rows);
     } catch (error) {
-        console.error("Error in listSkills:", error);
+        logger.error({ error }, "Error in listSkills");
         return res.status(500).json({ error: 'Error in listing skills' });
     }
 };
@@ -28,7 +29,7 @@ const addSkill = async (req, res) => {
         );
         return res.status(201).json(newSkill.rows[0]);
     } catch (error) {
-        console.error("Error in addSkill:", error);
+        logger.error({ error }, "Error in addSkill");
         return res.status(500).json({ error: 'Error in adding skill' });
     }
 };
@@ -48,7 +49,7 @@ const deleteSkill = async (req, res) => {
 
         return res.status(200).json(deletedSkill.rows[0]);
     } catch (error) {
-        console.error("Error in deleteSkill:", error);
+        logger.error({ error }, "Error in deleteSkill");
         return res.status(500).json({ error: 'Error in deleting skill' });
     }
 };

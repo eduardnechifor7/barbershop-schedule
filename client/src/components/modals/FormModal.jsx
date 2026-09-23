@@ -97,7 +97,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
         try {
             nextErrors = validateFields(formData, activeRules) || {};
         } catch (e) {
-            console.error("Error in validateFields", e);
+            Sentry.captureException(e);
         }
 
         Object.keys(nextErrors).forEach(key => {
@@ -134,7 +134,7 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
                 await deleteOldAvatar(previousUploadedUrl);
             }
         } catch (error) {
-            console.error("Error uploading file:", error);
+            Sentry.captureException(error, { details: "Error uploading file" });
         }
     };
 

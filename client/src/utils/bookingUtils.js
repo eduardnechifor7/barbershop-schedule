@@ -4,19 +4,22 @@ import { timeStringToMinutes, generateTimeSlots } from "./timeUtils.js";
 // Verify if a barber has all the required skills for a service
 export const canBarberDoService = (barber, service) => {
     if (!barber || !service) return false;
-    const barberSkillIds = (barber.skills || []).map((sk) => sk.id);
-    const serviceSkillIds = (service.required_skills || []).map((sk) => sk.id);
+    const barberSkillIds = (barber.skills_ids || []).map((sk) => sk.id);
+    const serviceSkillIds = (service.skills_ids || []).map((sk) => sk.id);
     return serviceSkillIds.every((id) => barberSkillIds.includes(id));
 };
 
 
 // Filter barbers based on the selected services.
 export const getFilteredBarbers = (barbers = [], services = [], selectedServiceIds = []) => {
-    if (!selectedServiceIds.length) return barbers;
+    if (!selectedServiceIds.length) {
+        return barbers;
+    }
 
     const activeServices = selectedServiceIds
         .map((id) => services.find((s) => (s.id || s.service_id) === id))
         .filter(Boolean);
+
 
     return barbers.filter((barber) =>
         activeServices.every((service) => canBarberDoService(barber, service))

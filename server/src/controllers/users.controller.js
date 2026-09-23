@@ -1,8 +1,10 @@
 const db = require('../config/db');
 const admin = require('firebase-admin');
+const logger = require('../config/logger');
 
 const syncUser = async (req, res) => {
-    const { firebase_uid, first_name, last_name, phone_number, email } = req.body;
+    const { first_name, last_name, phone_number, email } = req.body;
+    const firebase_uid = req.user.uid;
 
     try {
         const user = await db.query(
@@ -15,7 +17,7 @@ const syncUser = async (req, res) => {
         );
         return res.status(201).json(user.rows[0]);
     } catch (err) {
-        console.error("Error in syncUser:", err);
+        logger.error({ err }, "Error in syncUser");
         return res.status(500).json({ error: "Error in adding user" });
     }
 };
@@ -28,21 +30,27 @@ const listUsers = async (req, res) => {
         );
         return res.status(200).json(result.rows);
     } catch (error) {
-        return res.status(500).json({ error: "Internal server error", details: error.message });
+        logger.error({ error }, "Error in listUsers");
+        return res.status(500).json({ error: "Internal server error" });
     }
 };
 
 const checkUserStatus = async (req, res) => {
-    const result = await db.query(
-        "SELECT id, first_name, last_name, role FROM users WHERE firebase_uid = $1",
-        [req.user.uid]
-    );
+    try {
+        const result = await db.query(
+            "SELECT id, first_name, last_name, role FROM users WHERE firebase_uid = $1",
+            [req.user.uid]
+        );
 
-    if (result.rows.length === 0) {
-        return res.json({ isRegistered: false, user: null });
+        if (result.rows.length === 0) {
+            return res.json({isRegistered: false, user: null});
+        }
+
+        return res.json({isRegistered: true, user: result.rows[0]});
+    } catch (error) {
+        logger.error({ error }, "Error in checkUserStatus");
+        return res.status(500).json({ error: "Internal server error" });
     }
-
-    return res.json({ isRegistered: true, user: result.rows[0] });
 };
 
 const getUserByUid = async (req, res) => {
@@ -86,7 +94,8 @@ const getUserByUid = async (req, res) => {
             favourite_barber: barberRes.rows[0]?.name || "N/A"
         });
     } catch (error) {
-        return res.status(500).json({ error: "Error in fetching user details", details: error.message });
+        logger.error({ error }, "Error in getUserByUid");
+        return res.status(500).json({ error: "Error in fetching user details" });
     }
 };
 
@@ -125,7 +134,8 @@ const editUserById = async (req, res) => {
 
         return res.status(200).json(updateUser.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in updating user", details: error.message });
+        logger.error({ error }, "Error in editUserById");
+        return res.status(500).json({ error: "Error in updating user" });
     }
 };
 
@@ -188,8 +198,8 @@ const editPhoneNumber = async (req, res) => {
 
         return res.status(200).json(updatedUser.rows[0]);
     } catch (error) {
-        console.error("Error in updating phone number", error);
-        return res.status(500).json({ error: "Error in updating phone number", details: error.message });
+        logger.error({ error }, "Error in editPhoneNumber");
+        return res.status(500).json({ error: "Error in updating phone number" });
     }
 };
 
@@ -216,7 +226,8 @@ const updateMe = async (req, res) => {
 
         return res.status(200).json(updateUser.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in updating user", details: error.message });
+        logger.error({error}, "Error in updating user");
+        return res.status(500).json({ error: "Error in updating user" });
     }
 };
 
@@ -254,7 +265,8 @@ const updateNotification = async (req, res) => {
 
         return res.status(200).json({message: "Notification preferences updated successfully"});
     } catch (error) {
-        return res.status(500).json({error: "Error in updating notification preferences", details: error.message});
+        logger.error({error}, "Error in updateNotification");
+        return res.status(500).json({ error: "Error in updating notification preferences" });
     }
 }
 
@@ -272,7 +284,8 @@ const deleteUser = async (req, res) => {
         }
         return res.status(200).json(deleteUserRes.rows[0]);
     } catch (error) {
-        return res.status(500).json({ error: "Error in deleting user", details: error.message });
+        logger.error({error}, "Error in deleteUser");
+        return res.status(500).json({ error: "Error in deleting user" });
     }
 };
 
@@ -286,7 +299,7 @@ const getClients = async (req, res) => {
         );
         res.status(200).json(result.rows);
     } catch (error) {
-        console.error("Error fetching clients:", error);
+        logger.error({ error }, "Error in getClients");
         res.status(500).json({ error: "Could not fetch clients" });
     }
 };
@@ -312,7 +325,7 @@ const deleteMyAccount = async (req, res) => {
 
         res.status(200).json(deleteUserRes.rows[0]);
     } catch (error) {
-        console.error("Error deleting user:", error);
+        logger.error({ error }, "Error in deleteMyAccount");
         res.status(500).json({ error: "Could not delete user" });
     }
 };
