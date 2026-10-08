@@ -325,9 +325,9 @@ CREATE TABLE public.users (
     supabase_uid character varying(128),
     role character varying(20) DEFAULT 'Customer'::character varying,
     photo_url text,
-    email_notifications boolean DEFAULT true,
+    email_notifications boolean DEFAULT false,
     in_app_notifications boolean DEFAULT true,
-    sms_notifications boolean DEFAULT true,
+    sms_notifications boolean DEFAULT false,
     CONSTRAINT check_role_values CHECK (((role)::text = ANY ((ARRAY['Customer'::character varying, 'Barber'::character varying, 'Admin'::character varying])::text[])))
 );
 
