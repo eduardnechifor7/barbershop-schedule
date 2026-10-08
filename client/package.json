@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run"
   },
   "overrides": {
     "uuid": "^11.1.1",
@@ -15,9 +17,9 @@
   },
   "dependencies": {
     "@sentry/react": "^10.75.1",
+    "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/postcss": "^4.2.2",
     "axios": "^1.15.2",
-    "firebase": "^12.12.1",
     "lucide-react": "^1.25.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
@@ -27,6 +29,9 @@
     "react-select": "^5.10.2"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-basic-ssl": "^2.3.0",
@@ -34,8 +39,10 @@
     "autoprefixer": "^10.5.0",
     "flowbite": "^4.0.1",
     "flowbite-react": "^0.12.17",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.10",
     "tailwindcss": "^4.2.4",
-    "vite": "^8.0.1"
+    "vite": "^8.0.1",
+    "vitest": "^4.1.11"
   }
 }

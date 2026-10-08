@@ -84,7 +84,7 @@ export function CustomerBookings() {
             } catch (error) {
                 setToast({
                     isOpen: true,
-                    message: "Failed to laod page. Please try again later.",
+                    message: "Failed to load page. Please try again later.",
                     type: "error"
                 });
             }
@@ -105,7 +105,7 @@ export function CustomerBookings() {
             } catch (error) {
                 setToast({
                     isOpen: true,
-                    message: "Failed to laod page. Please try again later.",
+                    message: "Failed to load page. Please try again later.",
                     type: "error"
                 });
             }

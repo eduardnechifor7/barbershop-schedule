@@ -15,14 +15,13 @@ import {
 } from "lucide-react";
 import { userService } from "../../services/userService.js";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
-import { signOut } from "firebase/auth";
-import { auth } from "../../firebase.js";
 import { useNavigate } from "react-router-dom";
 import { NotificationsSettings } from "../../components/modals/NotificationsSettings.jsx";
 import { HelpSupportModal } from "../../components/modals/HelpSupportModal.jsx";
 import { TermsPolicyModal } from "../../components/modals/TermsPolicyModal.jsx";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import { supabase } from "../../supabase.js";
 
 export function CustomerProfile() {
     const [loading, setLoading] = useState(true);
@@ -76,7 +75,7 @@ export function CustomerProfile() {
 
     const handleLogout = async () => {
         try {
-            await signOut(auth);
+            await supabase.auth.signOut();
             navigate("/");
         } catch (error) {
             setToast({

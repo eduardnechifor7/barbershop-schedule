@@ -13,9 +13,9 @@ import {
     textOnly
 } from "../../utils/validation.js";
 import { FORM_SELECT_STYLES } from "../../constants/selectStyles.js";
-import { deleteObject, getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { storage } from "../../firebase.js";
 import { Toast } from "../common/Toast.jsx";
+import * as Sentry from "@sentry/react";
+import { supabase } from "../../supabase.js";
 
 export function FormModal({ isOpen, onClose, config, onSubmit, options = null, isEdit = false, initialData = null }) {
     const getInitialState = () => {
@@ -66,11 +66,27 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
 
     if (!isOpen) return null;
 
+    const extractStoragePath = (url) => {
+        if (!url || !url.includes("/storage/v1/object/public/Avatars/")) return null;
+        return url.split("/storage/v1/object/public/Avatars/")[1];
+    };
+
     const deleteOldAvatar = async (url) => {
-        if (!url || !url.includes("firebase")) return;
+        const storagePath = extractStoragePath(url);
+        if (!storagePath) return;
+
         try {
-            const oldFileRef = ref(storage, url);
-            await deleteObject(oldFileRef);
+            const { error: deleteError } = await supabase.storage
+                .from('Avatars')
+                .remove([storagePath]);
+
+            if (deleteError) {
+                setToast({
+                    isOpen: true,
+                    message: deleteError.message || "Failed to delete old avatar. Please try again.",
+                    type: "error"
+                });
+            }
         } catch (error) {
             setToast({
                 isOpen: true,
@@ -121,19 +137,40 @@ export function FormModal({ isOpen, onClose, config, onSubmit, options = null, i
         if (!fileToUpload) return;
 
         const previousUploadedUrl = formData.photo_url;
-        const fileName = `${Date.now()}_${fileToUpload.name}`;
-        const storageRef = ref(storage, `avatars/${fileName}`);
+        const fileExt = fileToUpload.name.split(".").pop();
+        const filePath = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
 
         try {
-            const snapshot = await uploadBytes(storageRef, fileToUpload);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            const { error: uploadError } = await supabase.storage
+                .from("Avatars")
+                .upload(filePath, fileToUpload, {
+                    cacheControl: "3600",
+                    upsert: false
+                });
 
-            handleChange("photo_url", downloadURL);
+            if (uploadError) {
+                setToast({
+                    isOpen: true,
+                    message: uploadError.message || "Failed to upload image. Please try again.",
+                    type: "error"
+                });
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("Avatars")
+                .getPublicUrl(filePath);
+
+            handleChange("photo_url", publicUrl);
 
             if (previousUploadedUrl && previousUploadedUrl !== initialAvatarUrlRef.current) {
                 await deleteOldAvatar(previousUploadedUrl);
             }
         } catch (error) {
+            setToast({
+                isOpen: true,
+                message: "Something went wrong. Please try again.",
+                type: "error"
+            });
             Sentry.captureException(error, { details: "Error uploading file" });
         }
     };

@@ -1,14 +1,12 @@
+import { supabase } from "../../supabase.js";
 import { AuthPhoneInput } from "../../components/common/AuthPhoneInput.jsx";
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import { useState, useEffect } from "react";
-import { auth } from "../../firebase.js";
-import { signInWithPhoneNumber } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import appLogo from "../../assets/cuthut_logo.png";
 import { TermsPolicyModal } from "../../components/modals/TermsPolicyModal.jsx";
-import { useRecaptcha } from "../../hooks/useRecaptcha.js";
-import { userService } from "../../services/userService.js";
 import { Toast } from "../../components/common/Toast.jsx";
+import * as Sentry from "@sentry/react";
 
 export function WelcomeScreen() {
     const [phone, setPhone] = useState("");
@@ -23,15 +21,20 @@ export function WelcomeScreen() {
     });
 
     const navigate = useNavigate();
-    useRecaptcha();
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((firebaseUser) => {
-            if (firebaseUser) {
-                navigate('/customer', { replace: true });
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
+            if (session) {
+                try {
+                    const data = await userService.checkStatus();
+                    if (data.isRegistered) {
+                        navigate('/customer', { replace: true });
+                    }
+                } catch (err) {
+                    Sentry.captureException(err, { details: "Error checking user status on WelcomeScreen" });
+                }
             }
         });
-        return () => unsubscribe();
     }, [navigate]);
 
 
@@ -47,13 +50,18 @@ export function WelcomeScreen() {
 
         try {
             setIsLoading(true);
-            const appVerifier = window.recaptchaVerifier;
 
-            window.confirmationResult = await signInWithPhoneNumber(auth, phone, appVerifier);
+            const { error: signInError } = await supabase.auth.signInWithOtp({
+                phone: phone
+            });
+
+            if (signInError) {
+                throw signInError;
+            }
 
             navigate('/welcome/otp', { state: { phone } });
         } catch (err) {
-            Sentry.captureException(err, { details: "Firebase SMS error" });
+            Sentry.captureException(err, { details: "Supabase SMS error" });
             setToast({
                 isOpen: true,
                 message: "Failed to send verification code. Please try again later.",
@@ -128,8 +136,6 @@ export function WelcomeScreen() {
                 type={toast.type}
                 onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
             />
-
-            <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
         </div>
     );
 }

@@ -4,9 +4,6 @@ const cors = require('cors');
 const logger = require('../src/config/logger');
 require('dotenv').config();
 
-require('./config/firebase.js');
-
-
 const servicesRoutes = require('./routes/services.routes');
 const appointmentsRoutes = require('./routes/appointments.routes');
 const barbersRoutes = require('./routes/barbers.routes');
@@ -22,6 +19,7 @@ const PORT = process.env.PORT || 8080;
 const allowedOrigins = [
     'http://localhost:5174',
     'http://localhost:3000',
+    'http://127.0.0.1:5174'
 ];
 
 app.use(cors({

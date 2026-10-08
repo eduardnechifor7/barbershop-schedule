@@ -1,12 +1,12 @@
 const express = require('express');
 const router = express.Router();
-const { verifyTokenRegistered, verifyFirebaseToken, isAdmin, isBarber } = require('../middleware/auth');
+const { verifyTokenRegistered, verifySupabaseToken, isAdmin, isBarber } = require('../middleware/auth');
 const { moderateLimiter, strictLimiter } = require('../middleware/rateLimiters');
 const usersCtrl = require('../controllers/users.controller');
 
 // Public routes
-router.post('/sync', verifyFirebaseToken, moderateLimiter, usersCtrl.syncUser);
-router.get('/check-status', verifyFirebaseToken, usersCtrl.checkUserStatus);
+router.post('/sync', verifySupabaseToken, moderateLimiter, usersCtrl.syncUser);
+router.get('/check-status', verifySupabaseToken, usersCtrl.checkUserStatus);
 
 // Current profile routes (Authenticated users)
 router.get('/by-uid', verifyTokenRegistered, usersCtrl.getUserByUid);

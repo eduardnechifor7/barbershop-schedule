@@ -5,10 +5,9 @@ import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 import { validateFields, email, textOnly } from "../../utils/validation.js";
 import { ArrowLeft, Pencil, Phone, Mail, Shield, User } from "lucide-react";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
-import { ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
-import { storage } from "../../firebase.js";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import { supabase } from "../../supabase.js";
 
 export function PersonalInfoPage() {
     const navigate = useNavigate();
@@ -44,6 +43,11 @@ export function PersonalInfoPage() {
         email: [email]
     }
 
+    const extractStoragePath = (url) => {
+        if (!url || !url.includes("/storage/v1/object/public/Avatars/")) return null;
+        return url.split("/storage/v1/object/public/Avatars/")[1];
+    };
+
     useEffect(() => {
         const controller = new AbortController();
 
@@ -54,6 +58,14 @@ export function PersonalInfoPage() {
                 const userData = await userService.getProfile();
                 setFormData(userData);
                 initialAvatarUrlRef.current = userData?.photo_url || null;
+
+                const pendingAvatarUrl = sessionStorage.getItem("pending_avatar_url");
+
+                if (pendingAvatarUrl && pendingAvatarUrl !== userData.photo_url) {
+                    sessionStorage.removeItem("pending_avatar_url");
+                    await deleteOldAvatar(pendingAvatarUrl);
+                }
+
             } catch (error) {
                 setError("Failed to load your profile. Please try again.");
             } finally {
@@ -76,10 +88,21 @@ export function PersonalInfoPage() {
     }, [passedUser, refreshTrigger]);
 
     const deleteOldAvatar = async (url) => {
-        if (!url || !url.includes("firebase")) return;
+        const storagePath = extractStoragePath(url);
+        if (!storagePath) return;
+
         try {
-            const oldFileRef = ref(storage, url);
-            await deleteObject(oldFileRef);
+            const { error: deleteError } = await supabase.storage
+                .from('Avatars')
+                .remove([storagePath]);
+
+            if (deleteError) {
+                setToast({
+                    isOpen: true,
+                    message: deleteError.message || "Failed to delete old avatar. Please try again.",
+                    type: "error"
+                });
+            }
         } catch (error) {
             setToast({
                 isOpen: true,
@@ -93,14 +116,32 @@ export function PersonalInfoPage() {
         if (!fileToUpload) return;
 
         const previousUploadedUrl = formData.photo_url;
-        const fileName = `${Date.now()}_${fileToUpload.name}`;
-        const storageRef = ref(storage, `avatars/${fileName}`);
+        const fileExt = fileToUpload.name.split(".").pop();
+        const filePath = `${Date.now()}_${Math.random().toString(36).substring(2)}.${fileExt}`;
 
         try {
-            const snapshot = await uploadBytes(storageRef, fileToUpload);
-            const downloadURL = await getDownloadURL(snapshot.ref);
+            const { error: uploadError } = await supabase.storage
+                .from("Avatars")
+                .upload(filePath, fileToUpload, {
+                    cacheControl: "3600",
+                    upsert: false
+                });
 
-            setFormData((prev) => ({ ...prev, photo_url: downloadURL }));
+            if (uploadError) {
+                setToast({
+                    isOpen: true,
+                    message: uploadError.message || "Failed to upload image. Please try again.",
+                    type: "error"
+                });
+            }
+
+            const { data: { publicUrl } } = supabase.storage
+                .from("Avatars")
+                .getPublicUrl(filePath);
+
+            sessionStorage.setItem("pending_avatar_url", publicUrl);
+
+            setFormData((prev) => ({ ...prev, photo_url: publicUrl }));
 
             if (previousUploadedUrl && previousUploadedUrl !== initialAvatarUrlRef.current) {
                 await deleteOldAvatar(previousUploadedUrl);

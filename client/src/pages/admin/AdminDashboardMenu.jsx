@@ -1,12 +1,12 @@
-import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { User, Scissors, Calendar, FileText, ArrowRight, Sparkles } from "lucide-react";
-import { auth } from "../../firebase.js";
 import { userService } from "../../services/userService.js";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
+import { supabase } from "../../supabase.js";
+
 
 export function AdminDashboardMenu() {
     const navigate = useNavigate();
@@ -22,8 +22,8 @@ export function AdminDashboardMenu() {
 
 
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-            if (firebaseUser) {
+        const {data: { subscription }} = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
                 try {
                     setError(null);
                     const userData = await userService.getProfile();
@@ -38,12 +38,14 @@ export function AdminDashboardMenu() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+        }
     }, [refreshTrigger]);
 
     const handleLogout = async () => {
         try {
-            await signOut(auth);
+            await supabase.auth.signOut();
             navigate("/");
         } catch (error) {
             setToast({
