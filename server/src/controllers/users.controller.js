@@ -1,19 +1,34 @@
 const db = require('../config/db');
-const admin = require('firebase-admin');
 const logger = require('../config/logger');
+const { createClient } = require('@supabase/supabase-js');
+
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey,
+    {
+        auth: {
+            autoRefreshToken: true,
+            persistSession: true
+        }
+    }
+);
 
 const syncUser = async (req, res) => {
     const { first_name, last_name, phone_number, email } = req.body;
-    const firebase_uid = req.user.uid;
+    const supabase_uid = req.user.uid;
 
     try {
         const user = await db.query(
-            `INSERT INTO users (firebase_uid, first_name, last_name, phone_number, email)
+            `INSERT INTO users (supabase_uid, first_name, last_name, phone_number, email)
              VALUES ($1, $2, $3, $4, $5)
-             ON CONFLICT (firebase_uid) 
-             DO UPDATE SET last_name = EXCLUDED.last_name
+             ON CONFLICT (supabase_uid)
+             DO UPDATE SET
+                    first_name = EXCLUDED.first_name,
+                    last_name = EXCLUDED.last_name,
+                    phone_number = EXCLUDED.phone_number,
+                    email = EXCLUDED.email
              RETURNING *`,
-            [firebase_uid, first_name, last_name, phone_number, email]
+            [supabase_uid, first_name, last_name, phone_number, email]
         );
         return res.status(201).json(user.rows[0]);
     } catch (err) {
@@ -38,7 +53,7 @@ const listUsers = async (req, res) => {
 const checkUserStatus = async (req, res) => {
     try {
         const result = await db.query(
-            "SELECT id, first_name, last_name, role FROM users WHERE firebase_uid = $1",
+            "SELECT id, first_name, last_name, role FROM users WHERE supabase_uid = $1",
             [req.user.uid]
         );
 
@@ -54,12 +69,12 @@ const checkUserStatus = async (req, res) => {
 };
 
 const getUserByUid = async (req, res) => {
-    const firebase_uid = req.user.uid;
+    const supabase_uid = req.user.uid;
 
     try {
         const result = await db.query(
-            `SELECT * FROM users WHERE firebase_uid = $1`,
-            [firebase_uid]
+            `SELECT * FROM users WHERE supabase_uid = $1`,
+            [supabase_uid]
         );
 
         const user = result.rows[0];
@@ -105,16 +120,12 @@ const editUserById = async (req, res) => {
 
     try {
         const userResult = await db.query(
-            `SELECT firebase_uid, phone_number FROM users WHERE id = $1`,
+            `SELECT supabase_uid, phone_number FROM users WHERE id = $1`,
             [id]
         );
         const user = userResult.rows[0];
 
         if (!user) return res.status(404).json({ error: "User not found" });
-
-        if (phone_number && phone_number !== user.phone_number) {
-            await admin.auth().updateUser(user.firebase_uid, { phoneNumber: phone_number });
-        }
 
         const updateUser = await db.query(
             `UPDATE users
@@ -152,49 +163,34 @@ const editPhoneNumber = async (req, res) => {
     }
 
     try {
-        const decodedToken = await admin.auth().verifyIdToken(verificationToken);
-        const verifiedPhoneNumber = decodedToken.phone_number;
-        const tempUid = decodedToken.uid;
+        const userId = req.user?.id;
+        const newPhoneNumber = req.body.phone_number || req.user?.phone;
 
-        if (!verifiedPhoneNumber) {
-            return res.status(400).json({ error: "Provided token does not contain a verified phone number" });
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized session" });
+        }
+
+        if (!newPhoneNumber) {
+            return res.status(400).json({ error: "Phone number is missing" });
         }
 
         const phoneConflict = await db.query(
             "SELECT id FROM users WHERE phone_number = $1 AND id <> $2",
-            [verifiedPhoneNumber, userId]
+            [newPhoneNumber, userId]
         );
 
         if (phoneConflict.rows.length > 0) {
-            if (tempUid) {
-                await admin.auth().deleteUser(tempUid).catch(() => null);
-            }
             return res.status(409).json({ error: "This phone number is already linked to another account." });
         }
 
-        const userRes = await db.query(
-            "SELECT firebase_uid, phone_number FROM users WHERE id = $1",
-            [userId]
-        );
-        const originalUser = userRes.rows[0];
-
-        if (!originalUser) {
-            return res.status(404).json({ error: "User not found in database" });
-        }
-
-        if (tempUid && tempUid !== originalUser.firebase_uid) {
-            await admin.auth().deleteUser(tempUid).catch(() => null);
-        }
-
-        await admin.auth().updateUser(originalUser.firebase_uid, {
-            phoneNumber: verifiedPhoneNumber
-        });
-
-
         const updatedUser = await db.query(
             "UPDATE users SET phone_number = $1 WHERE id = $2 RETURNING *",
-            [verifiedPhoneNumber, userId]
+            [newPhoneNumber, userId]
         );
+
+        if (updatedUser.rows.length === 0) {
+            return res.status(404).json({ error: "User not found in database" });
+        }
 
         return res.status(200).json(updatedUser.rows[0]);
     } catch (error) {
@@ -205,7 +201,7 @@ const editPhoneNumber = async (req, res) => {
 
 const updateMe = async (req, res) => {
     const { first_name, last_name, phone_number, email, photo_url } = req.body;
-    const firebase_uid = req.user.uid;
+    const supabase_uid = req.user.uid;
 
     try {
         const updateUser = await db.query(
@@ -215,9 +211,9 @@ const updateMe = async (req, res) => {
                  phone_number = COALESCE($3, phone_number),
                  email = COALESCE($4, email),
                  photo_url = COALESCE($5, photo_url)
-             WHERE firebase_uid = $6
+             WHERE supabase_uid = $6
              RETURNING *`,
-            [first_name, last_name, phone_number, email, photo_url, firebase_uid]
+            [first_name, last_name, phone_number, email, photo_url, supabase_uid]
         );
 
         if (updateUser.rows.length === 0) {
@@ -306,13 +302,27 @@ const getClients = async (req, res) => {
 
 const deleteMyAccount = async (req, res) => {
     const userId = req.user?.id;
-    const firebaseUid = req.user?.uid;
+    const supabaseUid = req.user?.uid;
 
-    if (!userId || !firebaseUid) {
-        return res.status(400).json({ error: "Missing required data" });
+    if (!supabaseUid) {
+        return res.status(401).json({ error: "Unauthorized session" });
     }
 
     try {
+        const userRes = await db.query("SELECT photo_url FROM users WHERE id = $1", [userId]);
+        const photoUrl = userRes.rows[0]?.photo_url;
+
+        if (photoUrl && photoUrl.includes("/storage/v1/object/public/Avatars/")) {
+            const filePath = photoUrl.split("/storage/v1/object/public/Avatars/")[1];
+            await supabase.storage.from("Avatars").remove([filePath]);
+        }
+
+        const { error: deleteAuthError } = await supabase.auth.admin.deleteUser(supabaseUid);
+
+        if (deleteAuthError) {
+            throw deleteAuthError;
+        }
+
         const deleteUserRes = await db.query(
             `DELETE FROM users WHERE id = $1 RETURNING *`, [userId]
         );
@@ -320,8 +330,6 @@ const deleteMyAccount = async (req, res) => {
         if (deleteUserRes.rowCount === 0) {
             return res.status(404).json({ error: "User was not found in database." });
         }
-
-        await admin.auth().deleteUser(firebaseUid);
 
         res.status(200).json(deleteUserRes.rows[0]);
     } catch (error) {

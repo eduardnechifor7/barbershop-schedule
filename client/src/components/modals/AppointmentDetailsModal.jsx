@@ -13,7 +13,8 @@ import {
 export function AppointmentDetailsModal({ isOpen, appointment, onClose }) {
     if (!isOpen || !appointment) return null;
 
-    const totalPrice = appointment.services?.reduce((sum, service) => sum + (Number(service.price_at_booking) || 0), 0) || 0;
+    const totalPriceValue = appointment.services?.reduce((sum, service) => sum + (Number(service.price_at_booking) || 0), 0) || 0;
+    const totalPrice = Number.isInteger(totalPriceValue) ? totalPriceValue : totalPriceValue.toFixed(2);
 
     const formattedDate = new Date(appointment.appointment_date).toLocaleDateString('en-US', {
         weekday: 'short',

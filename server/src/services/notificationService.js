@@ -1,13 +1,19 @@
 const path = require('path');
 const fs = require('fs');
-const { Resend } = require('resend');
 const db = require('../config/db');
 const twilio = require('twilio');
 const logger = require('../config/logger');
+const nodemailer = require('nodemailer');
 
 require('dotenv').config();
 
-const resendClient = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    }
+})
 const twilioClient = twilio(
     process.env.TWILIO_ACCOUNT_SID,
     process.env.TWILIO_AUTH_TOKEN
@@ -47,10 +53,10 @@ const sendExternalNotifications = async (userId, title, message) => {
                 .replace(/\{\{title}}/g, title)
                 .replace(/\{\{message}}/g, message);
 
-            await resendClient.emails.send({
-                from: 'Cut Hut <onboarding@resend.dev>',
+            await transporter.sendMail({
+                from: '"CutHut Barbershop" <cuthut.barbershop@gmail.com>',
                 to: user.email,
-                subject: title,
+                subject: 'Appointment Confirmation',
                 html: htmlContent
             });
         } catch (error) {

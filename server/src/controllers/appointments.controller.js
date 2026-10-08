@@ -1,4 +1,4 @@
-const { createInAppNotification, sendExternalNotifications } = require("./notificationService");
+const { createInAppNotification, sendExternalNotifications } = require("../services/notificationService");
 const { appointmentValidation, executeCreateAppointment } = require('../services/appointmentValidation');
 const db = require('../config/db');
 const logger = require('../config/logger');
