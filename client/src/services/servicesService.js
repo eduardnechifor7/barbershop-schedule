@@ -17,7 +17,7 @@ const getAuthHeaders = async (contentType = false) => {
 export const servicesService = {
     async getAll() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/services/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/services/list`, {
             method: "GET",
             headers
         });
@@ -27,7 +27,7 @@ export const servicesService = {
 
     async edit(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/services/edit/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/services/edit/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -38,7 +38,7 @@ export const servicesService = {
 
     async addService(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/services/create", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/services/create`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -49,7 +49,7 @@ export const servicesService = {
 
     async delete(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/services/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/services/delete/${id}`, {
             method: "DELETE",
             headers
         });

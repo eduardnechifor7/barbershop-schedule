@@ -17,14 +17,14 @@ const getAuthHeaders = async (contentType = false) => {
 export const userService = {
     async getAll() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/users/list", { headers });
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/list`, { headers });
         if (!response.ok) throw new Error("Failed to fetch users");
         return response.json();
     },
 
     async addUser(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/users/sync", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/sync`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -35,7 +35,7 @@ export const userService = {
 
     async getProfile() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/users/by-uid", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/by-uid`, {
             method: "GET",
             headers
         });
@@ -45,7 +45,7 @@ export const userService = {
 
     async updateNotifcationSettings(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/users/update-notification", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/update-notification`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -56,7 +56,7 @@ export const userService = {
 
     async getClients() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/users/clients", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/clients`, {
             method: "GET",
             headers
         });
@@ -66,7 +66,7 @@ export const userService = {
 
     async edit(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/users/edit/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/edit/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -77,7 +77,7 @@ export const userService = {
 
     async editPhoneNumber(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/users/edit-phone", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/edit-phone`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -88,7 +88,7 @@ export const userService = {
 
     async delete(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/users/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/delete/${id}`, {
             method: "DELETE",
             headers
         });
@@ -98,7 +98,7 @@ export const userService = {
 
     async deleteMyAccount() {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/users/delete-account`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/delete-account`, {
             method: "DELETE",
             headers
         });
@@ -108,7 +108,7 @@ export const userService = {
 
     async checkStatus() {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/users/check-status`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/check-status`, {
             method: "GET",
             headers
         });
@@ -118,7 +118,7 @@ export const userService = {
 
     async updateMe(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/users/me", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/users/me`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)

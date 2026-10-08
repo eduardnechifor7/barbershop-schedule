@@ -17,7 +17,7 @@ const getAuthHeaders = async (contentType = false) => {
 export const appointmentService = {
     async getAll() {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/appointments/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/list`, {
             method: "GET",
             headers
         });
@@ -27,7 +27,7 @@ export const appointmentService = {
 
     async getByUser() {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/appointments/me`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/me`, {
             method: "GET",
             headers
         });
@@ -37,7 +37,7 @@ export const appointmentService = {
 
     async getAsBarber() {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/appointments/list-as-barber`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/list-as-barber`, {
             method: "GET",
             headers
         });
@@ -47,7 +47,7 @@ export const appointmentService = {
 
     async editAsBarber(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/edit-as-barber/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/edit-as-barber/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -58,7 +58,7 @@ export const appointmentService = {
 
     async createAsBarber(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/create-as-barber`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/create-as-barber`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -69,7 +69,7 @@ export const appointmentService = {
 
     async getOccupiedTimes(barberId, date) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/appointments/${barberId}/existing-bookings?date=${date}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/${barberId}/existing-bookings?date=${date}`, {
             method: "GET",
             headers
         });
@@ -79,7 +79,7 @@ export const appointmentService = {
 
     async edit(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/edit/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/edit/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -90,7 +90,7 @@ export const appointmentService = {
 
     async addAppointment(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/addAppointment`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/addAppointment`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -101,7 +101,7 @@ export const appointmentService = {
 
     async addAppointmentUser(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/me/addAppointment`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/me/addAppointment`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -112,7 +112,7 @@ export const appointmentService = {
 
     async delete(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/appointments/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/delete/${id}`, {
             method: "DELETE",
             headers
         });
@@ -122,7 +122,7 @@ export const appointmentService = {
 
     async deleteAsUser(id) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/appointments/me/cancel/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/appointments/me/cancel/${id}`, {
             method: "PATCH",
             headers
         });

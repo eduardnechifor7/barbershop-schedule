@@ -8,7 +8,7 @@ import App from './App.jsx'
 
 Sentry.init({
     dsn: import.meta.env.VITE_SENTRY_DSN,
-    tunnel: "http://localhost:8080/api/system/sentry-tunnel"
+    tunnel: `${import.meta.env.VITE_API_URL}/api/system/sentry-tunnel`
 });
 
 function ErrorFallback({error, resetError}) {

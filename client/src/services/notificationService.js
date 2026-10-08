@@ -17,7 +17,7 @@ const getAuthHeaders = async (contentType = false) => {
 export const notificationService = {
     async getUserNotifications() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/notifications/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/list`, {
             method: "GET",
             headers
         });
@@ -27,7 +27,7 @@ export const notificationService = {
 
     async markAsRead(id) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/notifications/mark-as-read/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/mark-as-read/${id}`, {
             method: "PUT",
             headers
         });
@@ -37,7 +37,7 @@ export const notificationService = {
 
     async markAllAsRead() {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/notifications/mark-all-as-read`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/mark-all-as-read`, {
             method: "PUT",
             headers
         });
@@ -47,7 +47,7 @@ export const notificationService = {
 
     async deleteNotification(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/notifications/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/notifications/delete/${id}`, {
             method: "DELETE",
             headers
         });

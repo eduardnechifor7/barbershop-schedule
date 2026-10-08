@@ -17,7 +17,7 @@ const getAuthHeaders = async (contentType = false) => {
 export const barberService = {
     async getAll() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/barbers/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/barbers/list`, {
             method: "GET",
             headers
         });
@@ -27,7 +27,7 @@ export const barberService = {
 
     async getMyProfile() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/barbers/me", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/barbers/me`, {
             method: "GET",
             headers
         });
@@ -37,7 +37,7 @@ export const barberService = {
 
     async edit(id, formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/barbers/edit/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/barbers/edit/${id}`, {
             method: "PATCH",
             headers,
             body: JSON.stringify(formData)
@@ -48,7 +48,7 @@ export const barberService = {
 
     async addBarber(formData) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch(`http://localhost:8080/api/barbers/addBarber`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/barbers/addBarber`, {
             method: "POST",
             headers,
             body: JSON.stringify(formData)
@@ -60,7 +60,7 @@ export const barberService = {
 
     async delete(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/barbers/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/barbers/delete/${id}`, {
             method: "DELETE",
             headers
         });

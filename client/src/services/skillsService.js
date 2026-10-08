@@ -17,7 +17,7 @@ const getAuthHeaders = async (contentType = false) => {
 export const skillsService = {
     async getAll() {
         const headers = await getAuthHeaders();
-        const response = await fetch("http://localhost:8080/api/skills/list", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/list`, {
             method: "GET",
             headers
         });
@@ -27,7 +27,7 @@ export const skillsService = {
 
     async addSkill(name) {
         const headers = await getAuthHeaders(true);
-        const response = await fetch("http://localhost:8080/api/skills/add", {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/add`, {
             method: "POST",
             headers,
             body: JSON.stringify({ name })
@@ -38,7 +38,7 @@ export const skillsService = {
 
     async deleteSkill(id) {
         const headers = await getAuthHeaders();
-        const response = await fetch(`http://localhost:8080/api/skills/delete/${id}`, {
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/skills/delete/${id}`, {
             method: "DELETE",
             headers
         });
