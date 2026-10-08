@@ -31,10 +31,6 @@ The project is currently an MVP developed as a student portfolio project and wil
 
 A short walkthrough of the main customer flow: account creation, appointment booking, appointment cancellation, and logout.
 
-## Demo
-
-A short walkthrough of account creation, appointment booking, cancellation, and logout.
-
 [Watch the demo video](https://www.youtube.com/watch?v=i-TcUNRzEJw)
 
 [Download the demo video](docs/demo/cuthut-demo.mp4)
