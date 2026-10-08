@@ -14,7 +14,6 @@ import { userService } from "../../services/userService.js";
 import { notificationService } from "../../services/notificationService.js";
 import { useNavigate } from "react-router-dom";
 import { LoadingSpinner } from "../../components/common/LoadingSpinner.jsx";
-import { auth } from "../../firebase.js";
 import { BottomNav } from "../../components/common/BottomNav.jsx";
 import { ConfirmModal } from "../../components/modals/ConfirmModal.jsx";
 import { AppointmentDetailsModal } from "../../components/modals/AppointmentDetailsModal.jsx";
@@ -22,6 +21,8 @@ import { NotificationsModal } from "../../components/modals/NotificationsModal.j
 import { STATUS_ICON_STYLES } from "../../constants/selectStyles.js";
 import { ErrorScreen } from "../../components/common/ErrorScreen.jsx";
 import { Toast } from "../../components/common/Toast.jsx";
+import * as Sentry from "@sentry/react";
+import { supabase } from "../../supabase.js"
 
 export function CustomerHome() {
     const [loading, setLoading] = useState(true);
@@ -41,9 +42,9 @@ export function CustomerHome() {
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchDashboardData = auth.onAuthStateChanged(async (firebaseUser) => {
-            if (!firebaseUser) return;
+        let isMounted = true;
 
+        const fetchDashboardData = async () => {
             setLoading(true);
             setError(null);
             try {
@@ -52,16 +53,28 @@ export function CustomerHome() {
                     userService.getProfile(),
                     notificationService.getUserNotifications()
                 ]);
-                setAppointments(appointmentsData);
-                setUser(userData);
-                setNotifications(notificationsData);
-            } catch (error) {
-                setError("Error fetching dashboard data");
+
+                if (isMounted) {
+                    setAppointments(appointmentsData);
+                    setUser(userData);
+                    setNotifications(notificationsData);
+                }
+            } catch (err) {
+                if (isMounted) {
+                    setError("Error fetching dashboard data");
+                }
             } finally {
-                setLoading(false);
+                if (isMounted) {
+                    setLoading(false);
+                }
             }
-        });
-        return () => fetchDashboardData();
+        };
+
+        void fetchDashboardData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [refreshTrigger]);
 
     const { lastAppointment, completedAppointments } = useMemo(() => {

@@ -1,10 +1,10 @@
 import { AuthPhoneInput } from "../../components/common/AuthPhoneInput.jsx";
-import { useState } from "react";
-import { auth } from "../../firebase.js";
+import { useState, useEffect } from "react";
 import { validateFields, required, email as validateEmail, phone as validatePhone, textOnly } from "../../utils/validation.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Toast } from "../../components/common/Toast.jsx";
-import {userService} from "../../services/userService.js";
+import { userService } from "../../services/userService.js";
+import { supabase } from "../../supabase.js";
 
 export function ContinueRegister() {
     const navigate = useNavigate();
@@ -24,7 +24,15 @@ export function ContinueRegister() {
         type: "error"
     });
 
-    const phone = location.state?.phone || auth.currentUser?.phoneNumber || "";
+    useEffect(() => {
+        if (!form.phone) {
+            supabase.auth.getUser().then(({ data: { user } }) => {
+                if (user?.phone) {
+                    setForm(prev => ({ ...prev, phone: user.phone }));
+                }
+            });
+        }
+    }, [form.phone]);
 
     const updateField = (field, value) => {
         setForm((prev) => ({ ...prev, [field]: value }));
@@ -43,22 +51,25 @@ export function ContinueRegister() {
             return;
         }
 
-        const currentUser = auth.currentUser;
-        if (!currentUser) {
-            setToast({
-                isOpen: true,
-                message: "Session expired. Please restart login.",
-                type: "error"
-            });
-            setTimeout(() => navigate("/"), 1500);
-            return;
-        }
-
         try {
+            setIsLoading(true);
+
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+            if (userError || !user) {
+                setToast({
+                    isOpen: true,
+                    message: "Session expired. Please restart login.",
+                    type: "error"
+                });
+                setTimeout(() => navigate("/"), 1500);
+                return;
+            }
+
             await userService.addUser({
                 first_name: form.firstName,
                 last_name: form.lastName,
-                phone_number: currentUser.phoneNumber || phone,
+                phone_number: user.phoneNumber || form.phone,
                 email: form.email
             });
 
@@ -168,7 +179,7 @@ export function ContinueRegister() {
                 onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
             />
 
-            <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
+            <div id="recaptcha-container"></div>
         </div>
     );
 }

@@ -1,10 +1,10 @@
 import OTPInput from "react-otp-input";
+import { supabase } from "../../supabase.js";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { userService } from "../../services/userService.js";
-import {signInWithPhoneNumber, signOut} from "firebase/auth";
-import { auth } from "../../firebase.js";
 import { Toast } from "../../components/common/Toast.jsx";
+import * as Sentry from "@sentry/react";
 
 export function OTPScreen() {
     const [otp, setOtp] = useState("");
@@ -20,14 +20,33 @@ export function OTPScreen() {
     const location = useLocation();
 
     const phone = location.state?.phone || "";
-    const userId = location.state?.userId || null;
     const phoneChange = location.state?.phoneChange || false;
 
     useEffect(() => {
-        if (!window.confirmationResult && !phoneChange) {
+        if (!phone && !phoneChange) {
             navigate("/", { replace: true });
         }
-    }, [navigate, phoneChange]);
+    }, [navigate, phone, phoneChange]);
+
+    const handleResend = async () => {
+        if (!phone) return;
+        try {
+            const { error: resendErr } = await supabase.auth.signInWithOtp({ phone });
+            if (resendErr) throw resendErr;
+            setToast({
+                isOpen: true,
+                message: "Verification code sent again.",
+                type: "success"
+            });
+        } catch (err) {
+            setToast({
+                isOpen: true,
+                message: "Failed to resend verification code. Please wait a moment.",
+                type: "error"
+            });
+        }
+    };
+
 
     const handleVerify = async () => {
         if (otp.length < 6) {
@@ -43,11 +62,19 @@ export function OTPScreen() {
             setIsLoading(true);
             setError("");
 
-            const result = await window.confirmationResult.confirm(otp);
-            const firebaseUser = result.user;
+            const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
+                phone,
+                token: otp,
+                type: "sms"
+            });
+
+            if (verifyError) {
+                throw verifyError;
+            }
 
             if (phoneChange) {
-                if (!auth.currentUser) {
+                const session = authData.session;
+                if (!session) {
                     setToast({
                         isOpen: true,
                         message: "No active session found. Please log in again.",
@@ -56,13 +83,19 @@ export function OTPScreen() {
                     return;
                 }
 
-                const verificationToken = await firebaseUser.getIdToken();
-
-                await userService.editPhoneNumber({
-                    verificationToken
+                const { data, error } = await supabase.auth.verifyOtp({
+                    phone,
+                    token: otp,
+                    type: "phone_change"
                 });
 
-                await signOut(auth);
+                if (error) throw error;
+
+                await userService.editPhoneNumber({
+                    verificationToken: session.access_token
+                });
+
+                await supabase.auth.signOut();
                 navigate("/", { replace: true });
                 return;
             }
@@ -139,9 +172,13 @@ export function OTPScreen() {
 
                 <div className="flex flex-row items-center justify-center gap-1">
                     <span className="text-gray-pc text-sm">Didn't get a code?</span>
-                    <span className="text-white text-sm font-semibold cursor-pointer hover:underline">
+                    <button
+                        type="button"
+                        onClick={handleResend}
+                        className="text-white text-sm font-semibold cursor-pointer hover:underline bg-transparent border-none p-0"
+                    >
                         Resend
-                    </span>
+                    </button>
                 </div>
             </div>
 

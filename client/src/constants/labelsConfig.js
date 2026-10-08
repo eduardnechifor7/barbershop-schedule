@@ -32,7 +32,7 @@ export const VIEW_BARBERS_LABELS = {
     "Barber Name": ["first_name", "last_name"],
     "Phone Number": "phone_number",
     "Photo URL": "photo_url",
-    "Skills": "skills"
+    "Skills": "skills_ids"
 }
 
 export const EDIT_ADD_SERVICES_LABELS = {

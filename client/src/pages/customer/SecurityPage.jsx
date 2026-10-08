@@ -5,17 +5,10 @@ import {BottomNav} from "../../components/common/BottomNav.jsx";
 import {LoadingSpinner} from "../../components/common/LoadingSpinner.jsx";
 import {userService} from "../../services/userService.js";
 import {PhoneChangeModal} from "../../components/modals/PhoneChangeModal.jsx";
-import {auth, firebaseConfig} from "../../firebase.js";
-import {getAuth, RecaptchaVerifier, signInWithPhoneNumber, signOut} from "firebase/auth";
-import {getApps, initializeApp} from "firebase/app";
 import {ConfirmModal} from "../../components/modals/ConfirmModal.jsx";
 import {Toast} from "../../components/common/Toast.jsx";
 import {ErrorScreen} from "../../components/common/ErrorScreen.jsx";
-
-const tempApp = getApps().find(app => app.name === "PhoneVerificationApp")
-    || initializeApp(firebaseConfig, "PhoneVerificationApp");
-
-const tempAuth = getAuth(tempApp);
+import {supabase} from "../../supabase.js";
 
 export function SecurityPage() {
     const navigate = useNavigate();
@@ -40,21 +33,6 @@ export function SecurityPage() {
 
     const handleSubmitPhoneChange = async (newPhoneNumber) => {
         try {
-            if (window.recaptchaVerifier) {
-                window.recaptchaVerifier.clear();
-                window.recaptchaVerifier = null;
-            }
-
-            window.recaptchaVerifier = new RecaptchaVerifier(tempAuth, "recaptcha-container", {
-                size: "invisible"
-            });
-
-            window.confirmationResult = await signInWithPhoneNumber(
-                tempAuth,
-                newPhoneNumber,
-                window.recaptchaVerifier
-            );
-
             navigate("/welcome/otp", {
                 state: {
                     userId: user.id,
@@ -76,7 +54,7 @@ export function SecurityPage() {
             setIsDeleting(true);
             await userService.deleteMyAccount();
             setIsDeleting(false);
-            await signOut(auth);
+            await supabase.auth.signOut();
             navigate("/", { replace: true });
         } catch (error) {
             setToast({
@@ -234,7 +212,7 @@ export function SecurityPage() {
                 onClose={() => setToast(prev => ({ ...prev, isOpen: false }))}
             />
 
-            <div id="recaptcha-container" className="fixed bottom-0 right-0 pointer-events-none opacity-0"></div>
+            <div id="recaptcha-container"></div>
         </div>
     );
 }

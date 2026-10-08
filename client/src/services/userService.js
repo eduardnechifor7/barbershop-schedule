@@ -1,10 +1,13 @@
-import { auth } from "../firebase.js";
+import { supabase } from "../supabase.js";
 
 const getAuthHeaders = async (contentType = false) => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) throw new Error("Session expired. Please log in again.");
+    const { data: { session }, error } = await supabase.auth.getSession();
 
-    const token = await currentUser.getIdToken();
+    if (error || !session) {
+        throw new Error("Session expired. Please log in again.");
+    }
+
+    const token = session.access_token;
     const headers = { Authorization: `Bearer ${token}` };
 
     if (contentType) headers["Content-Type"] = "application/json";

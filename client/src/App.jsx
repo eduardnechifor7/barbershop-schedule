@@ -10,7 +10,6 @@ import { useEffect, useState } from "react";
 import { LoadingSpinner } from "./components/common/LoadingSpinner.jsx";
 import { AdminRoute } from "./components/routing/AdminRoute.jsx"
 import { userService } from "./services/userService.js";
-import { auth } from "./firebase.js";
 import { ManageUsers } from "./pages/admin/ManageUsers.jsx";
 import { ManageBarbers } from "./pages/admin/ManageBarbers.jsx";
 import { ManageAppointments } from "./pages/admin/ManageAppointments.jsx";
@@ -21,14 +20,16 @@ import { CustomerProfile } from "./pages/customer/CustomerProfile.jsx";
 import { PersonalInfoPage } from "./pages/customer/PersonalInfoPage.jsx";
 import { ManageApptBarber } from "./pages/admin/ManageApptBarber.jsx";
 import { SecurityPage } from "./pages/customer/SecurityPage.jsx";
+import * as Sentry from "@sentry/react";
+import { supabase } from "./supabase.js";
 
 function App() {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (firebaseUser) => {
-            if (firebaseUser) {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+            if (session?.user) {
                 try {
                     const { isRegistered, user } = await userService.checkStatus();
 
@@ -47,7 +48,9 @@ function App() {
             setLoading(false);
         });
 
-        return () => unsubscribe();
+        return () => {
+            subscription.unsubscribe();
+        };
     }, []);
 
     if (loading) {

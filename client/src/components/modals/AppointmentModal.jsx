@@ -54,7 +54,7 @@ export function AppointmentModal({
     const [toast, setToast] = useState({ isOpen: false, message: "", type: "error" });
 
     useEffect(() => {
-        if (!isOpen) return null;
+        if (!isOpen) return;
         if (isEdit && initialData) {
             setFormData({
                 service_ids: (initialData.services || []).map((s) => s.service_id),
