@@ -61,7 +61,7 @@ export function CustomerExplore() {
     if (loading) return <LoadingSpinner />;
 
     return (
-        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col min-h-dvh bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
             <div className="bg-[#121212] px-6 pt-6 pb-4 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
@@ -99,7 +99,7 @@ export function CustomerExplore() {
             </div>
 
             <div
-                className="flex-1 min-h-0 overflow-y-auto px-5 py-5 pb-24 space-y-4"
+                className="flex-1 min-h-0 overflow-y-auto px-5 py-5 pb-32 space-y-4"
                 style={{ scrollbarWidth: "none" }}
             >
                 {activeTab === "masters" && (

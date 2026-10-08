@@ -124,7 +124,7 @@ export function CustomerProfile() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col min-h-dvh bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
 
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <p className="text-gray-400 text-xs font-semibold uppercase tracking-widest">
@@ -139,7 +139,7 @@ export function CustomerProfile() {
             </div>
 
             <div
-                className="flex-1 min-h-0 overflow-y-auto px-5 py-5 pb-24 space-y-6"
+                className="flex-1 min-h-0 overflow-y-auto px-5 py-5 pb-32 space-y-6"
                 style={{ scrollbarWidth: "none" }}
             >
                 <div className="bg-[#1C1B1B] rounded-3xl p-5 border border-white/5 flex items-center gap-4">

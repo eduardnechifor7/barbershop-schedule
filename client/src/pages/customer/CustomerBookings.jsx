@@ -218,7 +218,7 @@ export function CustomerBookings() {
 
     if (success) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-[#121212] p-4 text-center">
+            <div className="flex flex-col items-center justify-center min-h-dvh bg-[#121212] p-4 text-center">
                 <div className="relative flex items-center justify-center mb-4">
                     <div className="w-12 h-12 rounded-full border-2 border-brand-gold/20 bg-brand-gold/10 flex items-center justify-center" />
                     <Check size={20} className="absolute text-brand-gold" />
@@ -231,7 +231,7 @@ export function CustomerBookings() {
     }
 
     return (
-        <div className="animate-fade-in flex flex-col h-screen bg-[#121212] overflow-hidden">
+        <div className="animate-fade-in flex flex-col h-dvh bg-[#121212] overflow-hidden">
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center gap-3 mb-1">
                     <div>
@@ -247,7 +247,7 @@ export function CustomerBookings() {
             </div>
 
             <div
-                className="bg-[#121212] px-5 py-10 pb-24 space-y-4 overflow-y-auto flex-1 min-h-0"
+                className="bg-[#121212] px-5 py-10 pb-32 space-y-4 overflow-y-auto flex-1 min-h-0"
                 style={{ scrollbarWidth: "none" }}
             >
                 <div className="bg-[#1C1B1B] rounded-2xl p-4 border border-white/5 space-y-4">

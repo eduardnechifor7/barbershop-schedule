@@ -182,7 +182,7 @@ export function CustomerHome() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col min-h-dvh bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
             <div className="bg-[#121212] px-6 pt-6 pb-3 shrink-0 border-b border-white/5">
                 <div className="flex items-center justify-between">
                     <div>

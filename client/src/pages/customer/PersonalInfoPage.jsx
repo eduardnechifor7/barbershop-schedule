@@ -227,7 +227,7 @@ export function PersonalInfoPage() {
     }
 
     return (
-        <div className="flex flex-col h-screen bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
+        <div className="flex flex-col min-h-dvh bg-[#121212] text-[#F2EFE9] overflow-hidden select-none">
             <input
                 type="file"
                 ref={fileInputRef}
@@ -257,7 +257,7 @@ export function PersonalInfoPage() {
             </div>
 
             <div
-                className="flex-1 min-h-0 overflow-y-auto px-5 py-6 pb-24 space-y-6"
+                className="flex-1 min-h-0 overflow-y-auto px-5 py-6 pb-32 space-y-6"
                 style={{ scrollbarWidth: "none" }}
             >
                 <div className="flex flex-col items-center justify-center">
