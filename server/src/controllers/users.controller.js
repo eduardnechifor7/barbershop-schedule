@@ -151,7 +151,7 @@ const editUserById = async (req, res) => {
 };
 
 const editPhoneNumber = async (req, res) => {
-    const { verificationToken } = req.body;
+    const { verificationToken, phone_number } = req.body;
     const userId = req.user?.id;
 
     if (!verificationToken) {
@@ -162,27 +162,12 @@ const editPhoneNumber = async (req, res) => {
         return res.status(401).json({ error: "Unauthorized session" });
     }
 
+    const newPhoneNumber = phone_number || req.user?.phone;
+    if (!newPhoneNumber) {
+        return res.status(400).json({ error: "Phone number is missing" });
+    }
+
     try {
-        const userId = req.user?.id;
-        const newPhoneNumber = req.body.phone_number || req.user?.phone;
-
-        if (!userId) {
-            return res.status(401).json({ error: "Unauthorized session" });
-        }
-
-        if (!newPhoneNumber) {
-            return res.status(400).json({ error: "Phone number is missing" });
-        }
-
-        const phoneConflict = await db.query(
-            "SELECT id FROM users WHERE phone_number = $1 AND id <> $2",
-            [newPhoneNumber, userId]
-        );
-
-        if (phoneConflict.rows.length > 0) {
-            return res.status(409).json({ error: "This phone number is already linked to another account." });
-        }
-
         const updatedUser = await db.query(
             "UPDATE users SET phone_number = $1 WHERE id = $2 RETURNING *",
             [newPhoneNumber, userId]

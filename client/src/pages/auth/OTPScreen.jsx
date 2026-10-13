@@ -31,7 +31,7 @@ export function OTPScreen() {
     const handleResend = async () => {
         if (!phone) return;
         try {
-            const { error: resendErr } = await supabase.auth.signInWithOtp({ phone });
+            const { error: resendErr } = phoneChange ? await supabase.auth.updateUser({ phone }) : await supabase.auth.signInWithOtp({ phone });
             if (resendErr) throw resendErr;
             setToast({
                 isOpen: true,
@@ -62,18 +62,18 @@ export function OTPScreen() {
             setIsLoading(true);
             setError("");
 
-            const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-                phone,
-                token: otp,
-                type: "sms"
-            });
-
-            if (verifyError) {
-                throw verifyError;
-            }
-
             if (phoneChange) {
-                const session = authData.session;
+                const { data, error: changeError } = await supabase.auth.verifyOtp({
+                    phone: phone,
+                    token: otp,
+                    type: "phone_change"
+                });
+
+                if (changeError) throw changeError;
+
+                const { data: sessionData } = await supabase.auth.getSession();
+                const session = sessionData?.session;
+
                 if (!session) {
                     setToast({
                         isOpen: true,
@@ -83,21 +83,24 @@ export function OTPScreen() {
                     return;
                 }
 
-                const { data, error } = await supabase.auth.verifyOtp({
-                    phone,
-                    token: otp,
-                    type: "phone_change"
-                });
-
-                if (error) throw error;
-
                 await userService.editPhoneNumber({
+                    phone: phone,
                     verificationToken: session.access_token
                 });
 
                 await supabase.auth.signOut();
                 navigate("/", { replace: true });
                 return;
+            }
+
+            const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
+                phone,
+                token: otp,
+                type: "sms"
+            });
+
+            if (verifyError) {
+                throw verifyError;
             }
 
             try {

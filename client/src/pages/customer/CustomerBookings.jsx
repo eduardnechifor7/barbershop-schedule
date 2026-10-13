@@ -170,7 +170,7 @@ export function CustomerBookings() {
             };
         });
     };
-
+    
     const handleBarberChange = (selectedOption) => {
         const barberId = selectedOption ? selectedOption.value : "";
         const currentBarber = data.barbers.find((b) => String(b.id) === String(barberId));
