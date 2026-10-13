@@ -35,6 +35,12 @@ A short walkthrough of the main customer flow: account creation, appointment boo
 
 [Download the demo video](docs/demo/cuthut-demo.mp4)
 
+Log in credentials for the demo:
+
+- Phone number: +40 700 000 000
+- OTP: 000000
+
+
 ## Features
 
 - Phone authentication using OTP
